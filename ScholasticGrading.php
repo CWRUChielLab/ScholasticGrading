@@ -34,7 +34,7 @@ $wgExtensionMessagesFiles['ScholasticGradingAlias'] = __DIR__ . '/ScholasticGrad
 
 # Create the special page Special:Grades
 $wgSpecialPages['Grades'] = 'SpecialGrades';
-$wgSpecialPageGroups['Grades'] = 'other';
+$wgSpecialPageGroups['Grades'] = 'scholastic';
 
 # User right to create, modify, and delete grades; given to administrators by default
 $wgAvailableRights[] = 'editgrades';
