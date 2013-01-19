@@ -34,3 +34,7 @@ $wgExtensionMessagesFiles['ScholasticGrading'] = __DIR__ . '/ScholasticGrading.i
 # Create the special page Special:Grades
 $wgSpecialPages['Grades'] = 'SpecialGrades';
 $wgSpecialPageGroups['Grades'] = 'other';
+
+# User right to create, modify, and delete grades; given to administrators by default
+$wgAvailableRights[] = 'editgrades';
+$wgGroupPermissions['sysop']['editgrades'] = true;
