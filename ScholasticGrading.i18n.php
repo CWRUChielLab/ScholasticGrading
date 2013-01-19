@@ -26,7 +26,7 @@ $messages['en'] = array(
  */
 $messages['qqq'] = array(
     # General
-    'grades'                    => "The name of the extension's entry in Special:SpecialPages",
+    'grades'                    => "The name of the extension's entry in Special:SpecialPages and the title of the special page",
     'scholasticgrading-desc'    => "{{desc|name=ScholasticGrading|url=https://github.com/jpg18/ScholasticGrading}}",
 
     # Rights

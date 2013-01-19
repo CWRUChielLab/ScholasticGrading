@@ -30,6 +30,7 @@ $wgExtensionCredits['specialpage'][] = array(
 # Register classes and system messages
 $wgAutoloadClasses['SpecialGrades'] = __DIR__ . '/SpecialGrades.php';
 $wgExtensionMessagesFiles['ScholasticGrading'] = __DIR__ . '/ScholasticGrading.i18n.php';
+$wgExtensionMessagesFiles['ScholasticGradingAlias'] = __DIR__ . '/ScholasticGrading.alias.php';
 
 # Create the special page Special:Grades
 $wgSpecialPages['Grades'] = 'SpecialGrades';
