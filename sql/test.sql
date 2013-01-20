@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS /*_*/test (
-    `test_id` int(10) NOT NULL,
+    `test_id` MEDIUMINT NOT NULL AUTO_INCREMENT,
     `foo` text NOT NULL,
     PRIMARY KEY (`test_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
