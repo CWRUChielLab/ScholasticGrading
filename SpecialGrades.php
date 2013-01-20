@@ -17,7 +17,7 @@ class SpecialGrades extends SpecialPage {
 
     function execute ( $par ) {
         $request = $this->getRequest();
-        $output = $this->getOutput();
+        $out = $this->getOutput();
         $user = $this->getUser();
         $this->setHeaders();
 
@@ -27,7 +27,31 @@ class SpecialGrades extends SpecialPage {
         # Do stuff
         # ...
         $wikitext = 'Hello, ' . $user . '!';
-        $output->addWikiText($wikitext);
+        $out->addWikiText($wikitext);
+
+
+        # Report the contents of the database table test
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('test', '*');
+
+        $output = '<table class="wikitable"><tr><th>Foo</th></tr>';
+        foreach ( $res as $row ) {
+            $output = $output . '<tr><td>' . $row->foo . '</td></tr>';
+        }
+        $output = $output . '</table>';
+        $out->addHTML($output);
+
+
+        # Report the contents of the database table test
+        #$dbr = wfGetDB(DB_SLAVE);
+        #$res = $dbr->select('test', '*');
+        #
+        #$out->addWikiText('{| class="wikitable" ');
+        #foreach ( $res as $row ) {
+        #    $out->addWikiText('|- ', false);
+        #    $out->addWikiText('| ' . $row->foo . ' ', false);
+        #}
+        #$out->addWikiText('|}', false);
     }
 
 }
