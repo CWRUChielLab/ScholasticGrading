@@ -13,9 +13,10 @@ class SpecialGrades extends SpecialPage {
         parent::__construct('Grades');
     }
 
-    function execute($par) {
+    function execute ( $par ) {
         $request = $this->getRequest();
         $output = $this->getOutput();
+        $user = $this->getUser();
         $this->setHeaders();
 
         # Get request data from, e.g.
@@ -23,7 +24,7 @@ class SpecialGrades extends SpecialPage {
 
         # Do stuff
         # ...
-        $wikitext = 'Hello world!';
+        $wikitext = 'Hello, ' . $user . '!';
         $output->addWikiText($wikitext);
     }
 }
