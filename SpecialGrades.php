@@ -8,7 +8,9 @@
  * @author Jeffrey Gill <jeffrey.p.gill@gmail.com>
  */
 
+
 class SpecialGrades extends SpecialPage {
+
     function __construct() {
         parent::__construct('Grades');
     }
@@ -27,4 +29,5 @@ class SpecialGrades extends SpecialPage {
         $wikitext = 'Hello, ' . $user . '!';
         $output->addWikiText($wikitext);
     }
+
 }

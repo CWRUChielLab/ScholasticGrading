@@ -7,7 +7,9 @@
  * @ingroup Extensions
  */
 
+
 $messages = array();
+
 
 /** English
  * @author Jeffrey Gill
@@ -21,6 +23,7 @@ $messages['en'] = array(
     # Rights
     'right-editgrades' => "Create, modify, and delete grades",
 );
+
 
 /** Message documentation
  * @author Jeffrey Gill

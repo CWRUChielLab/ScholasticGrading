@@ -7,7 +7,9 @@
  * @ingroup Extensions
  */
 
+
 $specialPageAliases = array();
+
 
 /** English
  * @author Jeffrey Gill
