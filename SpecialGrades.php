@@ -17,7 +17,6 @@ class SpecialGrades extends SpecialPage {
 
     function execute ( $par ) {
         $request = $this->getRequest();
-        $out = $this->getOutput();
         $user = $this->getUser();
         $this->setHeaders();
 
@@ -27,31 +26,27 @@ class SpecialGrades extends SpecialPage {
         # Do stuff
         # ...
         $wikitext = 'Hello, ' . $user . '!';
-        $out->addWikiText($wikitext);
+        $this->getOutput()->addWikiText($wikitext);
 
 
         # Report the contents of the database table test
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('test', '*');
 
-        $output = '<table class="wikitable"><tr><th>Foo</th></tr>';
+        $out = '';
+        $out .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
+        $out .= Html::rawElement('tr', null,
+            Html::element('th', null, 'id') .
+            Html::element('th', null, 'foo')
+        ) . "\n";
         foreach ( $res as $row ) {
-            $output = $output . '<tr><td>' . $row->foo . '</td></tr>';
+            $out .= Html::rawElement('tr', null,
+                Html::element('td', null, $row->test_id) .
+                Html::element('td', null, $row->foo)
+            ) . "\n";
         }
-        $output = $output . '</table>';
-        $out->addHTML($output);
-
-
-        # Report the contents of the database table test
-        #$dbr = wfGetDB(DB_SLAVE);
-        #$res = $dbr->select('test', '*');
-        #
-        #$out->addWikiText('{| class="wikitable" ');
-        #foreach ( $res as $row ) {
-        #    $out->addWikiText('|- ', false);
-        #    $out->addWikiText('| ' . $row->foo . ' ', false);
-        #}
-        #$out->addWikiText('|}', false);
+        $out .= Html::closeElement('table');
+        $this->getOutput()->addHTML($out);
     }
 
 }
