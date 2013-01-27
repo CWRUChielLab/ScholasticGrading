@@ -29,6 +29,54 @@ class SpecialGrades extends SpecialPage {
         $this->getOutput()->addWikiText($wikitext);
 
 
+        # Process requests
+        $action = $par ? $par : $request->getVal('action', $par);
+        switch ( $action ) {
+        case 'submit':
+            $this->doSubmit();
+        }
+
+        $this->showForm();
+        $this->showList();
+    }
+
+
+    public function doSubmit () {
+        $request = $this->getRequest();
+        $input = $request->getVal('input-name');
+
+        $dbw = wfGetDB( DB_MASTER );
+        $dbw->insert('test', array('foo' => $input));
+
+        if ( $dbw->affectedRows() === 0 ) {
+            $this->getOutput()->addWikiText('Database unchanged.');
+        } else {
+            $this->getOutput()->addWikiText('\'\'\'"' . $input . '" added!\'\'\'');
+        }
+    }
+
+
+    public function showForm () {
+        # Add entries to the database table test
+        $out = '';
+        $out .= Xml::fieldset( "fieldset",
+            Html::rawElement('form', array('method' => 'post',
+                'action' => $this->getTitle()->getLocalUrl(
+                    array('action' => 'submit', 'param' => 'form-param'))),
+                 Html::rawElement('table', null,
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('label-label', 'input-id')) .
+                        Html::rawElement('td', null, Xml::input('input-name', 20, 'input-value', array('id' => 'input-id'))) .
+                        Html::rawElement('td', null, Xml::submitButton('submit-value'))
+                    )
+                )
+            )
+        );
+        $this->getOutput()->addHTML($out);
+    }
+
+
+    public function showList () {
         # Report the contents of the database table test
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('test', '*');
