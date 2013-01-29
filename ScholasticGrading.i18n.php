@@ -20,6 +20,11 @@ $messages['en'] = array(
     'specialpages-group-scholastic' => "Scholastic tools",
     'scholasticgrading-desc' => "[[Special:Grades | Allows instructors to assign and students to review course grades]]",
 
+    # User groups
+    'group-instructor' => "Instructors",
+    'group-instructor-member' => "{{GENDER:$1|instructor}}",
+    'grouppage-instructor' => "{{ns:project}}:Instructors",
+
     # Rights
     'right-editgrades' => "Create, modify, and delete grades",
 );
@@ -33,6 +38,11 @@ $messages['qqq'] = array(
     'grades' => "The name of the extension's entry in Special:SpecialPages and the title of the special page",
     'specialpages-group-scholastic' => "Category title in Special:SpecialPages",
     'scholasticgrading-desc' => "{{desc|name=ScholasticGrading|url=https://github.com/jpg18/ScholasticGrading}}",
+
+    # User groups
+    'group-instructor' => "{{doc-group|instructor}}",
+    'group-instructor-member' => "{{doc-group|instructor|member",
+    'grouppage-instructor' => "{{doc-group|instructor|page",
 
     # Rights
     'right-editgrades' => "{{doc-right|editgrades}}",

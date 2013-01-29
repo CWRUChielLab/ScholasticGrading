@@ -42,9 +42,9 @@ $wgSpecialPages['Grades'] = 'SpecialGrades';
 $wgSpecialPageGroups['Grades'] = 'scholastic';
 
 
-# User right to create, modify, and delete grades; given to administrators by default
+# User right to create, modify, and delete grades; given to Instructors by default
 $wgAvailableRights[] = 'editgrades';
-$wgGroupPermissions['sysop']['editgrades'] = true;
+$wgGroupPermissions['instructor']['editgrades'] = true;
 
 
 # Create database tables; triggered when maintenance/update.php is run
