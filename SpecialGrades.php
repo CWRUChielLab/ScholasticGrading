@@ -28,7 +28,6 @@ class SpecialGrades extends SpecialPage {
         $wikitext = 'Hello, ' . $user . '!';
         $this->getOutput()->addWikiText($wikitext);
 
-
         # Process requests
         $action = $par ? $par : $request->getVal('action', $par);
         switch ( $action ) {
@@ -52,6 +51,9 @@ class SpecialGrades extends SpecialPage {
             $this->getOutput()->addWikiText('Database unchanged.');
         } else {
             $this->getOutput()->addWikiText('\'\'\'"' . $input . '" added!\'\'\'');
+
+            $log = new LogPage('grades', false);
+            $log->addEntry('add', $this->getTitle(), $input);
         }
     }
 

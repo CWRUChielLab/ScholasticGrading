@@ -27,6 +27,11 @@ $messages['en'] = array(
 
     # Rights
     'right-editgrades' => "Create, modify, and delete grades",
+
+    # Logs
+    'log-name-grades' => "Grade log",
+    'log-description-grades' => "Below is a list of the most recent grade changes made to [[Special:Grades]].",
+    'logentry-grades-add' => "$1 {{GENDER:$2|added}} something to $3",
 );
 
 
@@ -46,4 +51,13 @@ $messages['qqq'] = array(
 
     # Rights
     'right-editgrades' => "{{doc-right|editgrades}}",
+
+    # Logs
+    'log-name-grades' => "Page title on Special:Log/grades",
+    'log-description-grades' => "Description shown on Special:Log/grades",
+    'logentry-grades-add' => "Appears on [[Special:Log/grades]] when ...........",
+    #   $1: full name
+    #   $2: user name
+    #   $3: page title
+    #   $4: param1 ...
 );

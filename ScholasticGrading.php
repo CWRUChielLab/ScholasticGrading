@@ -47,6 +47,13 @@ $wgAvailableRights[] = 'editgrades';
 $wgGroupPermissions['instructor']['editgrades'] = true;
 
 
+# Create the log Special:Log/grades
+$wgLogTypes[] = 'grades';
+$wgLogNames['grades'] = 'log-name-grades';
+$wgLogHeaders['grades'] = 'log-description-grades';
+$wgLogActionsHandlers['grades/*'] = 'LogFormatter';
+
+
 # Create database tables; triggered when maintenance/update.php is run
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'scholasticGradesSchemaUpdate';
 
