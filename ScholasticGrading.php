@@ -51,6 +51,7 @@ $wgGroupPermissions['instructor']['editgrades'] = true;
 $wgLogTypes[] = 'grades';
 $wgLogNames['grades'] = 'log-name-grades';
 $wgLogHeaders['grades'] = 'log-description-grades';
+$wgLogRestrictions['grades'] = 'editgrades';
 $wgLogActionsHandlers['grades/*'] = 'LogFormatter';
 
 
