@@ -55,6 +55,14 @@ $wgLogRestrictions['grades'] = 'editgrades';
 $wgLogActionsHandlers['grades/*'] = 'LogFormatter';
 
 
+# Register JavaScript resources
+$wgResourceModules['ext.ScholasticGrading.assignment-date'] = array(
+    'localBasePath' => dirname(__FILE__),
+    'scripts' => 'modules/ext.ScholasticGrading.assignment-date.js',
+    'dependencies' => 'jquery.ui.datepicker',
+);
+
+
 # Create database tables; triggered when maintenance/update.php is run
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'scholasticGradingSchemaUpdate';
 

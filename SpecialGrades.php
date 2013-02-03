@@ -20,6 +20,8 @@ class SpecialGrades extends SpecialPage {
         $user = $this->getUser();
         $this->setHeaders();
 
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.assignment-date' );
+
         # Get request data from, e.g.
         $param = $request->getText('param');
 
@@ -116,12 +118,14 @@ class SpecialGrades extends SpecialPage {
         $assignmentTitle = $request->getVal('assignment-title');
         $assignmentValue = $request->getVal('assignment-value');
         $assignmentEnabled = $request->getCheck('assignment-enabled') ? 1 : 0;
+        $assignmentDate = $request->getVal('assignment-date');
 
         $dbw = wfGetDB( DB_MASTER );
         $dbw->insert('scholasticgrading_assignment', array(
             'sga_title' => $assignmentTitle,
             'sga_value' => $assignmentValue,
-            'sga_enabled' => $assignmentEnabled
+            'sga_enabled' => $assignmentEnabled,
+            'sga_date' => $assignmentDate,
         ));
 
         if ( $dbw->affectedRows() === 0 ) {
@@ -154,6 +158,10 @@ class SpecialGrades extends SpecialPage {
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
                         Html::rawElement('td', null, Xml::check('assignment-enabled', true, array('id' => 'assignment-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
+                        Html::rawElement('td', null, Xml::input('assignment-date', 20, '', array('id' => 'assignment-date')))
                     )
                 ) .
                 Xml::submitButton('Create assignment')
