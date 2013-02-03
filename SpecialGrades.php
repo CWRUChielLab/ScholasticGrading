@@ -32,7 +32,6 @@ class SpecialGrades extends SpecialPage {
 
         # Process requests
         $action = $par ? $par : $request->getVal('action', $par);
-        $form   = $par ? $par : $request->getVal('form', $par);
         switch ( $action ) {
         case 'submit':
             $this->doAssignmentSubmit();
