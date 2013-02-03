@@ -56,24 +56,29 @@ $wgLogActionsHandlers['grades/*'] = 'LogFormatter';
 
 
 # Create database tables; triggered when maintenance/update.php is run
-$wgHooks['LoadExtensionSchemaUpdates'][] = 'scholasticGradesSchemaUpdate';
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'scholasticGradingSchemaUpdate';
 
-function scholasticGradesSchemaUpdate ( $updater = null ) {
+function scholasticGradingSchemaUpdate ( $updater = null ) {
     if ( $updater === null ) {
         // <= 1.16 support
         global $wgExtNewTables, $wgExtModifiedFields;
 
-        $wgExtNewTables[] = array(
-            'test',
+        $wgExtNewTables[] = array( 'test',
             dirname(__FILE__) . '/sql/test.sql'
+        );
+
+        $wgExtNewTables[] = array( 'scholasticgrading_assignment',
+            dirname(__FILE__) . '/sql/scholasticgrading_assignment.sql'
         );
 
     } else {
         // >= 1.17 support
 
-        $updater->addExtensionUpdate(array('addTable',
-            'test',
-            dirname(__FILE__) . '/sql/test.sql', true));
+        $updater->addExtensionUpdate( array( 'addTable', 'test',
+            dirname(__FILE__) . '/sql/test.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_assignment',
+            dirname(__FILE__) . '/sql/scholasticgrading_assignment.sql', true ) );
 
     }
 
