@@ -55,7 +55,7 @@ class SpecialGrades extends SpecialPage {
             'sga_title' => $assignmentTitle,
             'sga_value' => $assignmentValue,
             'sga_enabled' => $assignmentEnabled,
-            'sga_date' => $assignmentDate,
+            'sga_date' => $dbw->timestamp($assignmentDate . ' 00:00:00'),
         ));
 
         if ( $dbw->affectedRows() === 0 ) {

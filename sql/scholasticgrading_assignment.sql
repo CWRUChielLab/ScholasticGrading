@@ -6,5 +6,5 @@ CREATE TABLE /*_*/scholasticgrading_assignment (
     sga_title varchar(255) NOT NULL default '',
     sga_value int unsigned NOT NULL default 0,
     sga_enabled boolean NOT NULL default TRUE,
-    sga_date varbinary(14)
+    sga_date varbinary(14) NOT NULL default ''
 ) /*$wgDBTableOptions*/;
