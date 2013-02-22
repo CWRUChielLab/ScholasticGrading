@@ -56,7 +56,7 @@ $messages['qqq'] = array(
     'log-name-grades' => "Page title on Special:Log/grades",
     'log-description-grades' => "Description shown on Special:Log/grades",
     'logentry-grades-add' => "Appears on [[Special:Log/grades]] when ...........",
-    #   $1: full name
+    #   $1: user name with links
     #   $2: user name
     #   $3: page title
     #   $4: param1 ...

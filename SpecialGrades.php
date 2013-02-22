@@ -45,17 +45,17 @@ class SpecialGrades extends SpecialPage {
     public function doAssignmentSubmit () {
         # Create an assignment
         $request = $this->getRequest();
-        $assignmentTitle = $request->getVal('assignment-title');
-        $assignmentValue = $request->getVal('assignment-value');
+        $assignmentTitle   = $request->getVal('assignment-title');
+        $assignmentValue   = $request->getVal('assignment-value');
         $assignmentEnabled = $request->getCheck('assignment-enabled') ? 1 : 0;
-        $assignmentDate = $request->getVal('assignment-date');
+        $assignmentDate    = $request->getVal('assignment-date');
 
         $dbw = wfGetDB( DB_MASTER );
         $dbw->insert('scholasticgrading_assignment', array(
-            'sga_title' => $assignmentTitle,
-            'sga_value' => $assignmentValue,
+            'sga_title'   => $assignmentTitle,
+            'sga_value'   => $assignmentValue,
             'sga_enabled' => $assignmentEnabled,
-            'sga_date' => $dbw->timestamp($assignmentDate . ' 00:00:00'),
+            'sga_date'    => $dbw->timestamp($assignmentDate . ' 00:00:00'),
         ));
 
         if ( $dbw->affectedRows() === 0 ) {
