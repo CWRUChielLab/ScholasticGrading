@@ -107,7 +107,7 @@ class SpecialGrades extends SpecialPage {
         $res = $dbr->select('scholasticgrading_assignment', '*');
 
         $out = '';
-        $out .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
+        $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
         $out .= Html::rawElement('tr', null,
             Html::element('th', null, 'id') .
             Html::element('th', null, 'title') .
