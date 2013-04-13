@@ -11,3 +11,6 @@ CREATE TABLE /*_*/scholasticgrading_evaluation (
     FOREIGN KEY (sge_user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (sge_assignment_id) REFERENCES scholasticgrading_assignment (sga_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) /*$wgDBTableOptions*/;
+
+CREATE INDEX /*i*/sge_user ON /*_*/scholasticgrading_evaluation (sge_user_id);
+CREATE INDEX /*i*/sge_assignment ON /*_*/scholasticgrading_evaluation (sge_assignment_id);
