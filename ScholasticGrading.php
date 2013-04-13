@@ -72,14 +72,19 @@ function scholasticGradingSchemaUpdate ( $updater = null ) {
         global $wgExtNewTables, $wgExtModifiedFields;
 
         $wgExtNewTables[] = array( 'scholasticgrading_assignment',
-            dirname(__FILE__) . '/sql/scholasticgrading_assignment.sql'
-        );
+            dirname(__FILE__) . '/sql/scholasticgrading_assignment.sql');
+
+        $wgExtNewTables[] = array( 'scholasticgrading_evaluation',
+            dirname(__FILE__) . '/sql/scholasticgrading_evaluation.sql');
 
     } else {
         // >= 1.17 support
 
         $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_assignment',
             dirname(__FILE__) . '/sql/scholasticgrading_assignment.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_evaluation',
+            dirname(__FILE__) . '/sql/scholasticgrading_evaluation.sql', true ) );
 
     }
 
