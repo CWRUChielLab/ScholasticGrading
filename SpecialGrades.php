@@ -15,6 +15,7 @@ class SpecialGrades extends SpecialPage {
         parent::__construct('Grades');
     }
 
+
     function execute ( $par ) {
         $request = $this->getRequest();
         $user = $this->getUser();
@@ -39,11 +40,13 @@ class SpecialGrades extends SpecialPage {
 
         $this->showAssignmentForm();
         $this->showAssignments();
+
+        $this->showEvaluations();
     }
 
 
+    # Create an assignment
     public function doAssignmentSubmit () {
-        # Create an assignment
         $request = $this->getRequest();
         $assignmentTitle   = $request->getVal('assignment-title');
         $assignmentValue   = $request->getVal('assignment-value');
@@ -69,8 +72,8 @@ class SpecialGrades extends SpecialPage {
     }
 
 
+    # Show the assignment creation form
     public function showAssignmentForm () {
-        # Show the assignment creation form
         $out = '';
         $out .= Xml::fieldset( "Create a new assignment",
             Html::rawElement('form', array('method' => 'post',
@@ -101,8 +104,8 @@ class SpecialGrades extends SpecialPage {
     }
 
 
+    # List all assignments
     public function showAssignments () {
-        # List all assignments
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('scholasticgrading_assignment', '*');
 
@@ -122,6 +125,34 @@ class SpecialGrades extends SpecialPage {
                 Html::element('td', null, $row->sga_value) .
                 Html::element('td', null, $row->sga_enabled) .
                 Html::element('td', null, $row->sga_date)
+            ) . "\n";
+        }
+        $out .= Html::closeElement('table');
+        $this->getOutput()->addHTML($out);
+    }
+
+
+    # List all evaluations
+    public function showEvaluations () {
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('scholasticgrading_evaluation', '*');
+
+        $out = '';
+        $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $out .= Html::rawElement('tr', null,
+            Html::element('th', null, 'user id') .
+            Html::element('th', null, 'assignment id') .
+            Html::element('th', null, 'score') .
+            Html::element('th', null, 'enabled') .
+            Html::element('th', null, 'date')
+        ) . "\n";
+        foreach ( $res as $row ) {
+            $out .= Html::rawElement('tr', null,
+                Html::element('td', null, $row->sge_user_id) .
+                Html::element('td', null, $row->sge_assignment_id) .
+                Html::element('td', null, $row->sge_score) .
+                Html::element('td', null, $row->sge_enabled) .
+                Html::element('td', null, $row->sge_date)
             ) . "\n";
         }
         $out .= Html::closeElement('table');
