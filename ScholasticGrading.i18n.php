@@ -31,7 +31,8 @@ $messages['en'] = array(
     # Logs
     'log-name-grades' => "Grade log",
     'log-description-grades' => "Below is a list of the most recent grade changes made to [[Special:Grades]].",
-    'logentry-grades-add' => "$1 {{GENDER:$2|added}} something to $3",
+    'logentry-grades-addAssignment' => "$1 {{GENDER:$2|added}} an assignment to $3",
+    'logentry-grades-addEvaluation' => "$1 {{GENDER:$2|added}} an evaluation to $3",
 );
 
 
@@ -55,7 +56,8 @@ $messages['qqq'] = array(
     # Logs
     'log-name-grades' => "Page title on Special:Log/grades",
     'log-description-grades' => "Description shown on Special:Log/grades",
-    'logentry-grades-add' => "Appears on [[Special:Log/grades]] when ...........",
+    'logentry-grades-addAssignment' => "Appears on [[Special:Log/grades]] when a new assignment is created",
+    'logentry-grades-addEvaluation' => "Appears on [[Special:Log/grades]] when a new evaluation is created",
     #   $1: user name with links
     #   $2: user name
     #   $3: page title

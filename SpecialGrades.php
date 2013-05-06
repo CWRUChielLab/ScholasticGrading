@@ -22,6 +22,7 @@ class SpecialGrades extends SpecialPage {
         $this->setHeaders();
 
         $this->getOutput()->addModules( 'ext.ScholasticGrading.assignment-date' );
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.evaluation-date' );
 
         # Get request data from, e.g.
         $param = $request->getText('param');
@@ -34,13 +35,18 @@ class SpecialGrades extends SpecialPage {
         # Process requests
         $action = $par ? $par : $request->getVal('action', $par);
         switch ( $action ) {
-        case 'submit':
+        case 'submitAssignment':
             $this->doAssignmentSubmit();
+            break;
+        case 'submitEvaluation':
+            $this->doEvaluationSubmit();
+            break;
         }
 
         $this->showAssignmentForm();
         $this->showAssignments();
 
+        $this->showEvaluationForm();
         $this->showEvaluations();
     }
 
@@ -67,7 +73,36 @@ class SpecialGrades extends SpecialPage {
             $this->getOutput()->addWikiText('\'\'\'"' . $assignmentTitle . '" added!\'\'\'');
 
             $log = new LogPage('grades', false);
-            $log->addEntry('add', $this->getTitle(), $assignmentTitle);
+            $log->addEntry('addAssignment', $this->getTitle(), $assignmentTitle);
+        }
+    }
+
+
+    # Create an evaluation
+    public function doEvaluationSubmit () {
+        $request = $this->getRequest();
+        $evaluationUser       = $request->getVal('evaluation-user');
+        $evaluationAssignment = $request->getVal('evaluation-assignment');
+        $evaluationScore      = $request->getVal('evaluation-score');
+        $evaluationEnabled    = $request->getCheck('evaluation-enabled') ? 1 : 0;
+        $evaluationDate       = $request->getVal('evaluation-date');
+
+        $dbw = wfGetDB( DB_MASTER );
+        $dbw->insert('scholasticgrading_evaluation', array(
+            'sge_user_id'       => $evaluationUser,
+            'sge_assignment_id' => $evaluationAssignment,
+            'sge_score'         => $evaluationScore,
+            'sge_enabled'       => $evaluationEnabled,
+            'sge_date'          => $dbw->timestamp($evaluationDate . ' 00:00:00'),
+        ));
+
+        if ( $dbw->affectedRows() === 0 ) {
+            $this->getOutput()->addWikiText('Database unchanged.');
+        } else {
+            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $evaluationUser . ' for "' . $evaluationAssignment . '" added!\'\'\'');
+
+            $log = new LogPage('grades', false);
+            $log->addEntry('addEvaluation', $this->getTitle(), 'User ' . $evaluationUser . ' for ' . $evaluationAssignment);
         }
     }
 
@@ -78,7 +113,7 @@ class SpecialGrades extends SpecialPage {
         $out .= Xml::fieldset( "Create a new assignment",
             Html::rawElement('form', array('method' => 'post',
                 'action' => $this->getTitle()->getLocalUrl(
-                    array('action' => 'submit'))),
+                    array('action' => 'submitAssignment'))),
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
@@ -98,6 +133,42 @@ class SpecialGrades extends SpecialPage {
                     )
                 ) .
                 Xml::submitButton('Create assignment')
+            )
+        );
+        $this->getOutput()->addHTML($out);
+    }
+
+
+    # Show the evaluation creation form
+    public function showEvaluationForm () {
+        $out = '';
+        $out .= Xml::fieldset( "Create a new evaluation",
+            Html::rawElement('form', array('method' => 'post',
+                'action' => $this->getTitle()->getLocalUrl(
+                    array('action' => 'submitEvaluation'))),
+                 Html::rawElement('table', null,
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-user', 20, '', array('id' => 'evaluation-user')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-assignment', 20, '', array('id' => 'evaluation-assignment')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-score', 20, '0', array('id' => 'evaluation-score')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
+                        Html::rawElement('td', null, Xml::check('evaluation-enabled', true, array('id' => 'evaluation-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-date', 20, '', array('id' => 'evaluation-date')))
+                    )
+                ) .
+                Xml::submitButton('Create evaluation')
             )
         );
         $this->getOutput()->addHTML($out);

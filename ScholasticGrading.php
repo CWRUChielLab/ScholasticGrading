@@ -61,6 +61,11 @@ $wgResourceModules['ext.ScholasticGrading.assignment-date'] = array(
     'scripts' => 'modules/ext.ScholasticGrading.assignment-date.js',
     'dependencies' => 'jquery.ui.datepicker',
 );
+$wgResourceModules['ext.ScholasticGrading.evaluation-date'] = array(
+    'localBasePath' => dirname(__FILE__),
+    'scripts' => 'modules/ext.ScholasticGrading.evaluation-date.js',
+    'dependencies' => 'jquery.ui.datepicker',
+);
 
 
 # Create database tables; triggered when maintenance/update.php is run
