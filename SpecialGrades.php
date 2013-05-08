@@ -33,6 +33,9 @@ class SpecialGrades extends SpecialPage {
         $wikitext = 'Hello, ' . $user . '!';
         $this->getOutput()->addWikiText($wikitext);
 
+        # Needed so dates are displayed correctly
+        date_default_timezone_set('UTC');
+
         # Process requests
         $action = $par ? $par : $request->getVal('action', $par);
         switch ( $action ) {
@@ -197,7 +200,7 @@ class SpecialGrades extends SpecialPage {
         $out .= Html::closeElement('tr') . "\n";
         foreach ( $assignments as $assignment ) {
             $out .= Html::openElement('tr');
-            $out .= Html::element('th', null, $assignment->sga_date);
+            $out .= Html::element('th', null, date('D m/d', wfTimestamp(TS_UNIX, $assignment->sga_date)));
             $out .= Html::element('th', null, $assignment->sga_title);
             foreach ( $users as $user ) {
                 $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
