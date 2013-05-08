@@ -186,7 +186,8 @@ class SpecialGrades extends SpecialPage {
     public function showGradeGrid () {
         $dbr = wfGetDB(DB_SLAVE);
         $users = $dbr->select('user', '*');
-        $assignments = $dbr->select('scholasticgrading_assignment', '*');
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
+            array('ORDER BY' => 'sga_date'));
 
         $out = '';
         $out .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
