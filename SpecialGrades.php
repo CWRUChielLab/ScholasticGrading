@@ -48,6 +48,8 @@ class SpecialGrades extends SpecialPage {
 
         $this->showEvaluationForm();
         $this->showEvaluations();
+
+        $this->showUsers();
     }
 
 
@@ -175,6 +177,30 @@ class SpecialGrades extends SpecialPage {
     }
 
 
+    # List all users
+    public function showUsers () {
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('user', '*');
+
+        $out = '';
+        $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $out .= Html::rawElement('tr', null,
+            Html::element('th', null, 'id') .
+            Html::element('th', null, 'name') .
+            Html::element('th', null, 'real name')
+        ) . "\n";
+        foreach ( $res as $row ) {
+            $out .= Html::rawElement('tr', null,
+                Html::element('td', null, $row->user_id) .
+                Html::element('td', null, $row->user_name) .
+                Html::element('td', null, $row->user_real_name)
+            ) . "\n";
+        }
+        $out .= Html::closeElement('table') . "\n";
+        $this->getOutput()->addHTML($out);
+    }
+
+
     # List all assignments
     public function showAssignments () {
         $dbr = wfGetDB(DB_SLAVE);
@@ -198,7 +224,7 @@ class SpecialGrades extends SpecialPage {
                 Html::element('td', null, $row->sga_date)
             ) . "\n";
         }
-        $out .= Html::closeElement('table');
+        $out .= Html::closeElement('table') . "\n";
         $this->getOutput()->addHTML($out);
     }
 
@@ -226,7 +252,7 @@ class SpecialGrades extends SpecialPage {
                 Html::element('td', null, $row->sge_date)
             ) . "\n";
         }
-        $out .= Html::closeElement('table');
+        $out .= Html::closeElement('table') . "\n";
         $this->getOutput()->addHTML($out);
     }
 
