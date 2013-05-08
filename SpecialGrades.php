@@ -23,6 +23,7 @@ class SpecialGrades extends SpecialPage {
 
         $this->getOutput()->addModules( 'ext.ScholasticGrading.assignment-date' );
         $this->getOutput()->addModules( 'ext.ScholasticGrading.evaluation-date' );
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.vertical-text' );
 
         # Get request data from, e.g.
         $param = $request->getText('param');
@@ -50,6 +51,7 @@ class SpecialGrades extends SpecialPage {
         $this->showEvaluations();
 
         $this->showUsers();
+        $this->showGradeGrid();
     }
 
 
@@ -173,6 +175,42 @@ class SpecialGrades extends SpecialPage {
                 Xml::submitButton('Create evaluation')
             )
         );
+        $this->getOutput()->addHTML($out);
+    }
+
+
+    # Show the grade grid
+    public function showGradeGrid () {
+        $dbr = wfGetDB(DB_SLAVE);
+        $users = $dbr->select('user', '*');
+        $assignments = $dbr->select('scholasticgrading_assignment', '*');
+
+        $out = '';
+        $out .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
+        $out .= Html::openElement('tr');
+        $out .= Html::element('th', null, '') . Html::element('th', null, '');
+        foreach ( $users as $user ) {
+            $out .= Html::rawElement('th', array('class' => 'vertical'),
+                Html::element('div', array('class' => 'vertical'), $user->user_real_name)
+            );
+        }
+        $out .= Html::closeElement('tr') . "\n";
+        foreach ( $assignments as $assignment ) {
+            $out .= Html::openElement('tr');
+            $out .= Html::element('th', null, $assignment->sga_date);
+            $out .= Html::element('th', null, $assignment->sga_title);
+            foreach ( $users as $user ) {
+                $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
+                    array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
+                if ( $evaluations->numRows() > 0 ) {
+                    $out .= Html::element('td', null, $evaluations->next()->sge_score / $assignment->sga_value * 100 . '%');
+                } else {
+                    $out .= Html::element('td', null, '');
+                }
+            }
+            $out .= Html::closeElement('tr') . "\n";
+        }
+        $out .= Html::closeElement('table') . "\n";
         $this->getOutput()->addHTML($out);
     }
 
