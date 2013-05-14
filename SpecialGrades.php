@@ -39,10 +39,22 @@ class SpecialGrades extends SpecialPage {
 
         switch ( $action ) {
         case 'submitAssignment':
-            $this->doAssignmentSubmit();
-            break;
         case 'submitEvaluation':
-            $this->doEvaluationSubmit();
+            if ( !$this->canModify( $this->getOutput() ) ) {
+                # Error msg added by canModify()
+            } elseif ( !$this->getRequest()->wasPosted() || !$this->getUser()->matchEditToken( $this->getRequest()->getVal( 'wpEditToken' ) ) ) {
+                # Prevent cross-site request forgeries
+                $this->getOutput()->addWikiMsg( 'sessionfailure' );
+            } else {
+                switch ( $action ) {
+                case 'submitAssignment':
+                    $this->doAssignmentSubmit();
+                    break;
+                case 'submitEvaluation':
+                    $this->doEvaluationSubmit();
+                    break;
+                }
+            }
             break;
         }
 
@@ -56,6 +68,25 @@ class SpecialGrades extends SpecialPage {
         $this->showGradeGrid();
 
         $this->getOutput()->returnToMain(false, $this->getTitle());
+    }
+
+
+    # Returns bool whether the user can modify the data
+    public function canModify ( $out = false ) {
+        if ( !$this->getUser()->isAllowed( 'editgrades' ) ) {
+            # Check user permissions
+            if ( $out ) {
+                throw new PermissionsError( 'editgrades' );
+            }
+            return false;
+        } elseif ( wfReadOnly() ) {
+            # Is the database in read-only mode?
+            if ( $out ) {
+                $out->readOnlyPage();
+            }
+            return false;
+        }
+        return true;
     }
 
 
@@ -140,7 +171,8 @@ class SpecialGrades extends SpecialPage {
                         Html::rawElement('td', null, Xml::input('assignment-date', 20, '', array('id' => 'assignment-date')))
                     )
                 ) .
-                Xml::submitButton('Create assignment')
+                Xml::submitButton('Create assignment') .
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
         $this->getOutput()->addHTML($out);
@@ -176,7 +208,8 @@ class SpecialGrades extends SpecialPage {
                         Html::rawElement('td', null, Xml::input('evaluation-date', 20, '', array('id' => 'evaluation-date')))
                     )
                 ) .
-                Xml::submitButton('Create evaluation')
+                Xml::submitButton('Create evaluation') .
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
         $this->getOutput()->addHTML($out);

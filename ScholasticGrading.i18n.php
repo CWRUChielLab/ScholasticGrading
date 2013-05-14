@@ -27,6 +27,7 @@ $messages['en'] = array(
 
     # Rights
     'right-editgrades' => "Create, modify, and delete grades",
+    'action-editgrades' => "edit grades",
 
     # Logs
     'log-name-grades' => "Grade log",
@@ -52,6 +53,7 @@ $messages['qqq'] = array(
 
     # Rights
     'right-editgrades' => "{{doc-right|editgrades}}",
+    'action-editgrades' => "{{doc-action|editgrades}}",
 
     # Logs
     'log-name-grades' => "Page title on Special:Log/grades",
