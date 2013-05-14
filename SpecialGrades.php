@@ -71,8 +71,8 @@ class SpecialGrades extends SpecialPage {
         default:
             $addAssignmentLink = Linker::linkKnown($this->getTitle('addassignment'), 'Add a new assignment');
             $addEvaluationLink = Linker::linkKnown($this->getTitle('addevaluation'), 'Add a new evaluation');
-            $this->getOutput()->addHTML('<p>' . $addAssignmentLink . '</p>');
-            $this->getOutput()->addHTML('<p>' . $addEvaluationLink . '</p>');
+            $this->getOutput()->addHTML("<p>" . $addAssignmentLink . "</p>\n");
+            $this->getOutput()->addHTML("<p>" . $addEvaluationLink . "</p>\n");
             $this->showGradeGrid();
             $this->showAssignments();
             $this->showEvaluations();
@@ -240,8 +240,9 @@ class SpecialGrades extends SpecialPage {
 
         $out = '';
         $out .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
+        $out .= Html::element('caption', null, 'Grade Grid') . "\n";
         $out .= Html::openElement('tr');
-        $out .= Html::element('th', null, '') . Html::element('th', null, '');
+        $out .= Html::element('td', null, '') . Html::element('td', null, '');
         foreach ( $users as $user ) {
             $out .= Html::rawElement('th', array('class' => 'vertical'),
                 Html::element('div', array('class' => 'vertical'), $user->user_real_name)
@@ -280,6 +281,7 @@ class SpecialGrades extends SpecialPage {
 
         $out = '';
         $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $out .= Html::element('caption', null, 'Users') . "\n";
         $out .= Html::rawElement('tr', null,
             Html::element('th', null, 'id') .
             Html::element('th', null, 'name') .
@@ -304,6 +306,7 @@ class SpecialGrades extends SpecialPage {
 
         $out = '';
         $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $out .= Html::element('caption', null, 'Assignments') . "\n";
         $out .= Html::rawElement('tr', null,
             Html::element('th', null, 'id') .
             Html::element('th', null, 'title') .
@@ -332,6 +335,7 @@ class SpecialGrades extends SpecialPage {
 
         $out = '';
         $out .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $out .= Html::element('caption', null, 'Evaluations') . "\n";
         $out .= Html::rawElement('tr', null,
             Html::element('th', null, 'user id') .
             Html::element('th', null, 'assignment id') .
