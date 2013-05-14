@@ -258,7 +258,11 @@ class SpecialGrades extends SpecialPage {
                 $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
                     array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
                 if ( $evaluations->numRows() > 0 ) {
-                    $out .= Html::element('td', null, $evaluations->next()->sge_score / $assignment->sga_value * 100 . '%');
+                    if ( $assignment->sga_value == 0 ) {
+                        $out .= Html::element('td', null, '+' . $evaluations->next()->sge_score);
+                    } else {
+                        $out .= Html::element('td', null, $evaluations->next()->sge_score / $assignment->sga_value * 100 . '%');
+                    }
                 } else {
                     $out .= Html::element('td', null, '');
                 }
