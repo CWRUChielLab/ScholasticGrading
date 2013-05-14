@@ -138,10 +138,14 @@ class SpecialGrades extends SpecialPage {
         if ( $dbw->affectedRows() === 0 ) {
             $this->getOutput()->addWikiText('Database unchanged.');
         } else {
-            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $evaluationUser . ' for "' . $evaluationAssignment . '" added!\'\'\'');
+            $users = $dbw->select('user', '*', array('user_id' => $evaluationUser));
+            $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment));
+            $user_name = $users->next()->user_name;
+            $assignment_title = $assignments->next()->sga_title;
+            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $user_name . ' for "' . $assignment_title . '" added!\'\'\'');
 
             $log = new LogPage('grades', false);
-            $log->addEntry('addEvaluation', $this->getTitle(), 'User ' . $evaluationUser . ' for ' . $evaluationAssignment);
+            $log->addEntry('addEvaluation', $this->getTitle(), 'user ' . $user_name . ', assignment "' . $assignment_title . '"');
         }
 
         $this->getOutput()->returnToMain(false, $this->getTitle());
