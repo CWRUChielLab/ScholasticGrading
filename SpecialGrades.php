@@ -38,6 +38,14 @@ class SpecialGrades extends SpecialPage {
         $action = $par ? $par : $this->getRequest()->getVal('action', $par);
 
         switch ( $action ) {
+        case 'addassignment':
+            $this->showAssignmentForm();
+            $this->getOutput()->returnToMain(false, $this->getTitle());
+            break;
+        case 'addevaluation':
+            $this->showEvaluationForm();
+            $this->getOutput()->returnToMain(false, $this->getTitle());
+            break;
         case 'submit':
             if ( !$this->canModify( $this->getOutput() ) ) {
                 # Error msg added by canModify()
@@ -54,16 +62,17 @@ class SpecialGrades extends SpecialPage {
                     break;
                 }
             }
+            $this->getOutput()->returnToMain(false, $this->getTitle());
             break;
         default:
-            $this->showAssignmentForm();
-            $this->showAssignments();
-
-            $this->showEvaluationForm();
-            $this->showEvaluations();
-
-            $this->showUsers();
+            $addAssignmentLink = Linker::linkKnown($this->getTitle('addassignment'), 'Add a new assignment');
+            $addEvaluationLink = Linker::linkKnown($this->getTitle('addevaluation'), 'Add a new evaluation');
+            $this->getOutput()->addHTML('<p>' . $addAssignmentLink . '</p>');
+            $this->getOutput()->addHTML('<p>' . $addEvaluationLink . '</p>');
             $this->showGradeGrid();
+            $this->showAssignments();
+            $this->showEvaluations();
+            $this->showUsers();
             break;
         }
     }
@@ -112,8 +121,6 @@ class SpecialGrades extends SpecialPage {
             $log = new LogPage('grades', false);
             $log->addEntry('addAssignment', $this->getTitle(), $assignmentTitle);
         }
-
-        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
@@ -147,8 +154,6 @@ class SpecialGrades extends SpecialPage {
             $log = new LogPage('grades', false);
             $log->addEntry('addEvaluation', $this->getTitle(), 'user ' . $user_name . ', assignment "' . $assignment_title . '"');
         }
-
-        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
