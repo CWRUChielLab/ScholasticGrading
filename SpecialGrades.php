@@ -149,14 +149,12 @@ class SpecialGrades extends SpecialPage {
         if ( $dbw->affectedRows() === 0 ) {
             $this->getOutput()->addWikiText('Database unchanged.');
         } else {
-            $users = $dbw->select('user', '*', array('user_id' => $evaluationUser));
-            $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment));
-            $user_name = $users->next()->user_name;
-            $assignment_title = $assignments->next()->sga_title;
-            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $user_name . ' for "' . $assignment_title . '" added!\'\'\'');
+            $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+            $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $user->user_name . ' for "' . $assignment->sga_title . '" added!\'\'\'');
 
             $log = new LogPage('grades', false);
-            $log->addEntry('addEvaluation', $this->getTitle(), 'user ' . $user_name . ', assignment "' . $assignment_title . '"');
+            $log->addEntry('addEvaluation', $this->getTitle(), 'user ' . $user->user_name . ', assignment "' . $assignment->sga_title . '"');
         }
     }
 
@@ -258,10 +256,11 @@ class SpecialGrades extends SpecialPage {
                 $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
                     array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
                 if ( $evaluations->numRows() > 0 ) {
+                    $evaluation = $evaluations->next();
                     if ( $assignment->sga_value == 0 ) {
-                        $out .= Html::element('td', null, '+' . $evaluations->next()->sge_score);
+                        $out .= Html::element('td', null, '+' . $evaluation->sge_score);
                     } else {
-                        $out .= Html::element('td', null, $evaluations->next()->sge_score / $assignment->sga_value * 100 . '%');
+                        $out .= Html::element('td', null, $evaluation->sge_score / $assignment->sga_value * 100 . '%');
                     }
                 } else {
                     $out .= Html::element('td', null, '');
