@@ -11,33 +11,32 @@
 
 class SpecialGrades extends SpecialPage {
 
+    # Constructor (sets up the new special page)
     function __construct() {
         parent::__construct('Grades');
     }
 
 
+    # Show the special page (main method, run automatically)
     function execute ( $par ) {
-        $request = $this->getRequest();
-        $user = $this->getUser();
         $this->setHeaders();
-
-        $this->getOutput()->addModules( 'ext.ScholasticGrading.assignment-date' );
-        $this->getOutput()->addModules( 'ext.ScholasticGrading.evaluation-date' );
-        $this->getOutput()->addModules( 'ext.ScholasticGrading.vertical-text' );
-
-        # Get request data from, e.g.
-        $param = $request->getText('param');
-
-        # Do stuff
-        # ...
-        $wikitext = 'Hello, ' . $user . '!';
-        $this->getOutput()->addWikiText($wikitext);
 
         # Needed so dates are displayed correctly
         date_default_timezone_set('UTC');
 
+        # Load JavaScript and CSS
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.assignment-date' );
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.evaluation-date' );
+        $this->getOutput()->addModules( 'ext.ScholasticGrading.vertical-text' );
+
+        # Do stuff
+        # ...
+        $wikitext = 'Hello, ' . $this->getUser() . '!';
+        $this->getOutput()->addWikiText($wikitext);
+
         # Process requests
-        $action = $par ? $par : $request->getVal('action', $par);
+        $action = $par ? $par : $this->getRequest()->getVal('action', $par);
+
         switch ( $action ) {
         case 'submitAssignment':
             $this->doAssignmentSubmit();
@@ -55,6 +54,8 @@ class SpecialGrades extends SpecialPage {
 
         $this->showUsers();
         $this->showGradeGrid();
+
+        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
