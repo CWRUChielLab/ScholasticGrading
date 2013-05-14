@@ -38,36 +38,34 @@ class SpecialGrades extends SpecialPage {
         $action = $par ? $par : $this->getRequest()->getVal('action', $par);
 
         switch ( $action ) {
-        case 'submitAssignment':
-        case 'submitEvaluation':
+        case 'submit':
             if ( !$this->canModify( $this->getOutput() ) ) {
                 # Error msg added by canModify()
             } elseif ( !$this->getRequest()->wasPosted() || !$this->getUser()->matchEditToken( $this->getRequest()->getVal( 'wpEditToken' ) ) ) {
                 # Prevent cross-site request forgeries
                 $this->getOutput()->addWikiMsg( 'sessionfailure' );
             } else {
-                switch ( $action ) {
-                case 'submitAssignment':
+                switch ( $this->getRequest()->getVal('wpScholasticGradingAction') ) {
+                case 'addAssignment':
                     $this->doAssignmentSubmit();
                     break;
-                case 'submitEvaluation':
+                case 'addEvaluation':
                     $this->doEvaluationSubmit();
                     break;
                 }
             }
             break;
+        default:
+            $this->showAssignmentForm();
+            $this->showAssignments();
+
+            $this->showEvaluationForm();
+            $this->showEvaluations();
+
+            $this->showUsers();
+            $this->showGradeGrid();
+            break;
         }
-
-        $this->showAssignmentForm();
-        $this->showAssignments();
-
-        $this->showEvaluationForm();
-        $this->showEvaluations();
-
-        $this->showUsers();
-        $this->showGradeGrid();
-
-        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
@@ -114,6 +112,8 @@ class SpecialGrades extends SpecialPage {
             $log = new LogPage('grades', false);
             $log->addEntry('addAssignment', $this->getTitle(), $assignmentTitle);
         }
+
+        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
@@ -143,6 +143,8 @@ class SpecialGrades extends SpecialPage {
             $log = new LogPage('grades', false);
             $log->addEntry('addEvaluation', $this->getTitle(), 'User ' . $evaluationUser . ' for ' . $evaluationAssignment);
         }
+
+        $this->getOutput()->returnToMain(false, $this->getTitle());
     }
 
 
@@ -152,7 +154,7 @@ class SpecialGrades extends SpecialPage {
         $out .= Xml::fieldset( "Create a new assignment",
             Html::rawElement('form', array('method' => 'post',
                 'action' => $this->getTitle()->getLocalUrl(
-                    array('action' => 'submitAssignment'))),
+                    array('action' => 'submit'))),
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
@@ -172,7 +174,8 @@ class SpecialGrades extends SpecialPage {
                     )
                 ) .
                 Xml::submitButton('Create assignment') .
-                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
+                Html::hidden('wpScholasticGradingAction', 'addAssignment')
             )
         );
         $this->getOutput()->addHTML($out);
@@ -185,7 +188,7 @@ class SpecialGrades extends SpecialPage {
         $out .= Xml::fieldset( "Create a new evaluation",
             Html::rawElement('form', array('method' => 'post',
                 'action' => $this->getTitle()->getLocalUrl(
-                    array('action' => 'submitEvaluation'))),
+                    array('action' => 'submit'))),
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
@@ -209,7 +212,8 @@ class SpecialGrades extends SpecialPage {
                     )
                 ) .
                 Xml::submitButton('Create evaluation') .
-                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
+                Html::hidden('wpScholasticGradingAction', 'addEvaluation')
             )
         );
         $this->getOutput()->addHTML($out);
