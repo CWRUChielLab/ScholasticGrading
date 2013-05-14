@@ -39,11 +39,15 @@ class SpecialGrades extends SpecialPage {
 
         switch ( $action ) {
         case 'addassignment':
-            $this->showAssignmentForm();
+            if ( $this->canModify( $this->getOutput() ) ) {
+                $this->showAssignmentForm();
+            }
             $this->getOutput()->returnToMain(false, $this->getTitle());
             break;
         case 'addevaluation':
-            $this->showEvaluationForm();
+            if ( $this->canModify( $this->getOutput() ) ) {
+                $this->showEvaluationForm();
+            }
             $this->getOutput()->returnToMain(false, $this->getTitle());
             break;
         case 'submit':
