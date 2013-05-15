@@ -34,6 +34,12 @@ $messages['en'] = array(
     'log-description-grades' => "Below is a list of the most recent grade changes made to [[Special:Grades]].",
     'logentry-grades-addAssignment' => "$1 {{GENDER:$2|added}} an assignment to $3",
     'logentry-grades-addEvaluation' => "$1 {{GENDER:$2|added}} an evaluation to $3",
+    'logentry-grades-editAssignment' => "$1 {{GENDER:$2|updated}} assignment \"$4\" ($5) on $3",
+    #   $1: user name with links
+    #   $2: user name
+    #   $3: page title
+    #   $4: param1
+    #   $5: param2
 );
 
 
@@ -60,8 +66,5 @@ $messages['qqq'] = array(
     'log-description-grades' => "Description shown on Special:Log/grades",
     'logentry-grades-addAssignment' => "Appears on [[Special:Log/grades]] when a new assignment is created",
     'logentry-grades-addEvaluation' => "Appears on [[Special:Log/grades]] when a new evaluation is created",
-    #   $1: user name with links
-    #   $2: user name
-    #   $3: page title
-    #   $4: param1 ...
+    'logentry-grades-editAssignment' => "Appears on [[Special:Log/grades]] when an assignment is updated",
 );
