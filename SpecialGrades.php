@@ -124,10 +124,10 @@ class SpecialGrades extends SpecialPage {
             if ( $dbw->affectedRows() === 0 ) {
                 $this->getOutput()->addWikiText('Database unchanged.');
             } else {
-                $this->getOutput()->addWikiText('\'\'\'"' . $assignmentTitle . '" added!\'\'\'');
+                $this->getOutput()->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') added!\'\'\'');
 
                 $log = new LogPage('grades', false);
-                $log->addEntry('addAssignment', $this->getTitle(), $assignmentTitle);
+                $log->addEntry('addAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
             }
         } else {
             # Check whether assignment exists
@@ -145,7 +145,7 @@ class SpecialGrades extends SpecialPage {
                 if ( $dbw->affectedRows() === 0 ) {
                     $this->getOutput()->addWikiText('Database unchanged.');
                 } else {
-                    $this->getOutput()->addWikiText('\'\'\'"' . $assignmentTitle . '" updated!\'\'\'');
+                    $this->getOutput()->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
 
                     $log = new LogPage('grades', false);
                     $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
@@ -181,10 +181,11 @@ class SpecialGrades extends SpecialPage {
         } else {
             $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
             $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-            $this->getOutput()->addWikiText('\'\'\'Score for user ' . $user->user_name . ' for "' . $assignment->sga_title . '" added!\'\'\'');
+            $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
+            $this->getOutput()->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignmentDate . ') added!\'\'\'');
 
             $log = new LogPage('grades', false);
-            $log->addEntry('addEvaluation', $this->getTitle(), 'user ' . $user->user_name . ', assignment "' . $assignment->sga_title . '"');
+            $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
         }
     }
 
@@ -229,6 +230,7 @@ class SpecialGrades extends SpecialPage {
             if ( $assignments->numRows() > 0 ) {
                 # Edit the existing assignment
                 $assignment = $assignments->next();
+                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
                 $out = '';
                 $out .= Xml::fieldset( "Edit an existing assignment",
                     Html::rawElement('form', array('method' => 'post',
@@ -249,7 +251,7 @@ class SpecialGrades extends SpecialPage {
                             ) .
                             Html::rawElement('tr', null,
                                 Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                                Html::rawElement('td', null, Xml::input('assignment-date', 20, date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date)), array('id' => 'assignment-date')))
+                                Html::rawElement('td', null, Xml::input('assignment-date', 20, $assignmentDate, array('id' => 'assignment-date')))
                             )
                         ) .
                         Xml::submitButton('Apply changes') .
