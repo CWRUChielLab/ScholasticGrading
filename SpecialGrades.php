@@ -67,8 +67,6 @@ class SpecialGrades extends SpecialPage {
         default:
             $this->getOutput()->addHTML(Html::rawElement('p', null,
                 Linker::linkKnown($this->getTitle('assignment'), 'Create a new assignment')) . "\n");
-            $this->getOutput()->addHTML(Html::rawElement('p', null,
-                Linker::linkKnown($this->getTitle('evaluation'), 'Create a new evaluation')) . "\n");
             $this->showGradeGrid();
             $this->showAssignments();
             $this->showEvaluations();
@@ -292,86 +290,99 @@ class SpecialGrades extends SpecialPage {
 
     # Show the evaluation creation form
     public function showEvaluationForm ( $user_id = false, $assignment_id = false ) {
-        # Check whether evaluation exists
         $dbr = wfGetDB(DB_SLAVE);
-        $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
-        if ( $evaluations->numRows() == 0 ) {
-            # Create a new evaluation
-            $out = '';
-            $out .= Xml::fieldset( "Create a new evaluation",
-                Html::rawElement('form', array('method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(
-                        array('action' => 'submit'))),
-                     Html::rawElement('table', null,
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-user', 20, $user_id, array('id' => 'evaluation-user')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-assignment', 20, $assignment_id, array('id' => 'evaluation-assignment')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-score', 20, '0', array('id' => 'evaluation-score')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
-                            Html::rawElement('td', null, Xml::check('evaluation-enabled', true, array('id' => 'evaluation-enabled')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-date', 20, '', array('id' => 'evaluation-date')))
-                        )
-                    ) .
-                    Xml::submitButton('Create evaluation') .
-                    Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                    Html::hidden('wpScholasticGradingAction', 'evaluation')
-                )
-            );
-            $this->getOutput()->addHTML($out);
-        } else {
-            # Edit the existing evaluation
-            $evaluation = $evaluations->next();
-            $user = $dbr->select('user', '*', array('user_id' => $user_id))->next();
-            $assignment = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignment_id))->next();
-            $evaluationDate = date('Y-m-d', wfTimestamp(TS_UNIX, $evaluation->sge_date));
+
+        # Check whether user and assignment exist
+        $users = $dbr->select('user', '*', array('user_id' => $user_id));
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignment_id));
+        if ( $users->numRows() > 0 && $assignments->numRows() > 0 ) {
+            $user = $users->next();
+            $assignment = $assignments->next();
             $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
-            $out = '';
-            $out .= Xml::fieldset( "Edit an existing evaluation",
-                Html::rawElement('form', array('method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(
-                        array('action' => 'submit'))),
-                     Html::rawElement('table', null,
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
-                            Html::rawElement('td', null, $user->user_name)
+
+            # Check whether evaluation exists
+            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
+            if ( $evaluations->numRows() == 0 ) {
+                # Create a new evaluation
+                $out = '';
+                $out .= Xml::fieldset( "Create a new evaluation",
+                    Html::rawElement('form', array('method' => 'post',
+                        'action' => $this->getTitle()->getLocalUrl(
+                            array('action' => 'submit'))),
+                         Html::rawElement('table', null,
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
+                                Html::rawElement('td', null, $user->user_name)
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
+                                Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignmentDate . ')')
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
+                                Html::rawElement('td', null, Xml::input('evaluation-score', 20, '0', array('id' => 'evaluation-score')))
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
+                                Html::rawElement('td', null, Xml::check('evaluation-enabled', true, array('id' => 'evaluation-enabled')))
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
+                                Html::rawElement('td', null, Xml::input('evaluation-date', 20, '', array('id' => 'evaluation-date')))
+                            )
                         ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
-                            Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignmentDate . ')')
+                        Xml::submitButton('Create evaluation') .
+                        Html::hidden('evaluation-user', $user_id) .
+                        Html::hidden('evaluation-assignment', $assignment_id) .
+                        Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
+                        Html::hidden('wpScholasticGradingAction', 'evaluation')
+                    )
+                );
+                $this->getOutput()->addHTML($out);
+            } else {
+                $evaluation = $evaluations->next();
+                $evaluationDate = date('Y-m-d', wfTimestamp(TS_UNIX, $evaluation->sge_date));
+
+                # Edit the existing evaluation
+                $out = '';
+                $out .= Xml::fieldset( "Edit an existing evaluation",
+                    Html::rawElement('form', array('method' => 'post',
+                        'action' => $this->getTitle()->getLocalUrl(
+                            array('action' => 'submit'))),
+                         Html::rawElement('table', null,
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
+                                Html::rawElement('td', null, $user->user_name)
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
+                                Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignmentDate . ')')
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
+                                Html::rawElement('td', null, Xml::input('evaluation-score', 20, $evaluation->sge_score, array('id' => 'evaluation-score')))
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
+                                Html::rawElement('td', null, Xml::check('evaluation-enabled', $evaluation->sge_enabled, array('id' => 'evaluation-enabled')))
+                            ) .
+                            Html::rawElement('tr', null,
+                                Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
+                                Html::rawElement('td', null, Xml::input('evaluation-date', 20, $evaluationDate, array('id' => 'evaluation-date')))
+                            )
                         ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-score', 20, $evaluation->sge_score, array('id' => 'evaluation-score')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
-                            Html::rawElement('td', null, Xml::check('evaluation-enabled', $evaluation->sge_enabled, array('id' => 'evaluation-enabled')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-date', 20, $evaluationDate, array('id' => 'evaluation-date')))
-                        )
-                    ) .
-                    Xml::submitButton('Apply changes') .
-                    Html::hidden('evaluation-user', $user_id) .
-                    Html::hidden('evaluation-assignment', $assignment_id) .
-                    Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                    Html::hidden('wpScholasticGradingAction', 'evaluation')
-                )
-            );
-            $this->getOutput()->addHTML($out);
+                        Xml::submitButton('Apply changes') .
+                        Html::hidden('evaluation-user', $user_id) .
+                        Html::hidden('evaluation-assignment', $assignment_id) .
+                        Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
+                        Html::hidden('wpScholasticGradingAction', 'evaluation')
+                    )
+                );
+                $this->getOutput()->addHTML($out);
+            }
+        } else {
+            # Either the user or assignment does not exist
+            $this->getOutput()->addWikiText('Either user (id=' . $user_id . ') or assignment (id=' . $assignment_id . ') does not exist.');
         }
     }
 
