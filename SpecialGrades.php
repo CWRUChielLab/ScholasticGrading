@@ -29,23 +29,18 @@ class SpecialGrades extends SpecialPage {
         $this->getOutput()->addModules( 'ext.ScholasticGrading.evaluation-date' );
         $this->getOutput()->addModules( 'ext.ScholasticGrading.vertical-text' );
 
-        # Do stuff
-        # ...
-        $wikitext = 'Hello, ' . $this->getUser() . '!';
-        $this->getOutput()->addWikiText($wikitext);
-
         # Process requests
         $request = $this->getRequest();
         $action = $par ? $par : $request->getVal('action', $par);
 
         switch ( $action ) {
-        case 'addassignment':
+        case 'assignment':
             if ( $this->canModify( $this->getOutput() ) ) {
                 $this->showAssignmentForm( $request->getVal('id', false) );
             }
             $this->getOutput()->returnToMain(false, $this->getTitle());
             break;
-        case 'addevaluation':
+        case 'evaluation':
             if ( $this->canModify( $this->getOutput() ) ) {
                 $this->showEvaluationForm();
             }
@@ -70,10 +65,10 @@ class SpecialGrades extends SpecialPage {
             $this->getOutput()->returnToMain(false, $this->getTitle());
             break;
         default:
-            $addAssignmentLink = Linker::linkKnown($this->getTitle('addassignment'), 'Add a new assignment');
-            $addEvaluationLink = Linker::linkKnown($this->getTitle('addevaluation'), 'Add a new evaluation');
-            $this->getOutput()->addHTML("<p>" . $addAssignmentLink . "</p>\n");
-            $this->getOutput()->addHTML("<p>" . $addEvaluationLink . "</p>\n");
+            $this->getOutput()->addHTML(Html::rawElement('p', null,
+                Linker::linkKnown($this->getTitle('assignment'), 'Create a new assignment')) . "\n");
+            $this->getOutput()->addHTML(Html::rawElement('p', null,
+                Linker::linkKnown($this->getTitle('evaluation'), 'Create a new evaluation')) . "\n");
             $this->showGradeGrid();
             $this->showAssignments();
             $this->showEvaluations();
@@ -330,7 +325,7 @@ class SpecialGrades extends SpecialPage {
             $out .= Html::element('th', array('style' => 'text-align: right'), date('D m/d', wfTimestamp(TS_UNIX, $assignment->sga_date)));
             $out .= Html::rawElement('th', null,
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
-                    array('action' => 'addassignment', 'id' => $assignment->sga_id)));
+                    array('action' => 'assignment', 'id' => $assignment->sga_id)));
             foreach ( $users as $user ) {
                 $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
                     array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
