@@ -328,7 +328,9 @@ class SpecialGrades extends SpecialPage {
         foreach ( $assignments as $assignment ) {
             $out .= Html::openElement('tr');
             $out .= Html::element('th', array('style' => 'text-align: right'), date('D m/d', wfTimestamp(TS_UNIX, $assignment->sga_date)));
-            $out .= Html::element('th', null, $assignment->sga_title);
+            $out .= Html::rawElement('th', null,
+                Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
+                    array('action' => 'addassignment', 'id' => $assignment->sga_id)));
             foreach ( $users as $user ) {
                 $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
                     array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
