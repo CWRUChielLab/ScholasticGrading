@@ -334,93 +334,75 @@ class SpecialGrades extends SpecialPage {
         # Load JavaScript resources
         $page->addModules('ext.ScholasticGrading.assignment-date');
 
-        if ( !$id ) {
+        # Set default parameters for creating a new assignment
+        $fieldsetTitle = 'Create a new assignment';
+        $submitButtonLabel = 'Create assignment';
+        $assignmentTitleDefault = '';
+        $assignmentValueDefault = 0;
+        $assignmentEnabledDefault = true;
+        $assignmentDateDefault = '';
 
-            # Create a new assignment
-            $content = Xml::fieldset("Create a new assignment",
-                Html::rawElement('form',
-                    array(
-                        'method' => 'post',
-                        'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
-                     ),
-                     Html::rawElement('table', null,
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
-                            Html::rawElement('td', null, Xml::input('assignment-title', 20, '', array('id' => 'assignment-title')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Point value:', 'assignment-value')) .
-                            Html::rawElement('td', null, Xml::input('assignment-value', 20, '0', array('id' => 'assignment-value')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
-                            Html::rawElement('td', null, Xml::check('assignment-enabled', true, array('id' => 'assignment-enabled')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                            Html::rawElement('td', null, Xml::input('assignment-date', 20, '', array('id' => 'assignment-date')))
-                        )
-                    ) .
-                    Xml::submitButton('Create assignment') .
-                    Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                    Html::hidden('wpScholasticGradingAction', 'assignment')
-                )
-            );
-
-            $page->addHTML($content);
-
-        } else {
+        if ( $id ) {
 
             # Check whether assignment exists
             $dbr = wfGetDB(DB_SLAVE);
             $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $id));
-            if ( $assignments->numRows() > 0 ) {
-
-                # Edit the existing assignment
-                $assignment = $assignments->next();
-                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
-
-                $content = Xml::fieldset("Edit an existing assignment",
-                    Html::rawElement('form',
-                        array(
-                            'method' => 'post',
-                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
-                        ),
-                        Html::rawElement('table', null,
-                            Html::rawElement('tr', null,
-                                Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
-                                Html::rawElement('td', null, Xml::input('assignment-title', 20, $assignment->sga_title, array('id' => 'assignment-title')))
-                            ) .
-                            Html::rawElement('tr', null,
-                                Html::rawElement('td', null, Xml::label('Point value:', 'assignment-value')) .
-                                Html::rawElement('td', null, Xml::input('assignment-value', 20, $assignment->sga_value, array('id' => 'assignment-value')))
-                            ) .
-                            Html::rawElement('tr', null,
-                                Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
-                                Html::rawElement('td', null, Xml::check('assignment-enabled', $assignment->sga_enabled, array('id' => 'assignment-enabled')))
-                            ) .
-                            Html::rawElement('tr', null,
-                                Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                                Html::rawElement('td', null, Xml::input('assignment-date', 20, $assignmentDate, array('id' => 'assignment-date')))
-                            )
-                        ) .
-                        Xml::submitButton('Apply changes') .
-                        Html::hidden('assignment-id', $id) .
-                        Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                        Html::hidden('wpScholasticGradingAction', 'assignment')
-                    )
-                );
-
-                $page->addHTML($content);
-
-            } else {
+            if ( $assignments->numRows() === 0 ) {
 
                 # The assignment does not exist
                 $page->addWikiText('Assignment (id=' . $id . ') does not exist.');
+                return;
+
+            } else {
+
+                # The assignment exists
+                $assignment = $assignments->next();
+
+                # Use its values as default parameters
+                $fieldsetTitle = 'Edit an existing assignment';
+                $submitButtonLabel = 'Apply changes';
+                $assignmentTitleDefault = $assignment->sga_title;
+                $assignmentValueDefault = $assignment->sga_value;
+                $assignmentEnabledDefault = $assignment->sga_enabled;
+                $assignmentDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
 
             }
 
         }
+
+        # Build the assignment form
+        $content = Xml::fieldset($fieldsetTitle,
+            Html::rawElement('form',
+                array(
+                    'method' => 'post',
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+                 ),
+                 Html::rawElement('table', null,
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
+                        Html::rawElement('td', null, Xml::input('assignment-title', 20, $assignmentTitleDefault, array('id' => 'assignment-title')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Point value:', 'assignment-value')) .
+                        Html::rawElement('td', null, Xml::input('assignment-value', 20, $assignmentValueDefault, array('id' => 'assignment-value')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
+                        Html::rawElement('td', null, Xml::check('assignment-enabled', $assignmentEnabledDefault, array('id' => 'assignment-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
+                        Html::rawElement('td', null, Xml::input('assignment-date', 20, $assignmentDateDefault, array('id' => 'assignment-date')))
+                    )
+                ) .
+                Xml::submitButton($submitButtonLabel) .
+                Html::hidden('assignment-id', $id) .
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
+                Html::hidden('wpScholasticGradingAction', 'assignment')
+            )
+        );
+
+        $page->addHTML($content);
 
     } /* end showAssignmentForm */
 
