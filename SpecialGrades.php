@@ -54,7 +54,6 @@ class SpecialGrades extends SpecialPage {
             }
 
             $page->returnToMain(false, $this->getTitle());
-
             break;
 
         case 'evaluation':
@@ -67,7 +66,6 @@ class SpecialGrades extends SpecialPage {
             }
 
             $page->returnToMain(false, $this->getTitle());
-
             break;
 
         case 'submit':
@@ -77,21 +75,14 @@ class SpecialGrades extends SpecialPage {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
 
                     switch ( $request->getVal('wpScholasticGradingAction') ) {
-
                     case 'assignment':
-
                         $this->submitAssignment(
                             $request->getVal('assignment-id')
                         );
-
                         break;
-
                     case 'evaluation':
-
                         $this->submitEvaluation();
-
                         break;
-
                     }
 
                 } else {
@@ -104,7 +95,6 @@ class SpecialGrades extends SpecialPage {
             }
 
             $page->returnToMain(false, $this->getTitle());
-
             break;
 
         default:
@@ -113,11 +103,9 @@ class SpecialGrades extends SpecialPage {
                 Linker::linkKnown($this->getTitle('assignment'), 'Create a new assignment')) . "\n");
 
             $this->showGradeTable();
-
             //$this->showAssignments();
             //$this->showEvaluations();
             //$this->showUsers();
-
             break;
 
         } /* end switch action */
