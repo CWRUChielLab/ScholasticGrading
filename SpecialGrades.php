@@ -466,6 +466,7 @@ class SpecialGrades extends SpecialPage {
                 $evaluationDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $evaluation->sge_date));
 
             }
+
         }
 
         # Build the evaluation form
