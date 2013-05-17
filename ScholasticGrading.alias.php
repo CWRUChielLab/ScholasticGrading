@@ -3,17 +3,19 @@
 /**
  * Aliases for ScholasticGrading
  *
- * @file
- * @ingroup Extensions
+ * @package ScholasticGrading
  */
 
 
 $specialPageAliases = array();
 
 
-/** English
- * @author Jeffrey Gill
+/**
+ * English
+ *
+ * @author Jeffrey Gill <jeffrey.p.gill@gmail.com>
  */
+
 $specialPageAliases['en'] = array(
     'Grades' => array('Grades'),
 );

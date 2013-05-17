@@ -3,9 +3,7 @@
 /**
  * ScholasticGrading extension for MediaWiki
  *
- * @file
- * @ingroup Extensions
- *
+ * @package ScholasticGrading
  * @author Jeffrey Gill <jeffrey.p.gill@gmail.com>
  */
 
@@ -55,7 +53,7 @@ $wgLogRestrictions['grades'] = 'editgrades';
 $wgLogActionsHandlers['grades/*'] = 'LogFormatter';
 
 
-# Register JavaScript resources
+# Register JavaScript and CSS resources
 $wgResourceModules['ext.ScholasticGrading.assignment-date'] = array(
     'localBasePath' => dirname(__FILE__),
     'scripts' => 'modules/ext.ScholasticGrading.assignment-date.js',

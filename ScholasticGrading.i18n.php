@@ -3,17 +3,19 @@
 /**
  * Internationalization for ScholasticGrading
  *
- * @file
- * @ingroup Extensions
+ * @package ScholasticGrading
  */
 
 
 $messages = array();
 
 
-/** English
- * @author Jeffrey Gill
+/**
+ * English
+ *
+ * @author Jeffrey Gill <jeffrey.p.gill@gmail.com>
  */
+
 $messages['en'] = array(
     # General messages
     'grades' => "Grades",
@@ -44,9 +46,12 @@ $messages['en'] = array(
 );
 
 
-/** Message documentation
- * @author Jeffrey Gill
+/**
+ * Message documentation
+ * 
+ * @author Jeffrey Gill <jeffrey.p.gill@gmail.com>
  */
+
 $messages['qqq'] = array(
     # General
     'grades' => "The name of the extension's entry in Special:SpecialPages and the title of the special page",
