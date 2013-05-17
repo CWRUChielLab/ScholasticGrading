@@ -415,7 +415,6 @@ class SpecialGrades extends SpecialPage {
      * not exist, the form will be prepared for evaluation creation.
      * If the user id and assignment id are keys for an existing evaluation,
      * the form will be prepared for evaluation modification.
-     * The parameters are required.
      *
      * @param int|bool $user_id the user id of an evaluation
      * @param int|bool $assignment_id the assignment id of an evaluation
