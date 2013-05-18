@@ -521,6 +521,8 @@ class SpecialGrades extends SpecialPage {
     public function showGradeTable () {
 
         $page = $this->getOutput();
+        $pointsEarned = array();
+        $pointTotal = array();
 
         # Load CSS resources
         $page->addModules('ext.ScholasticGrading.vertical-text');
@@ -543,6 +545,10 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::rawElement('th', array('class' => 'vertical'),
                 Html::element('div', array('class' => 'vertical'), $user->user_real_name)
             );
+
+            # Initialize the points earned and the point total for this student
+            $pointsEarned[$user->user_name] = 0;
+            $pointTotal[$user->user_name] = 0;
         }
         $content .= Html::closeElement('tr') . "\n";
 
@@ -580,6 +586,10 @@ class SpecialGrades extends SpecialPage {
 
                     }
 
+                    # Increment the points earned and the point total for this student
+                    $pointsEarned[$user->user_name] += $evaluation->sge_score;
+                    $pointTotal[$user->user_name] += $assignment->sga_value;
+
                 } else {
 
                     # An evaluation does not exist for this (user,assignment) combination
@@ -594,6 +604,16 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::closeElement('tr') . "\n";
 
         } /* end for each assignment */
+
+        # Report point totals for each student
+        $content .= Html::openElement('tr');
+        $content .= Html::element('th', null, '') . Html::element('th', null, 'TOTAL');
+        foreach ( $users as $user ) {
+            $content .= Html::element('td', null,
+                $pointsEarned[$user->user_name] . ' / ' . $pointTotal[$user->user_name]
+            );
+        }
+        $content .= Html::closeElement('tr') . "\n";
 
         $content .= Html::closeElement('table') . "\n";
 
