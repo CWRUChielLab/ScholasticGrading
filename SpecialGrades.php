@@ -487,7 +487,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-score', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')))
+                        Html::rawElement('td', null, Xml::input('evaluation-score', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
