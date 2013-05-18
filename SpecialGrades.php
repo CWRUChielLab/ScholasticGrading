@@ -340,7 +340,7 @@ class SpecialGrades extends SpecialPage {
         $assignmentTitleDefault = '';
         $assignmentValueDefault = 0;
         $assignmentEnabledDefault = true;
-        $assignmentDateDefault = '';
+        $assignmentDateDefault = date('Y-m-d');
 
         if ( $id ) {
 
@@ -428,13 +428,6 @@ class SpecialGrades extends SpecialPage {
         # Load JavaScript resources
         $page->addModules('ext.ScholasticGrading.evaluation-date');
 
-        # Set default parameters for creating a new evaluation
-        $fieldsetTitle = 'Create a new evaluation';
-        $submitButtonLabel = 'Create evaluation';
-        $evaluationScoreDefault = 0;
-        $evaluationEnabledDefault = true;
-        $evaluationDateDefault = '';
-
         # Check whether user and assignment exist
         $users = $dbr->select('user', '*', array('user_id' => $user_id));
         $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignment_id));
@@ -453,7 +446,17 @@ class SpecialGrades extends SpecialPage {
 
             # Check whether evaluation exists
             $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
-            if ( $evaluations->numRows() > 0 ) {
+            if ( $evaluations->numRows() === 0 ) {
+
+                # The evaluation does not exist
+                # Set default parameters for creating a new evaluation
+                $fieldsetTitle = 'Create a new evaluation';
+                $submitButtonLabel = 'Create evaluation';
+                $evaluationScoreDefault = 0;
+                $evaluationEnabledDefault = true;
+                $evaluationDateDefault = $assignmentDate;
+
+            } else {
 
                 # The evaluation exists
                 $evaluation = $evaluations->next();
