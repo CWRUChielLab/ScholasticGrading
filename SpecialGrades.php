@@ -362,7 +362,7 @@ class SpecialGrades extends SpecialPage {
                 $fieldsetTitle = 'Edit an existing assignment';
                 $submitButtonLabel = 'Apply changes';
                 $assignmentTitleDefault = $assignment->sga_title;
-                $assignmentValueDefault = $assignment->sga_value;
+                $assignmentValueDefault = (float)$assignment->sga_value;
                 $assignmentEnabledDefault = $assignment->sga_enabled;
                 $assignmentDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
 
@@ -461,7 +461,7 @@ class SpecialGrades extends SpecialPage {
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing evaluation';
                 $submitButtonLabel = 'Apply changes';
-                $evaluationScoreDefault = $evaluation->sge_score;
+                $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
                 $evaluationDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $evaluation->sge_date));
 
@@ -574,7 +574,7 @@ class SpecialGrades extends SpecialPage {
 
                         # The assignment is extra credit
                         $content .= Html::rawElement('td', null, 
-                            Linker::linkKnown($this->getTitle(), '+' . $evaluation->sge_score, array(),
+                            Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
                                 array('action' => 'evaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     } else {
