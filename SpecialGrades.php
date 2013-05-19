@@ -52,7 +52,7 @@ class SpecialGrades extends SpecialPage {
 
         case 'assignment':
 
-            if ( $this->canModify($page) ) {
+            if ( $this->canModify(true) ) {
                 $this->showAssignmentForm(
                     $request->getVal('id', false)
                 );
@@ -63,7 +63,7 @@ class SpecialGrades extends SpecialPage {
 
         case 'evaluation':
 
-            if ( $this->canModify($page) ) {
+            if ( $this->canModify(true) ) {
                 $this->showEvaluationForm(
                     $request->getVal('user', false),
                     $request->getVal('assignment', false)
@@ -75,7 +75,7 @@ class SpecialGrades extends SpecialPage {
 
         case 'submit':
 
-            if ( $this->canModify($page) ) {
+            if ( $this->canModify(true) ) {
 
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
 
@@ -145,7 +145,7 @@ class SpecialGrades extends SpecialPage {
 
         return $allTablesExist;
 
-    }
+    } /* end allTablesExist */
 
 
     /**
@@ -153,16 +153,18 @@ class SpecialGrades extends SpecialPage {
      *
      * Determines whether the user has privileges to modify assignments and grades
      *
-     * @param OutputPage|bool $page where errors should be printed
+     * @param bool $printErrors whether to display error messages on the page
      * @return bool whether the user can modify assignments and grades
      */
 
-    public function canModify ( $page = false ) {
+    public function canModify ( $printErrors = false ) {
+
+        $page = $this->getOutput();
 
         if ( !$this->getUser()->isAllowed('editgrades') ) {
 
             # The user does not have the correct privileges
-            if ( $page ) {
+            if ( $printErrors ) {
                 throw new PermissionsError('editgrades');
             }
             return false;
@@ -170,7 +172,7 @@ class SpecialGrades extends SpecialPage {
         } elseif ( wfReadOnly() ) {
 
             # The database is in read-only mode
-            if ( $page ) {
+            if ( $printErrors ) {
                 $page->readOnlyPage();
             }
             return false;
