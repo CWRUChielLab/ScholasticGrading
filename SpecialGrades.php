@@ -38,6 +38,11 @@ class SpecialGrades extends SpecialPage {
         # Set the time zone so assignment and evaluation dates are displayed correctly
         date_default_timezone_set('UTC');
 
+        # Check whether database tables exist
+        if ( !$this->allTablesExist() ) {
+            return;
+        }
+
         # Process requests
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -109,6 +114,38 @@ class SpecialGrades extends SpecialPage {
         } /* end switch action */
 
     } /* end execute */
+
+
+    /**
+     * Check whether all database tables exist
+     *
+     * Determines whether the database tables used by the extension exist
+     * and provides warnings if any do not.
+     */
+
+    public function allTablesExist () {
+
+        $page = $this->getOutput();
+        $allTablesExist = true;
+        $dbr = wfGetDB(DB_SLAVE);
+
+        if ( !$dbr->tableExists('scholasticgrading_assignment') ) {
+            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_assignment does not exist.') . "\n");
+            $allTablesExist = false;
+        }
+
+        if ( !$dbr->tableExists('scholasticgrading_evaluation') ) {
+            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_evaluation does not exist.') . "\n");
+            $allTablesExist = false;
+        }
+
+        if ( !$allTablesExist ) {
+            $page->addHTML(Html::element('p', null, 'Run maintenance/update.php.') . "\n");
+        }
+
+        return $allTablesExist;
+
+    }
 
 
     /**
