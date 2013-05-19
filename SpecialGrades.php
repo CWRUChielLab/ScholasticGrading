@@ -76,9 +76,7 @@ class SpecialGrades extends SpecialPage {
 
                     switch ( $request->getVal('wpScholasticGradingAction') ) {
                     case 'assignment':
-                        $this->submitAssignment(
-                            $request->getVal('assignment-id')
-                        );
+                        $this->submitAssignment();
                         break;
                     case 'evaluation':
                         $this->submitEvaluation();
@@ -151,25 +149,50 @@ class SpecialGrades extends SpecialPage {
      * Submit an assignment creation/modification request
      *
      * Processes an assignment form and modifies the database.
-     * If no assignment id is provided, the function will create a new assignment.
-     * If a valid assignment id is provided, the function will modify that assignment.
-     * If an invalid assignment id is provided, report an error.
-     *
-     * @param int|bool $id an assignment id
+     * If the (id) key provided in the request corresponds to an
+     * existing assignment, the function will modify that assignment.
+     * Otherwise, the function will create a new assignment.
      */
 
-    public function submitAssignment ( $id = false ) {
+    public function submitAssignment () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
 
+        $assignmentID      = $request->getVal('assignment-id');
         $assignmentTitle   = $request->getVal('assignment-title');
         $assignmentValue   = $request->getVal('assignment-value');
         $assignmentEnabled = $request->getCheck('assignment-enabled') ? 1 : 0;
         $assignmentDate    = $request->getVal('assignment-date');
 
-        if ( !$id ) {
+        # Check whether assignment exists
+        $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
+        if ( $assignments->numRows() > 0 ) {
+
+            # Edit the existing assignment
+            $dbw->update('scholasticgrading_assignment', array(
+                'sga_title'   => $assignmentTitle,
+                'sga_value'   => $assignmentValue,
+                'sga_enabled' => $assignmentEnabled,
+                'sga_date'    => $dbw->timestamp($assignmentDate . ' 00:00:00'),
+            ), array('sga_id' => $assignmentID));
+
+            # Report success and create a new log entry
+            if ( $dbw->affectedRows() === 0 ) {
+
+                $page->addWikiText('Database unchanged.');
+
+            } else {
+
+                $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
+
+                $log = new LogPage('grades', false);
+                $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
+
+            }
+
+        } else {
 
             # Create a new assignment
             $dbw->insert('scholasticgrading_assignment', array(
@@ -193,41 +216,6 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-        } else {
-
-            # Check whether assignment exists
-            $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $id));
-            if ( $assignments->numRows() > 0 ) {
-
-                # Edit the existing assignment
-                $dbw->update('scholasticgrading_assignment', array(
-                    'sga_title'   => $assignmentTitle,
-                    'sga_value'   => $assignmentValue,
-                    'sga_enabled' => $assignmentEnabled,
-                    'sga_date'    => $dbw->timestamp($assignmentDate . ' 00:00:00'),
-                ), array('sga_id' => $id));
-
-                # Report success and create a new log entry
-                if ( $dbw->affectedRows() === 0 ) {
-
-                    $page->addWikiText('Database unchanged.');
-
-                } else {
-
-                    $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
-
-                }
-
-            } else {
-
-                # The assignment does not exist
-                $page->addWikiText('Assignment id=' . $id . ' does not exist.');
-
-            }
-
         }
 
     } /* end submitAssignment */
@@ -237,8 +225,9 @@ class SpecialGrades extends SpecialPage {
      * Submit an evaluation creation/modification request
      *
      * Processes an evaluation form and modifies the database.
-     * The (user,assignment) key for the evaluation is provided in
-     * the request whether the evaluation already exists or not.
+     * If the (user,assignment) key provided in the request corresponds to an
+     * existing evaluation, the function will modify that evaluation.
+     * Otherwise, the function will create a new evaluation.
      */
 
     public function submitEvaluation () {
@@ -255,36 +244,7 @@ class SpecialGrades extends SpecialPage {
 
         # Check whether evaluation exists
         $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
-        if ( $evaluations->numRows() === 0 ) {
-
-            # Create a new evaluation
-            $dbw->insert('scholasticgrading_evaluation', array(
-                'sge_user_id'       => $evaluationUser,
-                'sge_assignment_id' => $evaluationAssignment,
-                'sge_score'         => $evaluationScore,
-                'sge_enabled'       => $evaluationEnabled,
-                'sge_date'          => $dbw->timestamp($evaluationDate . ' 00:00:00'),
-            ));
-
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
-
-                $page->addWikiText('Database unchanged.');
-
-            } else {
-
-                $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date)) ;
-
-                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignmentDate . ') added!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
-
-            }
-
-        } else {
+        if ( $evaluations->numRows() > 0 ) {
 
             # Edit the existing evaluation
             $dbw->update('scholasticgrading_evaluation', array(
@@ -308,6 +268,35 @@ class SpecialGrades extends SpecialPage {
 
                 $log = new LogPage('grades', false);
                 $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
+
+            }
+
+        } else {
+
+            # Create a new evaluation
+            $dbw->insert('scholasticgrading_evaluation', array(
+                'sge_user_id'       => $evaluationUser,
+                'sge_assignment_id' => $evaluationAssignment,
+                'sge_score'         => $evaluationScore,
+                'sge_enabled'       => $evaluationEnabled,
+                'sge_date'          => $dbw->timestamp($evaluationDate . ' 00:00:00'),
+            ));
+
+            # Report success and create a new log entry
+            if ( $dbw->affectedRows() === 0 ) {
+
+                $page->addWikiText('Database unchanged.');
+
+            } else {
+
+                $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
+
+                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignmentDate . ') added!\'\'\'');
+
+                $log = new LogPage('grades', false);
+                $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
 
             }
 
