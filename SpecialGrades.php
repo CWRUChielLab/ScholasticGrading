@@ -35,9 +35,6 @@ class SpecialGrades extends SpecialPage {
         # Set the page title
         $this->setHeaders();
 
-        # Set the time zone so assignment and evaluation dates are displayed correctly
-        date_default_timezone_set('UTC');
-
         # Check whether database tables exist
         if ( !$this->allTablesExist() ) {
             return;
@@ -214,7 +211,7 @@ class SpecialGrades extends SpecialPage {
                 'sga_title'   => $assignmentTitle,
                 'sga_value'   => $assignmentValue,
                 'sga_enabled' => $assignmentEnabled,
-                'sga_date'    => $dbw->timestamp($assignmentDate . ' 00:00:00'),
+                'sga_date'    => $assignmentDate,
             ), array('sga_id' => $assignmentID));
 
             # Report success and create a new log entry
@@ -238,7 +235,7 @@ class SpecialGrades extends SpecialPage {
                 'sga_title'   => $assignmentTitle,
                 'sga_value'   => $assignmentValue,
                 'sga_enabled' => $assignmentEnabled,
-                'sga_date'    => $dbw->timestamp($assignmentDate . ' 00:00:00'),
+                'sga_date'    => $assignmentDate,
             ));
 
             # Report success and create a new log entry
@@ -289,7 +286,7 @@ class SpecialGrades extends SpecialPage {
             $dbw->update('scholasticgrading_evaluation', array(
                 'sge_score'   => $evaluationScore,
                 'sge_enabled' => $evaluationEnabled,
-                'sge_date'    => $dbw->timestamp($evaluationDate . ' 00:00:00'),
+                'sge_date'    => $evaluationDate,
             ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
             # Report success and create a new log entry
@@ -301,12 +298,11 @@ class SpecialGrades extends SpecialPage {
 
                 $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
                 $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
 
-                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignmentDate . ') updated!\'\'\'');
+                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
 
                 $log = new LogPage('grades', false);
-                $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
+                $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
 
             }
 
@@ -318,7 +314,7 @@ class SpecialGrades extends SpecialPage {
                 'sge_assignment_id' => $evaluationAssignment,
                 'sge_score'         => $evaluationScore,
                 'sge_enabled'       => $evaluationEnabled,
-                'sge_date'          => $dbw->timestamp($evaluationDate . ' 00:00:00'),
+                'sge_date'          => $evaluationDate,
             ));
 
             # Report success and create a new log entry
@@ -330,12 +326,11 @@ class SpecialGrades extends SpecialPage {
 
                 $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
                 $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-                $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
 
-                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignmentDate . ') added!\'\'\'');
+                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
 
                 $log = new LogPage('grades', false);
-                $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignmentDate));
+                $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
 
             }
 
@@ -392,7 +387,7 @@ class SpecialGrades extends SpecialPage {
                 $assignmentTitleDefault = $assignment->sga_title;
                 $assignmentValueDefault = (float)$assignment->sga_value;
                 $assignmentEnabledDefault = $assignment->sga_enabled;
-                $assignmentDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
+                $assignmentDateDefault = $assignment->sga_date;
 
             }
 
@@ -470,7 +465,6 @@ class SpecialGrades extends SpecialPage {
             # The user and assignment both exist
             $user = $users->next();
             $assignment = $assignments->next();
-            $assignmentDate = date('Y-m-d', wfTimestamp(TS_UNIX, $assignment->sga_date));
 
             # Check whether evaluation exists
             $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
@@ -482,7 +476,7 @@ class SpecialGrades extends SpecialPage {
                 $submitButtonLabel = 'Create evaluation';
                 $evaluationScoreDefault = 0;
                 $evaluationEnabledDefault = true;
-                $evaluationDateDefault = $assignmentDate;
+                $evaluationDateDefault = $assignment->sga_date;
 
             } else {
 
@@ -494,7 +488,7 @@ class SpecialGrades extends SpecialPage {
                 $submitButtonLabel = 'Apply changes';
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
-                $evaluationDateDefault = date('Y-m-d', wfTimestamp(TS_UNIX, $evaluation->sge_date));
+                $evaluationDateDefault = $evaluation->sge_date;
 
             }
 
@@ -514,7 +508,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
-                        Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignmentDate . ')')
+                        Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')')
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
@@ -587,7 +581,7 @@ class SpecialGrades extends SpecialPage {
         foreach ( $assignments as $assignment ) {
 
             $content .= Html::openElement('tr');
-            $content .= Html::element('th', array('style' => 'text-align: right'), date('D m/d', wfTimestamp(TS_UNIX, $assignment->sga_date)));
+            $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
             $content .= Html::rawElement('th', null,
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
                     array('action' => 'assignment', 'id' => $assignment->sga_id)));

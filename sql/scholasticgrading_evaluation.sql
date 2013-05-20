@@ -6,7 +6,7 @@ CREATE TABLE /*_*/scholasticgrading_evaluation (
     sge_assignment_id int unsigned NOT NULL,
     sge_score decimal(8,4) NOT NULL default 0,
     sge_enabled boolean NOT NULL default TRUE,
-    sge_date varbinary(14) NOT NULL default '',
+    sge_date char(10) NOT NULL default '',
     PRIMARY KEY (sge_user_id, sge_assignment_id),
     FOREIGN KEY (sge_user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (sge_assignment_id) REFERENCES scholasticgrading_assignment (sga_id) ON DELETE CASCADE ON UPDATE CASCADE
