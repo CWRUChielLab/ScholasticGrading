@@ -277,6 +277,7 @@ class SpecialGrades extends SpecialPage {
         $evaluationScore      = $request->getVal('evaluation-score');
         $evaluationEnabled    = $request->getCheck('evaluation-enabled') ? 1 : 0;
         $evaluationDate       = $request->getVal('evaluation-date');
+        $evaluationComment    = $request->getVal('evaluation-comment');
 
         # Check whether evaluation exists
         $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
@@ -287,6 +288,7 @@ class SpecialGrades extends SpecialPage {
                 'sge_score'   => $evaluationScore,
                 'sge_enabled' => $evaluationEnabled,
                 'sge_date'    => $evaluationDate,
+                'sge_comment' => $evaluationComment,
             ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
             # Report success and create a new log entry
@@ -315,6 +317,7 @@ class SpecialGrades extends SpecialPage {
                 'sge_score'         => $evaluationScore,
                 'sge_enabled'       => $evaluationEnabled,
                 'sge_date'          => $evaluationDate,
+                'sge_comment'       => $evaluationComment,
             ));
 
             # Report success and create a new log entry
@@ -477,6 +480,7 @@ class SpecialGrades extends SpecialPage {
                 $evaluationScoreDefault = 0;
                 $evaluationEnabledDefault = true;
                 $evaluationDateDefault = $assignment->sga_date;
+                $evaluationCommentDefault = '';
 
             } else {
 
@@ -489,6 +493,7 @@ class SpecialGrades extends SpecialPage {
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
                 $evaluationDateDefault = $evaluation->sge_date;
+                $evaluationCommentDefault = $evaluation->sge_comment;
 
             }
 
@@ -521,6 +526,10 @@ class SpecialGrades extends SpecialPage {
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
                         Html::rawElement('td', null, Xml::input('evaluation-date', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-comment', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
                     )
                 ) .
                 Xml::submitButton($submitButtonLabel) .
@@ -763,7 +772,8 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, 'assignment id') .
             Html::element('th', null, 'score') .
             Html::element('th', null, 'enabled') .
-            Html::element('th', null, 'date')
+            Html::element('th', null, 'date') .
+            Html::element('th', null, 'comment')
         ) . "\n";
 
         # Create a row for each evaluation
@@ -773,7 +783,8 @@ class SpecialGrades extends SpecialPage {
                 Html::element('td', null, $evaluation->sge_assignment_id) .
                 Html::element('td', null, $evaluation->sge_score) .
                 Html::element('td', null, $evaluation->sge_enabled) .
-                Html::element('td', null, $evaluation->sge_date)
+                Html::element('td', null, $evaluation->sge_date) .
+                Html::element('td', null, $evaluation->sge_comment)
             ) . "\n";
         }
 
