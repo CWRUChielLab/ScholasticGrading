@@ -54,19 +54,11 @@ $wgLogActionsHandlers['grades/*'] = 'LogFormatter';
 
 
 # Register JavaScript and CSS resources
-$wgResourceModules['ext.ScholasticGrading.assignment-date'] = array(
+$wgResourceModules['ext.ScholasticGrading.SpecialGrades'] = array(
     'localBasePath' => dirname(__FILE__),
-    'scripts' => 'modules/ext.ScholasticGrading.assignment-date.js',
+    'styles' => 'modules/ext.ScholasticGrading.SpecialGrades.css',
+    'scripts' => 'modules/ext.ScholasticGrading.SpecialGrades.js',
     'dependencies' => 'jquery.ui.datepicker',
-);
-$wgResourceModules['ext.ScholasticGrading.evaluation-date'] = array(
-    'localBasePath' => dirname(__FILE__),
-    'scripts' => 'modules/ext.ScholasticGrading.evaluation-date.js',
-    'dependencies' => 'jquery.ui.datepicker',
-);
-$wgResourceModules['ext.ScholasticGrading.vertical-text'] = array(
-    'localBasePath' => dirname(__FILE__),
-    'styles' => 'modules/ext.ScholasticGrading.vertical-text.css',
 );
 
 

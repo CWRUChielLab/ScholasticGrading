@@ -32,8 +32,13 @@ class SpecialGrades extends SpecialPage {
 
     function execute ( $subPage ) {
 
+        $page = $this->getOutput();
+
         # Set the page title
         $this->setHeaders();
+
+        # Load JavaScript and CSS resources
+        $page->addModules('ext.ScholasticGrading.SpecialGrades');
 
         # Check whether database tables exist
         if ( !$this->allTablesExist() ) {
@@ -41,7 +46,6 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Process requests
-        $page = $this->getOutput();
         $request = $this->getRequest();
         $action = $subPage ? $subPage : $request->getVal('action', $subPage);
 
@@ -357,9 +361,6 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
 
-        # Load JavaScript resources
-        $page->addModules('ext.ScholasticGrading.assignment-date');
-
         # Set default parameters for creating a new assignment
         $fieldsetTitle = 'Create a new assignment';
         $submitButtonLabel = 'Create assignment';
@@ -450,9 +451,6 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
-
-        # Load JavaScript resources
-        $page->addModules('ext.ScholasticGrading.evaluation-date');
 
         # Check whether user and assignment exist
         $users = $dbr->select('user', '*', array('user_id' => $user_id));
@@ -557,9 +555,6 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $pointsEarned = array();
         $pointTotal = array();
-
-        # Load CSS resources
-        $page->addModules('ext.ScholasticGrading.vertical-text');
 
         # Query for all users and all assignments
         $dbr = wfGetDB(DB_SLAVE);
