@@ -1,4 +1,5 @@
-/* ...
+/**
+ * CSS for Special:Grades
  */
 
 th.vertical {
@@ -6,7 +7,7 @@ th.vertical {
     height: 120px;
 }
 
-div.vertical {
+th.vertical div.vertical {
     width: 20px;
     white-space: nowrap;
     -webkit-transform: rotate(-90deg);
@@ -14,4 +15,25 @@ div.vertical {
     -o-transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
     transform: rotate(-90deg);
+}
+
+table.sg-assignmenttable {
+    width: 100%;
+}
+
+table.sg-assignmenttable tr#assignmenttable-header {
+}
+
+table.sg-assignmenttable tr.sg-assignmenttable-row {
+}
+
+table.sg-assignmenttable td.sg-assignmenttable-date,
+table.sg-assignmenttable td.sg-assignmenttable-value,
+table.sg-assignmenttable td.sg-assignmenttable-enabled,
+table.sg-assignmenttable td.sg-assignmenttable-modify {
+    text-align:center;
+    width: 100px;
+}
+
+table.sg-assignmenttable td.sg-assignmenttable-title {
 }

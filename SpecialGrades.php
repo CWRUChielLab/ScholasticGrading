@@ -51,7 +51,17 @@ class SpecialGrades extends SpecialPage {
 
         switch ( $action ) {
 
-        case 'assignment':
+        case 'assignments':
+
+            $page->addHTML(Html::element('p', null, 'Create, modify, and delete assignments.') . "\n");
+            $page->addHTML(Html::rawElement('p', null,
+                Linker::linkKnown($this->getTitle('editassignment'), 'Create a new assignment')) . "\n");
+            $this->showAllAssignments();
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
+        case 'editassignment':
 
             if ( $this->canModify(true) ) {
                 $this->showAssignmentForm(
@@ -104,7 +114,7 @@ class SpecialGrades extends SpecialPage {
         default:
 
             $page->addHTML(Html::rawElement('p', null,
-                Linker::linkKnown($this->getTitle('assignment'), 'Create a new assignment')) . "\n");
+                Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
 
             $this->showGradeTable();
             //$this->showAssignments();
@@ -544,6 +554,55 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Display a table of all assignments
+     *
+     * Generates a table of assignments with controls
+     * for modifying and deleting assignments
+     */
+
+    public function showAllAssignments () {
+
+        $page = $this->getOutput();
+
+        # Query for all assignments
+        $dbr = wfGetDB(DB_SLAVE);
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
+            array('ORDER BY' => 'sga_date'));
+
+        # Build the assignment table
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-assignmenttable')) . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', array('id' => 'assignmenttable-header'),
+            Html::element('th', null, 'Date') .
+            Html::element('th', null, 'Title') .
+            Html::element('th', null, 'Value') .
+            Html::element('th', null, 'Enabled') .
+            Html::element('th', array('class' => 'unsortable'), 'Modify')
+        ) . "\n";
+
+        # Create a row for each assignment
+        foreach ( $assignments as $assignment ) {
+            $content .= Html::rawElement('tr', array('class' => 'sg-assignmenttable-row'),
+                Html::element('td', array('class' => 'sg-assignmenttable-date'), $assignment->sga_date) .
+                Html::element('td', array('class' => 'sg-assignmenttable-title'), $assignment->sga_title) .
+                Html::element('td', array('class' => 'sg-assignmenttable-value'), (float)$assignment->sga_value) .
+                Html::element('td', array('class' => 'sg-assignmenttable-enabled'), $assignment->sga_enabled ? 'Yes' : 'No') .
+                Html::rawElement('td', array('class' => 'sg-assignmenttable-modify'),
+                    Linker::linkKnown($this->getTitle(), 'Edit', array(),
+                        array('action' => 'editassignment', 'id' => $assignment->sga_id)) . ', Delete')
+            ) . "\n";
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showAllAssignments */
+
+
+    /**
      * Display a table of assignments, students, and evaluations
      *
      * Generates a table of evaluations, where columns represent
@@ -588,7 +647,7 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
             $content .= Html::rawElement('th', null,
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
-                    array('action' => 'assignment', 'id' => $assignment->sga_id)));
+                    array('action' => 'editassignment', 'id' => $assignment->sga_id)));
 
             # Create a cell for each user
             foreach ( $users as $user ) {
