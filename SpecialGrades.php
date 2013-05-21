@@ -84,28 +84,29 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
-        case 'submit':
+        case 'submitassignment':
 
             if ( $this->canModify(true) ) {
-
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-
-                    switch ( $request->getVal('wpScholasticGradingAction') ) {
-                    case 'assignment':
-                        $this->submitAssignment();
-                        break;
-                    case 'evaluation':
-                        $this->submitEvaluation();
-                        break;
-                    }
-
+                    $this->submitAssignment();
                 } else {
-
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
-
                 }
+            }
 
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
+        case 'submitevaluation':
+
+            if ( $this->canModify(true) ) {
+                if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
+                    $this->submitEvaluation();
+                } else {
+                    # Prevent cross-site request forgeries
+                    $page->addWikiMsg('sessionfailure');
+                }
             }
 
             $page->returnToMain(false, $this->getTitle());
@@ -412,7 +413,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitassignment'))
                  ),
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -434,8 +435,7 @@ class SpecialGrades extends SpecialPage {
                 ) .
                 Xml::submitButton($submitButtonLabel) .
                 Html::hidden('assignment-id', $id) .
-                Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                Html::hidden('wpScholasticGradingAction', 'assignment')
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
 
@@ -512,7 +512,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
                 ),
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -543,8 +543,7 @@ class SpecialGrades extends SpecialPage {
                 Xml::submitButton($submitButtonLabel) .
                 Html::hidden('evaluation-user', $user_id) .
                 Html::hidden('evaluation-assignment', $assignment_id) .
-                Html::hidden('wpEditToken', $this->getUser()->getEditToken()) .
-                Html::hidden('wpScholasticGradingAction', 'evaluation')
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
 
