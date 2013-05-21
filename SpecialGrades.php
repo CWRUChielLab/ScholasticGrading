@@ -72,7 +72,7 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
-        case 'evaluation':
+        case 'editevaluation':
 
             if ( $this->canModify(true) ) {
                 $this->showEvaluationForm(
@@ -663,14 +663,14 @@ class SpecialGrades extends SpecialPage {
                         # The assignment is extra credit
                         $content .= Html::rawElement('td', null, 
                             Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
-                                array('action' => 'evaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                                array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     } else {
 
                         # The assignment is not extra credit
                         $content .= Html::rawElement('td', null, 
                             Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
-                                array('action' => 'evaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                                array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     }
 
@@ -683,7 +683,7 @@ class SpecialGrades extends SpecialPage {
                     # An evaluation does not exist for this (user,assignment) combination
                     $content .= Html::rawElement('td', null, 
                         Linker::linkKnown($this->getTitle(), '--', array(),
-                            array('action' => 'evaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                            array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                 }
 
