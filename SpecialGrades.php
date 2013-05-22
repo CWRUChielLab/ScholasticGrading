@@ -639,56 +639,60 @@ class SpecialGrades extends SpecialPage {
         }
         $content .= Html::closeElement('tr') . "\n";
 
-        # Create a row for each assignment
+        # Create a row for each enabled assignment
         foreach ( $assignments as $assignment ) {
 
-            $content .= Html::openElement('tr');
-            $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
-            $content .= Html::rawElement('th', null,
-                Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
-                    array('action' => 'editassignment', 'id' => $assignment->sga_id)));
+            if ( $assignment->sga_enabled ) {
 
-            # Create a cell for each user
-            foreach ( $users as $user ) {
+                $content .= Html::openElement('tr');
+                $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
+                $content .= Html::rawElement('th', null,
+                    Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
+                        array('action' => 'editassignment', 'id' => $assignment->sga_id)));
 
-                $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
-                    array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
-                if ( $evaluations->numRows() > 0 ) {
+                # Create a cell for each user
+                foreach ( $users as $user ) {
 
-                    # An evaluation exists for this (user,assignment) combination
-                    $evaluation = $evaluations->next();
-                    if ( $assignment->sga_value == 0 ) {
+                    $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
+                        array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
+                    if ( $evaluations->numRows() > 0 ) {
 
-                        # The assignment is extra credit
-                        $content .= Html::rawElement('td', null, 
-                            Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
-                                array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                        # An evaluation exists for this (user,assignment) combination
+                        $evaluation = $evaluations->next();
+                        if ( $assignment->sga_value == 0 ) {
+
+                            # The assignment is extra credit
+                            $content .= Html::rawElement('td', null, 
+                                Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
+                                    array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                        } else {
+
+                            # The assignment is not extra credit
+                            $content .= Html::rawElement('td', null, 
+                                Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                    array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                        }
+
+                        # Increment the points earned and the point total for this student
+                        $pointsEarned[$user->user_name] += $evaluation->sge_score;
+                        $pointTotal[$user->user_name] += $assignment->sga_value;
 
                     } else {
 
-                        # The assignment is not extra credit
+                        # An evaluation does not exist for this (user,assignment) combination
                         $content .= Html::rawElement('td', null, 
-                            Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                            Linker::linkKnown($this->getTitle(), '--', array(),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     }
 
-                    # Increment the points earned and the point total for this student
-                    $pointsEarned[$user->user_name] += $evaluation->sge_score;
-                    $pointTotal[$user->user_name] += $assignment->sga_value;
+                } /* end for each user */
 
-                } else {
+                $content .= Html::closeElement('tr') . "\n";
 
-                    # An evaluation does not exist for this (user,assignment) combination
-                    $content .= Html::rawElement('td', null, 
-                        Linker::linkKnown($this->getTitle(), '--', array(),
-                            array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
-
-                }
-
-            } /* end for each user */
-
-            $content .= Html::closeElement('tr') . "\n";
+            } /* end if assignment enabled */
 
         } /* end for each assignment */
 
