@@ -659,25 +659,37 @@ class SpecialGrades extends SpecialPage {
 
                         # An evaluation exists for this (user,assignment) combination
                         $evaluation = $evaluations->next();
-                        if ( $assignment->sga_value == 0 ) {
+                        if ( $evaluation->sge_enabled ) {
 
-                            # The assignment is extra credit
-                            $content .= Html::rawElement('td', null, 
-                                Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
-                                    array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                            # The evaluation is enabled
+                            if ( $assignment->sga_value == 0 ) {
+
+                                # The assignment is extra credit
+                                $content .= Html::rawElement('td', null, 
+                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
+                                        array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                            } else {
+
+                                # The assignment is not extra credit
+                                $content .= Html::rawElement('td', null, 
+                                    Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                        array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                            }
+
+                            # Increment the points earned and the point total for this student
+                            $pointsEarned[$user->user_name] += $evaluation->sge_score;
+                            $pointTotal[$user->user_name] += $assignment->sga_value;
 
                         } else {
 
-                            # The assignment is not extra credit
+                            # The evaluation is disabled
                             $content .= Html::rawElement('td', null, 
-                                Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                Linker::linkKnown($this->getTitle(), '**', array(),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                         }
-
-                        # Increment the points earned and the point total for this student
-                        $pointsEarned[$user->user_name] += $evaluation->sge_score;
-                        $pointTotal[$user->user_name] += $assignment->sga_value;
 
                     } else {
 
