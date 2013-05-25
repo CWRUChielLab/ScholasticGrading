@@ -220,50 +220,123 @@ class SpecialGrades extends SpecialPage {
         # Check whether assignment exists
         $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
         if ( $assignments->numRows() > 0 ) {
+            $assignment = $assignments->next();
 
-            # Edit the existing assignment
-            $dbw->update('scholasticgrading_assignment', array(
-                'sga_title'   => $assignmentTitle,
-                'sga_value'   => $assignmentValue,
-                'sga_enabled' => $assignmentEnabled,
-                'sga_date'    => $assignmentDate,
-            ), array('sga_id' => $assignmentID));
+            if ( $request->getVal('modify-assignment') ) {
 
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+                # Edit the existing assignment
+                $dbw->update('scholasticgrading_assignment', array(
+                    'sga_title'   => $assignmentTitle,
+                    'sga_value'   => $assignmentValue,
+                    'sga_enabled' => $assignmentEnabled,
+                    'sga_date'    => $assignmentDate,
+                ), array('sga_id' => $assignmentID));
 
-                $page->addWikiText('Database unchanged.');
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
+
+                }
+
+            } elseif ( $request->getVal('delete-assignment') ) {
+
+                if ( !$request->getVal('confirm-delete') ) {
+
+                    # Ask for confirmation of delete
+                    $page->addWikiText('Are you sure you want to delete "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
+
+                    # List all evaluations that will be deleted with the assignment
+                    $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_assignment_id' => $assignmentID));
+                    if ( $evaluations->numRows() > 0 ) {
+                        $content = '';
+                        $content .= Html::element('p', null, 'Evaluations for the following users will be deleted:') . "\n";
+                        $content .= Html::openElement('ul', null);
+                        foreach ( $evaluations as $evaluation ) {
+                            $user = $dbw->select('user', '*', array('user_id' => $evaluation->sge_user_id))->next();
+                            $content .= Html::rawElement('li', null, $user->user_real_name) . "\n";
+                        }
+                        $content .= Html::closeElement('ul') . "\n";
+                        $page->addHtml($content);
+                    }
+
+                    # Provide a delete button
+                    $page->addHtml(Html::rawElement('form',
+                        array(
+                            'method' => 'post',
+                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitassignment'))
+                        ),
+                        Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
+                        Html::hidden('confirm-delete', true) .
+                        Html::hidden('assignment-id', $assignmentID) .
+                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                    ));
+
+                } else {
+
+                    # Delete the existing assignment
+                    $dbw->delete('scholasticgrading_assignment', array('sga_id' => $assignmentID));
+
+                    # Report success and create a new log entry
+                    if ( $dbw->affectedRows() === 0 ) {
+
+                        $page->addWikiText('Database unchanged.');
+
+                    } else {
+
+                        $page->addWikiText('\'\'\'"' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+
+                        $log = new LogPage('grades', false);
+                        $log->addEntry('deleteAssignment', $this->getTitle(), null, array($assignment->sga_title, $assignment->sga_date));
+
+                    }
+
+                }
 
             } else {
 
-                $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
+                # Unknown action
+                $page->addWikiText('Unknown action. What button was pressed?');
 
             }
 
         } else {
 
-            # Create a new assignment
-            $dbw->insert('scholasticgrading_assignment', array(
-                'sga_title'   => $assignmentTitle,
-                'sga_value'   => $assignmentValue,
-                'sga_enabled' => $assignmentEnabled,
-                'sga_date'    => $assignmentDate,
-            ));
+            if ( $request->getVal('create-assignment') ) {
 
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+                # Create a new assignment
+                $dbw->insert('scholasticgrading_assignment', array(
+                    'sga_title'   => $assignmentTitle,
+                    'sga_value'   => $assignmentValue,
+                    'sga_enabled' => $assignmentEnabled,
+                    'sga_date'    => $assignmentDate,
+                ));
 
-                $page->addWikiText('Database unchanged.');
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') added!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('addAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
+
+                }
 
             } else {
 
-                $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') added!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('addAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
+                # Unknown action
+                $page->addWikiText('Unknown action. What button was pressed?');
 
             }
 
@@ -297,58 +370,123 @@ class SpecialGrades extends SpecialPage {
         # Check whether evaluation exists
         $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
         if ( $evaluations->numRows() > 0 ) {
+            $evaluation = $evaluations->next();
 
-            # Edit the existing evaluation
-            $dbw->update('scholasticgrading_evaluation', array(
-                'sge_score'   => $evaluationScore,
-                'sge_enabled' => $evaluationEnabled,
-                'sge_date'    => $evaluationDate,
-                'sge_comment' => $evaluationComment,
-            ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+            if ( $request->getVal('modify-evaluation') ) {
 
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+                # Edit the existing evaluation
+                $dbw->update('scholasticgrading_evaluation', array(
+                    'sge_score'   => $evaluationScore,
+                    'sge_enabled' => $evaluationEnabled,
+                    'sge_date'    => $evaluationDate,
+                    'sge_comment' => $evaluationComment,
+                ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
-                $page->addWikiText('Database unchanged.');
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+
+                    $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+
+                }
+
+            } elseif ( $request->getVal('delete-evaluation') ) {
+
+                if ( !$request->getVal('confirm-delete') ) {
+
+                    # Ask for confirmation of delete
+                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+                    $page->addWikiText('Are you sure you want to delete the evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
+
+                    # Provide a delete button
+                    $page->addHtml(Html::rawElement('form',
+                        array(
+                            'method' => 'post',
+                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+                        ),
+                        Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
+                        Html::hidden('confirm-delete', true) .
+                        Html::hidden('evaluation-user', $evaluationUser) .
+                        Html::hidden('evaluation-assignment', $evaluationAssignment) .
+                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                    ));
+
+                } else {
+
+                    # Delete the existing evaluation
+                    $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+
+                    # Report success and create a new log entry
+                    if ( $dbw->affectedRows() === 0 ) {
+
+                        $page->addWikiText('Database unchanged.');
+
+                    } else {
+
+                        $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                        $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+
+                        $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+
+                        $log = new LogPage('grades', false);
+                        $log->addEntry('deleteEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+
+                    }
+
+                }
 
             } else {
 
-                $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-
-                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+                # Unknown action
+                $page->addWikiText('Unknown action. What button was pressed?');
 
             }
 
         } else {
 
-            # Create a new evaluation
-            $dbw->insert('scholasticgrading_evaluation', array(
-                'sge_user_id'       => $evaluationUser,
-                'sge_assignment_id' => $evaluationAssignment,
-                'sge_score'         => $evaluationScore,
-                'sge_enabled'       => $evaluationEnabled,
-                'sge_date'          => $evaluationDate,
-                'sge_comment'       => $evaluationComment,
-            ));
+            if ( $request->getVal('create-evaluation') ) {
 
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+                # Create a new evaluation
+                $dbw->insert('scholasticgrading_evaluation', array(
+                    'sge_user_id'       => $evaluationUser,
+                    'sge_assignment_id' => $evaluationAssignment,
+                    'sge_score'         => $evaluationScore,
+                    'sge_enabled'       => $evaluationEnabled,
+                    'sge_date'          => $evaluationDate,
+                    'sge_comment'       => $evaluationComment,
+                ));
 
-                $page->addWikiText('Database unchanged.');
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+
+                    $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+
+                }
 
             } else {
 
-                $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-
-                $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+                # Unknown action
+                $page->addWikiText('Unknown action. What button was pressed?');
 
             }
 
@@ -374,7 +512,7 @@ class SpecialGrades extends SpecialPage {
 
         # Set default parameters for creating a new assignment
         $fieldsetTitle = 'Create a new assignment';
-        $submitButtonLabel = 'Create assignment';
+        $buttons = Xml::submitButton('Create assignment', array('name' => 'create-assignment'));
         $assignmentTitleDefault = '';
         $assignmentValueDefault = 0;
         $assignmentEnabledDefault = true;
@@ -398,7 +536,8 @@ class SpecialGrades extends SpecialPage {
 
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing assignment';
-                $submitButtonLabel = 'Apply changes';
+                $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-assignment')) .
+                    Xml::submitButton('Delete assignment', array('name' => 'delete-assignment'));
                 $assignmentTitleDefault = $assignment->sga_title;
                 $assignmentValueDefault = (float)$assignment->sga_value;
                 $assignmentEnabledDefault = $assignment->sga_enabled;
@@ -433,7 +572,7 @@ class SpecialGrades extends SpecialPage {
                         Html::rawElement('td', null, Xml::input('assignment-date', 20, $assignmentDateDefault, array('id' => 'assignment-date')))
                     )
                 ) .
-                Xml::submitButton($submitButtonLabel) .
+                $buttons .
                 Html::hidden('assignment-id', $id) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
@@ -484,7 +623,7 @@ class SpecialGrades extends SpecialPage {
                 # The evaluation does not exist
                 # Set default parameters for creating a new evaluation
                 $fieldsetTitle = 'Create a new evaluation';
-                $submitButtonLabel = 'Create evaluation';
+                $buttons = Xml::submitButton('Create evaluation', array('name' => 'create-evaluation'));
                 $evaluationScoreDefault = 0;
                 $evaluationEnabledDefault = true;
                 $evaluationDateDefault = $assignment->sga_date;
@@ -497,7 +636,8 @@ class SpecialGrades extends SpecialPage {
 
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing evaluation';
-                $submitButtonLabel = 'Apply changes';
+                $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-evaluation')) .
+                    Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation'));
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
                 $evaluationDateDefault = $evaluation->sge_date;
@@ -540,7 +680,7 @@ class SpecialGrades extends SpecialPage {
                         Html::rawElement('td', null, Xml::input('evaluation-comment', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
                     )
                 ) .
-                Xml::submitButton($submitButtonLabel) .
+                $buttons .
                 Html::hidden('evaluation-user', $user_id) .
                 Html::hidden('evaluation-assignment', $assignment_id) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
