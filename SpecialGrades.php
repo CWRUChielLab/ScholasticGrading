@@ -718,7 +718,7 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, 'Title') .
             Html::element('th', null, 'Value') .
             Html::element('th', null, 'Enabled') .
-            Html::element('th', array('class' => 'unsortable'), 'Modify')
+            Html::element('th', array('class' => 'unsortable'), 'Edit')
         ) . "\n";
 
         # Create a row for each assignment
@@ -730,7 +730,7 @@ class SpecialGrades extends SpecialPage {
                 Html::element('td', array('class' => 'sg-assignmenttable-enabled'), $assignment->sga_enabled ? 'Yes' : 'No') .
                 Html::rawElement('td', array('class' => 'sg-assignmenttable-modify'),
                     Linker::linkKnown($this->getTitle(), 'Edit', array(),
-                        array('action' => 'editassignment', 'id' => $assignment->sga_id)) . ', Delete')
+                        array('action' => 'editassignment', 'id' => $assignment->sga_id)))
             ) . "\n";
         }
 
