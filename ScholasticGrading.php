@@ -23,7 +23,7 @@ $wgExtensionCredits['specialpage'][] = array(
     'path'              => __FILE__,
     'name'              => 'ScholasticGrading',
     'author'            => array('Jeffrey Gill'),
-    'url'               => 'https://github.com/jpg18/ScholasticGrading',
+    'url'               => 'https://github.com/CWRUChielLab/ScholasticGrading',
     'descriptionmsg'    => 'scholasticgrading-desc',
     'version'           => 0.0,
 );
