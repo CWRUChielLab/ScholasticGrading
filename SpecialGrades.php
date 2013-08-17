@@ -102,7 +102,14 @@ class SpecialGrades extends SpecialPage {
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitEvaluation();
+                    $this->submitEvaluation(
+                        $request->getVal('evaluation-user', false),
+                        $request->getVal('evaluation-assignment', false),
+                        $request->getVal('evaluation-score', false),
+                        $request->getCheck('evaluation-enabled') ? 1 : 0,
+                        $request->getVal('evaluation-date', false),
+                        $request->getVal('evaluation-comment', false)
+                    );
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -349,23 +356,23 @@ class SpecialGrades extends SpecialPage {
      * Submit an evaluation creation/modification request
      *
      * Processes an evaluation form and modifies the database.
-     * If the (user,assignment) key provided in the request corresponds to an
+     * If the (user,assignment) key provided corresponds to an
      * existing evaluation, the function will modify that evaluation.
      * Otherwise, the function will create a new evaluation.
+     *
+     * @param int|bool    $evaluationUser the user id of an evaluation
+     * @param int|bool    $evaluationAssignment the assignment id of an evaluation
+     * @param float|bool  $evaluationScore the score of an evaluation
+     * @param int|bool    $evaluationEnabled the enabled status of an evaluation
+     * @param string|bool $evaluationDate the date of an evaluation
+     * @param string|bool $evaluationComment the comment of an evaluation
      */
 
-    public function submitEvaluation () {
+    public function submitEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
-
-        $evaluationUser       = $request->getVal('evaluation-user');
-        $evaluationAssignment = $request->getVal('evaluation-assignment');
-        $evaluationScore      = $request->getVal('evaluation-score');
-        $evaluationEnabled    = $request->getCheck('evaluation-enabled') ? 1 : 0;
-        $evaluationDate       = $request->getVal('evaluation-date');
-        $evaluationComment    = $request->getVal('evaluation-comment');
 
         # Check whether evaluation exists
         $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
