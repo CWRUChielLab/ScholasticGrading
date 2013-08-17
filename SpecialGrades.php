@@ -210,6 +210,32 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Echo the contents of the web request
+     *
+     * Reports all data passed in the URL or POSTed
+     * by a form.
+     */
+
+    public function dumpRequest () {
+
+        $request = $this->getRequest();
+
+        foreach ( $request->getValues() as $key => $value ) {
+            if ( !is_array($value) ) {
+                echo $key . " => " . $value . "\n";
+            } else {
+                echo $key . " => [";
+                foreach ( $value as $key2 => $value2 ) {
+                    echo $key2 . " => " . $value2 . ", ";
+                }
+                echo "]\n";
+            }
+        }
+
+    } /* end dumpRequest */
+
+
+    /**
      * Submit an assignment creation/modification request
      *
      * Processes an assignment form and modifies the database.
