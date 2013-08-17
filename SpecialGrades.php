@@ -88,13 +88,7 @@ class SpecialGrades extends SpecialPage {
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitAssignment(
-                        $request->getVal('assignment-id', false),
-                        $request->getVal('assignment-title', false),
-                        $request->getVal('assignment-value', false),
-                        $request->getCheck('assignment-enabled') ? 1 : 0,
-                        $request->getVal('assignment-date', false)
-                    );
+                    $this->submitAssignments();
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -108,14 +102,7 @@ class SpecialGrades extends SpecialPage {
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitEvaluation(
-                        $request->getVal('evaluation-user', false),
-                        $request->getVal('evaluation-assignment', false),
-                        $request->getVal('evaluation-score', false),
-                        $request->getCheck('evaluation-enabled') ? 1 : 0,
-                        $request->getVal('evaluation-date', false),
-                        $request->getVal('evaluation-comment', false)
-                    );
+                    $this->submitEvaluations();
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -236,12 +223,61 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Submit an assignment creation/modification request
+     * Process sets of assignment creation/modification/deletion requests
      *
-     * Processes an assignment form and modifies the database.
-     * If the (id) key provided in the request corresponds to an
-     * existing assignment, the function will modify that assignment.
-     * Otherwise, the function will create a new assignment.
+     * Processes assignment forms. Does not directly modify the
+     * database. Instead, each set of assignment parameters is sent
+     * to the writeAssignment function one at a time.
+     */
+
+    public function submitAssignments () {
+
+        $request = $this->getRequest();
+
+        $this->writeAssignment(
+            $request->getVal('assignment-id', false),
+            $request->getVal('assignment-title', false),
+            $request->getVal('assignment-value', false),
+            $request->getCheck('assignment-enabled') ? 1 : 0,
+            $request->getVal('assignment-date', false)
+        );
+
+    } /* end submitAssignments */
+
+
+    /**
+     * Process sets of evaluation creation/modification/deletion requests
+     *
+     * Processes evaluation forms. Does not directly modify the
+     * database. Instead, each set of evaluation parameters is sent
+     * to the writeEvaluation function one at a time.
+     */
+
+    public function submitEvaluations () {
+
+        $request = $this->getRequest();
+
+        $this->writeEvaluation(
+            $request->getVal('evaluation-user', false),
+            $request->getVal('evaluation-assignment', false),
+            $request->getVal('evaluation-score', false),
+            $request->getCheck('evaluation-enabled') ? 1 : 0,
+            $request->getVal('evaluation-date', false),
+            $request->getVal('evaluation-comment', false)
+        );
+
+    } /* end submitEvaluations */
+
+
+    /**
+     * Execute assignment creation/modification/deletion
+     *
+     * Creates, modifies, or deletes an assignment by directly
+     * modifying the database. If the (id) key provided corresponds
+     * to an existing assignment, the function will modify or delete
+     * that assignment depending on whether the delete-assignment
+     * variable is set. Otherwise, the function will create a new
+     * assignment.
      *
      * @param int|bool    $assignmentID the id of an assignment
      * @param int|bool    $assignmentTitle the title of an assignment
@@ -250,7 +286,7 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $assignmentDate the date of an assignment
      */
 
-    public function submitAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
+    public function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -373,16 +409,19 @@ class SpecialGrades extends SpecialPage {
 
         }
 
-    } /* end submitAssignment */
+    } /* end writeAssignment */
 
 
     /**
-     * Submit an evaluation creation/modification request
+     * Execute an evaluation creation/modification/deletion
      *
-     * Processes an evaluation form and modifies the database.
-     * If the (user,assignment) key provided corresponds to an
-     * existing evaluation, the function will modify that evaluation.
-     * Otherwise, the function will create a new evaluation.
+     * Creates, modifies, or deletes an evaluation by directly
+     * modifying the database. If the (user,assignment) key provided
+     * corresponds to an existing evaluation, the function will
+     * modify or delete that evaluation depending on whether the
+     * delete-evaluation variable is set. Otherwise, the function
+     * will create a new evaluation as long as both the user and
+     * assignment exist.
      *
      * @param int|bool    $evaluationUser the user id of an evaluation
      * @param int|bool    $evaluationAssignment the assignment id of an evaluation
@@ -392,7 +431,7 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $evaluationComment the comment of an evaluation
      */
 
-    public function submitEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
+    public function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -530,7 +569,7 @@ class SpecialGrades extends SpecialPage {
 
         }
 
-    } /* end submitEvaluation */
+    } /* end writeEvaluation */
 
 
     /**
