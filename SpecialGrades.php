@@ -88,7 +88,13 @@ class SpecialGrades extends SpecialPage {
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitAssignment();
+                    $this->submitAssignment(
+                        $request->getVal('assignment-id', false),
+                        $request->getVal('assignment-title', false),
+                        $request->getVal('assignment-value', false),
+                        $request->getCheck('assignment-enabled') ? 1 : 0,
+                        $request->getVal('assignment-date', false)
+                    );
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -210,19 +216,19 @@ class SpecialGrades extends SpecialPage {
      * If the (id) key provided in the request corresponds to an
      * existing assignment, the function will modify that assignment.
      * Otherwise, the function will create a new assignment.
+     *
+     * @param int|bool    $assignmentID the id of an assignment
+     * @param int|bool    $assignmentTitle the title of an assignment
+     * @param float|bool  $assignmentValue the value of an assignment
+     * @param int|bool    $assignmentEnabled the enabled status of an assignment
+     * @param string|bool $assignmentDate the date of an assignment
      */
 
-    public function submitAssignment () {
+    public function submitAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
-
-        $assignmentID      = $request->getVal('assignment-id');
-        $assignmentTitle   = $request->getVal('assignment-title');
-        $assignmentValue   = $request->getVal('assignment-value');
-        $assignmentEnabled = $request->getCheck('assignment-enabled') ? 1 : 0;
-        $assignmentDate    = $request->getVal('assignment-date');
 
         # Check whether assignment exists
         $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
