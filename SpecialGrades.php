@@ -206,15 +206,62 @@ class SpecialGrades extends SpecialPage {
 
     public function submitAssignments () {
 
+        $page = $this->getOutput();
         $request = $this->getRequest();
 
-        $this->writeAssignment(
-            $request->getVal('assignment-id', false),
-            $request->getVal('assignment-title', false),
-            $request->getVal('assignment-value', false),
-            $request->getCheck('assignment-enabled') ? 1 : 0,
-            $request->getVal('assignment-date', false)
-        );
+        $assignmentParams = $request->getArray('assignment-params', false);
+        if ( $assignmentParams ) {
+
+            # The assignment-params array is present
+
+            # Make database changes for each assignment in assignment-params
+            foreach ( $assignmentParams as $assignment ) {
+
+                # Store each parameter for this assignment if it exists
+                if ( array_key_exists('assignment-id', $assignment) ) {
+                    $assignmentID = $assignment['assignment-id'];
+                } else {
+                    $assignmentID = false;
+                }
+                if ( array_key_exists('assignment-title', $assignment) ) {
+                    $assignmentTitle = $assignment['assignment-title'];
+                } else {
+                    $assignmentTitle = false;
+                }
+                if ( array_key_exists('assignment-value', $assignment) ) {
+                    $assignmentValue = $assignment['assignment-value'];
+                } else {
+                    $assignmentValue = false;
+                }
+                if ( array_key_exists('assignment-enabled', $assignment) ) {
+                    $assignmentEnabled = $assignment['assignment-enabled'] ? 1 : 0;
+                } else {
+                    # Form posts omit checkboxes that are unchecked
+                    $assignmentEnabled = false;
+                }
+                if ( array_key_exists('assignment-date', $assignment) ) {
+                    $assignmentDate = $assignment['assignment-date'];
+                } else {
+                    $assignmentDate = false;
+                }
+                
+                $this->writeAssignment(
+                    $assignmentID,
+                    $assignmentTitle,
+                    $assignmentValue,
+                    $assignmentEnabled,
+                    $assignmentDate
+                );
+
+            }
+
+        } else {
+
+            # The assignment-params array is missing or invalid
+            $page->addWikiText('Assignment parameter array is missing or invalid.');
+            return;
+
+        }
 
     } /* end submitAssignments */
 
@@ -229,16 +276,68 @@ class SpecialGrades extends SpecialPage {
 
     public function submitEvaluations () {
 
+        $page = $this->getOutput();
         $request = $this->getRequest();
 
-        $this->writeEvaluation(
-            $request->getVal('evaluation-user', false),
-            $request->getVal('evaluation-assignment', false),
-            $request->getVal('evaluation-score', false),
-            $request->getCheck('evaluation-enabled') ? 1 : 0,
-            $request->getVal('evaluation-date', false),
-            $request->getVal('evaluation-comment', false)
-        );
+        $evaluationParams = $request->getArray('evaluation-params', false);
+        if ( $evaluationParams ) {
+
+            # The evaluation-params array is present
+
+            # Make database changes for each evaluation in evaluation-params
+            foreach ( $evaluationParams as $evaluation ) {
+
+                # Store each parameter for this evaluation if it exists
+                if ( array_key_exists('evaluation-user', $evaluation) ) {
+                    $evaluationUser = $evaluation['evaluation-user'];
+                } else {
+                    $evaluationUser = false;
+                }
+                if ( array_key_exists('evaluation-assignment', $evaluation) ) {
+                    $evaluationAssignment = $evaluation['evaluation-assignment'];
+                } else {
+                    $evaluationAssignment = false;
+                }
+                if ( array_key_exists('evaluation-score', $evaluation) ) {
+                    $evaluationScore = $evaluation['evaluation-score'];
+                } else {
+                    $evaluationScore = false;
+                }
+                if ( array_key_exists('evaluation-enabled', $evaluation) ) {
+                    $evaluationEnabled = $evaluation['evaluation-enabled'] ? 1 : 0;
+                } else {
+                    # Form posts omit checkboxes that are unchecked
+                    $evaluationEnabled = false;
+                }
+                if ( array_key_exists('evaluation-date', $evaluation) ) {
+                    $evaluationDate = $evaluation['evaluation-date'];
+                } else {
+                    $evaluationDate = false;
+                }
+                if ( array_key_exists('evaluation-comment', $evaluation) ) {
+                    $evaluationComment = $evaluation['evaluation-comment'];
+                } else {
+                    $evaluationComment = false;
+                }
+                
+                $this->writeEvaluation(
+                    $evaluationUser,
+                    $evaluationAssignment,
+                    $evaluationScore,
+                    $evaluationEnabled,
+                    $evaluationDate,
+                    $evaluationComment
+                );
+
+            }
+
+        } else {
+
+            # The evaluation-params array is missing or invalid
+            $page->addWikiText('Evaluation parameter array is missing or invalid.');
+            return;
+
+        }
 
     } /* end submitEvaluations */
 
@@ -328,7 +427,7 @@ class SpecialGrades extends SpecialPage {
                         ),
                         Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
                         Html::hidden('confirm-delete', true) .
-                        Html::hidden('assignment-id', $assignmentID) .
+                        Html::hidden('assignment-params[0][assignment-id]', $assignmentID) .
                         Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                     ));
 
@@ -477,8 +576,8 @@ class SpecialGrades extends SpecialPage {
                             ),
                             Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
                             Html::hidden('confirm-delete', true) .
-                            Html::hidden('evaluation-user', $evaluationUser) .
-                            Html::hidden('evaluation-assignment', $evaluationAssignment) .
+                            Html::hidden('evaluation-params[0][evaluation-user]', $evaluationUser) .
+                            Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignment) .
                             Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                         ));
 
@@ -608,23 +707,23 @@ class SpecialGrades extends SpecialPage {
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Title:', 'assignment-title')) .
-                        Html::rawElement('td', null, Xml::input('assignment-title', 20, $assignmentTitleDefault, array('id' => 'assignment-title')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-title]', 20, $assignmentTitleDefault, array('id' => 'assignment-title')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Point value:', 'assignment-value')) .
-                        Html::rawElement('td', null, Xml::input('assignment-value', 20, $assignmentValueDefault, array('id' => 'assignment-value')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-value]', 20, $assignmentValueDefault, array('id' => 'assignment-value')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
-                        Html::rawElement('td', null, Xml::check('assignment-enabled', $assignmentEnabledDefault, array('id' => 'assignment-enabled')))
+                        Html::rawElement('td', null, Xml::check('assignment-params[0][assignment-enabled]', $assignmentEnabledDefault, array('id' => 'assignment-enabled')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                        Html::rawElement('td', null, Xml::input('assignment-date', 20, $assignmentDateDefault, array('id' => 'assignment-date')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date')))
                     )
                 ) .
                 $buttons .
-                Html::hidden('assignment-id', $id) .
+                Html::hidden('assignment-params[0][assignment-id]', $id) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
@@ -716,24 +815,24 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-score', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
-                        Html::rawElement('td', null, Xml::check('evaluation-enabled', $evaluationEnabledDefault, array('id' => 'evaluation-enabled')))
+                        Html::rawElement('td', null, Xml::check('evaluation-params[0][evaluation-enabled]', $evaluationEnabledDefault, array('id' => 'evaluation-enabled')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-date', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-comment', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-comment]', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
                     )
                 ) .
                 $buttons .
-                Html::hidden('evaluation-user', $user_id) .
-                Html::hidden('evaluation-assignment', $assignment_id) .
+                Html::hidden('evaluation-params[0][evaluation-user]', $user_id) .
+                Html::hidden('evaluation-params[0][evaluation-assignment]', $assignment_id) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
