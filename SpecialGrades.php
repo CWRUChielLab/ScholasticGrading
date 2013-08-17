@@ -259,6 +259,8 @@ class SpecialGrades extends SpecialPage {
         # Check whether assignment exists
         $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
         if ( $assignments->numRows() > 0 ) {
+
+            # The assignment exists
             $assignment = $assignments->next();
 
             if ( $request->getVal('modify-assignment') ) {
@@ -286,6 +288,8 @@ class SpecialGrades extends SpecialPage {
                 }
 
             } elseif ( $request->getVal('delete-assignment') ) {
+
+                # Prepare to delete the existing evaluation
 
                 if ( !$request->getVal('confirm-delete') ) {
 
@@ -320,7 +324,7 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    # Delete the existing assignment
+                    # Delete is confirmed so delete the existing evaluation
                     $dbw->delete('scholasticgrading_assignment', array('sga_id' => $assignmentID));
 
                     # Report success and create a new log entry
@@ -347,6 +351,8 @@ class SpecialGrades extends SpecialPage {
             }
 
         } else {
+
+            # The assignment does not exist
 
             if ( $request->getVal('create-assignment') ) {
 
@@ -406,64 +412,35 @@ class SpecialGrades extends SpecialPage {
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
 
-        # Check whether evaluation exists
-        $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
-        if ( $evaluations->numRows() > 0 ) {
-            $evaluation = $evaluations->next();
+        # Check whether user and assignment exist
+        $users = $dbw->select('user', '*', array('user_id' => $evaluationUser));
+        $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment));
+        if ( $users->numRows() === 0 || $assignments->numRows() === 0 ) {
 
-            if ( $request->getVal('modify-evaluation') ) {
+            # Either the user or assignment does not exist
+            $page->addWikiText('Either user (id=' . $evaluationUser . ') or assignment (id=' . $evaluationAssignment . ') does not exist.');
+            return;
 
-                # Edit the existing evaluation
-                $dbw->update('scholasticgrading_evaluation', array(
-                    'sge_score'   => $evaluationScore,
-                    'sge_enabled' => $evaluationEnabled,
-                    'sge_date'    => $evaluationDate,
-                    'sge_comment' => $evaluationComment,
-                ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+        } else {
 
-                # Report success and create a new log entry
-                if ( $dbw->affectedRows() === 0 ) {
+            # The user and assignment both exist
 
-                    $page->addWikiText('Database unchanged.');
+            # Check whether evaluation exists
+            $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+            if ( $evaluations->numRows() > 0 ) {
 
-                } else {
+                # The evaluation exists
+                $evaluation = $evaluations->next();
 
-                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+                if ( $request->getVal('modify-evaluation') ) {
 
-                    $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
-
-                }
-
-            } elseif ( $request->getVal('delete-evaluation') ) {
-
-                if ( !$request->getVal('confirm-delete') ) {
-
-                    # Ask for confirmation of delete
-                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-                    $page->addWikiText('Are you sure you want to delete the evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
-
-                    # Provide a delete button
-                    $page->addHtml(Html::rawElement('form',
-                        array(
-                            'method' => 'post',
-                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
-                        ),
-                        Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
-                        Html::hidden('confirm-delete', true) .
-                        Html::hidden('evaluation-user', $evaluationUser) .
-                        Html::hidden('evaluation-assignment', $evaluationAssignment) .
-                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
-                    ));
-
-                } else {
-
-                    # Delete the existing evaluation
-                    $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+                    # Edit the existing evaluation
+                    $dbw->update('scholasticgrading_evaluation', array(
+                        'sge_score'   => $evaluationScore,
+                        'sge_enabled' => $evaluationEnabled,
+                        'sge_date'    => $evaluationDate,
+                        'sge_comment' => $evaluationComment,
+                    ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
                     # Report success and create a new log entry
                     if ( $dbw->affectedRows() === 0 ) {
@@ -475,57 +452,107 @@ class SpecialGrades extends SpecialPage {
                         $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
                         $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
 
-                        $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+                        $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
 
                         $log = new LogPage('grades', false);
-                        $log->addEntry('deleteEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+                        $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
 
                     }
 
-                }
+                } elseif ( $request->getVal('delete-evaluation') ) {
 
-            } else {
+                    # Prepare to delete the existing evaluation
 
-                # Unknown action
-                $page->addWikiText('Unknown action. What button was pressed?');
+                    if ( !$request->getVal('confirm-delete') ) {
 
-            }
+                        # Ask for confirmation of delete
+                        $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                        $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+                        $page->addWikiText('Are you sure you want to delete the evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
 
-        } else {
+                        # Provide a delete button
+                        $page->addHtml(Html::rawElement('form',
+                            array(
+                                'method' => 'post',
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+                            ),
+                            Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
+                            Html::hidden('confirm-delete', true) .
+                            Html::hidden('evaluation-user', $evaluationUser) .
+                            Html::hidden('evaluation-assignment', $evaluationAssignment) .
+                            Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                        ));
 
-            if ( $request->getVal('create-evaluation') ) {
+                    } else {
 
-                # Create a new evaluation
-                $dbw->insert('scholasticgrading_evaluation', array(
-                    'sge_user_id'       => $evaluationUser,
-                    'sge_assignment_id' => $evaluationAssignment,
-                    'sge_score'         => $evaluationScore,
-                    'sge_enabled'       => $evaluationEnabled,
-                    'sge_date'          => $evaluationDate,
-                    'sge_comment'       => $evaluationComment,
-                ));
+                        # Delete is confirmed so delete the existing evaluation
+                        $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
-                # Report success and create a new log entry
-                if ( $dbw->affectedRows() === 0 ) {
+                        # Report success and create a new log entry
+                        if ( $dbw->affectedRows() === 0 ) {
 
-                    $page->addWikiText('Database unchanged.');
+                            $page->addWikiText('Database unchanged.');
+
+                        } else {
+
+                            $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                            $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+
+                            $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+
+                            $log = new LogPage('grades', false);
+                            $log->addEntry('deleteEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+
+                        }
+
+                    }
 
                 } else {
 
-                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-
-                    $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+                    # Unknown action
+                    $page->addWikiText('Unknown action. What button was pressed?');
 
                 }
 
             } else {
 
-                # Unknown action
-                $page->addWikiText('Unknown action. What button was pressed?');
+                # The evaluation does not exist
+
+                if ( $request->getVal('create-evaluation') ) {
+
+                    # Create a new evaluation
+                    $dbw->insert('scholasticgrading_evaluation', array(
+                        'sge_user_id'       => $evaluationUser,
+                        'sge_assignment_id' => $evaluationAssignment,
+                        'sge_score'         => $evaluationScore,
+                        'sge_enabled'       => $evaluationEnabled,
+                        'sge_date'          => $evaluationDate,
+                        'sge_comment'       => $evaluationComment,
+                    ));
+
+                    # Report success and create a new log entry
+                    if ( $dbw->affectedRows() === 0 ) {
+
+                        $page->addWikiText('Database unchanged.');
+
+                    } else {
+
+                        $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
+                        $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
+
+                        $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
+
+                        $log = new LogPage('grades', false);
+                        $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
+
+                    }
+
+                } else {
+
+                    # Unknown action
+                    $page->addWikiText('Unknown action. What button was pressed?');
+
+                }
 
             }
 
