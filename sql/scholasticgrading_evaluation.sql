@@ -2,7 +2,7 @@
 -- Evaluations for the ScholasticGrading extension
 --
 CREATE TABLE /*_*/scholasticgrading_evaluation (
-    sge_user_id int(10) unsigned NOT NULL DEFAULT '0',
+    sge_user_id int(10) unsigned NOT NULL,
     sge_assignment_id int unsigned NOT NULL,
     sge_score decimal(8,4) NOT NULL default 0,
     sge_enabled boolean NOT NULL default TRUE,
