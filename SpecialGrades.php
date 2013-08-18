@@ -1078,9 +1078,15 @@ class SpecialGrades extends SpecialPage {
 
         }
 
-        # Query for all assignments
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
-            array('ORDER BY' => 'sga_date'));
+        # Initialize the points earned, the ideal score,
+        # and the course total points for this student
+        $pointsEarned = 0;
+        $pointsIdeal = 0;
+        $pointsAllAssignments = 0;
+
+        # Query for all enabled assignments
+        $assignments = $dbr->select('scholasticgrading_assignment', '*',
+            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => 'sga_date'));
 
         # Build the user scores page
         $content = '';
@@ -1093,64 +1099,67 @@ class SpecialGrades extends SpecialPage {
         $paramSetCounter = 0;
         foreach ( $assignments as $assignment ) {
 
-            if ( $assignment->sga_enabled ) {
+            # Increment the course total points
+            $pointsAllAssignments += $assignment->sga_value;
 
-                # Check whether evaluation exists
-                $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
-                if ( $evaluations->numRows() === 0 ) {
+            # Check whether evaluation exists
+            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
+            if ( $evaluations->numRows() === 0 ) {
 
-                    # The evaluation does not exist
-                    # Set default parameters for creating a new evaluation
-                    $evaluationScoreDefault = '';
-                    $evaluationEnabledDefault = true;
-                    $evaluationDateDefault = $assignment->sga_date;
-                    $evaluationCommentDefault = '';
+                # The evaluation does not exist
+                # Set default parameters for creating a new evaluation
+                $evaluationScoreDefault = '';
+                $evaluationEnabledDefault = true;
+                $evaluationDateDefault = $assignment->sga_date;
+                $evaluationCommentDefault = '';
 
-                } else {
+            } else {
 
-                    # The evaluation exists
-                    $evaluation = $evaluations->next();
+                # The evaluation exists
+                $evaluation = $evaluations->next();
 
-                    # Use its values as default parameters
-                    $evaluationScoreDefault = (float)$evaluation->sge_score;
-                    $evaluationEnabledDefault = $evaluation->sge_enabled;
-                    $evaluationDateDefault = $evaluation->sge_date;
-                    $evaluationCommentDefault = $evaluation->sge_comment;
+                # Use its values as default parameters
+                $evaluationScoreDefault = (float)$evaluation->sge_score;
+                $evaluationEnabledDefault = $evaluation->sge_enabled;
+                $evaluationDateDefault = $evaluation->sge_date;
+                $evaluationCommentDefault = $evaluation->sge_comment;
 
-                }
+                # Increment the points earned and the ideal score
+                $pointsEarned += $evaluation->sge_score;
+                $pointsIdeal  += $assignment->sga_value;
 
-                # Build the evaluation form
-                $content .= Html::rawElement('fieldset', null,
-                    Html::element('legend', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')') .
-                    Html::rawElement('table', null,
+            }
+
+            # Build the evaluation form
+            $content .= Html::rawElement('fieldset', null,
+                Html::element('legend', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')') .
+                Html::rawElement('table', null,
 #                        Html::rawElement('tr', null,
 #                            Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
 #                            Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')')
 #                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
-                            Html::rawElement('td', null, Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault, array('id' => 'evaluation-enabled')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
-                        ) .
-                        Html::rawElement('tr', null,
-                            Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
-                            Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
-                        )
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
                     ) .
-                    Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user_id) .
-                    Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-assignment]', $assignment->sga_id)
-                );
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
+                        Html::rawElement('td', null, Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault, array('id' => 'evaluation-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
+                    )
+                ) .
+                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user_id) .
+                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-assignment]', $assignment->sga_id)
+            );
 
-                $paramSetCounter += 1;
-
-            }
+            $paramSetCounter += 1;
 
         }
 
@@ -1158,6 +1167,11 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";
         $content .= Html::element('br') . "\n";
+
+        # Insert the racetrack image at the top of the page
+        $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
+                Html::element('img', array('src' => 'https://neurowiki.case.edu/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+            )) . "\n";
 
         $page->addHTML($content);
 
@@ -1334,7 +1348,7 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
         $pointsEarned = array();
-        $pointTotal = array();
+        $pointsIdeal = array();
 
         # Query for all users and all enabled assignments
         $dbr = wfGetDB(DB_SLAVE);
@@ -1358,9 +1372,9 @@ class SpecialGrades extends SpecialPage {
                 )
             );
 
-            # Initialize the points earned and the point total for this student
+            # Initialize the points earned and the ideal score for this student
             $pointsEarned[$user->user_name] = 0;
-            $pointTotal[$user->user_name] = 0;
+            $pointsIdeal[$user->user_name] = 0;
         }
         $content .= Html::closeElement('tr') . "\n";
 
@@ -1401,9 +1415,9 @@ class SpecialGrades extends SpecialPage {
 
                         }
 
-                        # Increment the points earned and the point total for this student
+                        # Increment the points earned and the ideal score for this student
                         $pointsEarned[$user->user_name] += $evaluation->sge_score;
-                        $pointTotal[$user->user_name] += $assignment->sga_value;
+                        $pointsIdeal[$user->user_name] += $assignment->sga_value;
 
                     } else {
 
@@ -1434,7 +1448,7 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::element('th', null, '') . Html::element('th', null, 'TOTAL');
         foreach ( $users as $user ) {
             $content .= Html::element('td', null,
-                $pointsEarned[$user->user_name] . ' / ' . $pointTotal[$user->user_name]
+                $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
             );
         }
         $content .= Html::closeElement('tr') . "\n";
