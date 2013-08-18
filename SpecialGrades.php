@@ -197,6 +197,52 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Validates a title string
+     *
+     * Returns the string with leading and trailing
+     * whitespace removed if non-whitespace characters
+     * are present. Otherwise, returns false.
+     *
+     * @param string title string to validate
+     * @return mixed the trimmed string or false
+     */
+
+    function validateTitle ( $test_title ) {
+
+        if ( strlen(trim($test_title)) > 0 ) {
+            return trim($test_title);
+        } else {
+            return false;
+        }
+
+    } /* end validateTitle */
+
+
+    /**
+     * Validates a date string
+     *
+     * Returns the date string if it has the form
+     * YYYY-MM-DD. Otherwise, returns false.
+     *
+     * @param string date string to validate
+     * @return mixed the date string or false
+     */
+
+    function validateDate ( $test_date ) {
+
+        $date = DateTime::createFromFormat('Y-m-d', trim($test_date));
+        $date_errors = DateTime::getLastErrors();
+        if ( $date_errors['warning_count'] + $date_errors['error_count'] > 0 ) {
+            # Date is not of the form YYYY-MM-DD
+            return false;
+        } else {
+            return $date->format('Y-m-d');
+        }
+
+    } /* end validateDate */
+
+
+    /**
      * Process sets of assignment creation/modification/deletion requests
      *
      * Processes assignment forms. Does not directly modify the
@@ -350,7 +396,7 @@ class SpecialGrades extends SpecialPage {
      * to an existing assignment, the function will modify or delete
      * that assignment depending on whether the delete-assignment
      * variable is set. Otherwise, the function will create a new
-     * assignment.
+     * assignment. Parameters are initially validated and sanitized.
      *
      * @param int|bool    $assignmentID the id of an assignment
      * @param int|bool    $assignmentTitle the title of an assignment
@@ -364,6 +410,31 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+
+        # Validate/sanitize assignment parameters
+        $assignmentID          = filter_var($assignmentID, FILTER_VALIDATE_INT);
+        $assignmentTitle       = filter_var($assignmentTitle, FILTER_CALLBACK, array('options' => array($this, 'validateTitle')));
+        $assignmentValue       = filter_var($assignmentValue, FILTER_VALIDATE_FLOAT);
+        if ( !is_bool($assignmentEnabled) ) {
+            $assignmentEnabled = filter_var($assignmentEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+        $assignmentDate        = filter_var($assignmentDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
+        if ( $assignmentTitle === false ) {
+            $page->addWikiText('Invalid title for assignment (may not be empty).');
+            return;
+        }
+        if ( $assignmentValue === false ) {
+            $page->addWikiText('Invalid value for assignment (must be a float).');
+            return;
+        }
+        if ( !is_bool($assignmentEnabled) ) {
+            $page->addWikiText('Invalid enabled status for assignment (must be a boolean).');
+            return;
+        }
+        if ( $assignmentDate === false ) {
+            $page->addWikiText('Invalid date for assignment (must have form YYYY-MM-DD).');
+            return;
+        }
 
         # Check whether assignment exists
         $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
@@ -428,6 +499,10 @@ class SpecialGrades extends SpecialPage {
                         Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
                         Html::hidden('confirm-delete', true) .
                         Html::hidden('assignment-params[0][assignment-id]', $assignmentID) .
+                        Html::hidden('assignment-params[0][assignment-title]', $assignmentTitle) .
+                        Html::hidden('assignment-params[0][assignment-value]', $assignmentValue) .
+                        Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled) .
+                        Html::hidden('assignment-params[0][assignment-date]', $assignmentDate) .
                         Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                     ));
 
@@ -494,7 +569,8 @@ class SpecialGrades extends SpecialPage {
      * modify or delete that evaluation depending on whether the
      * delete-evaluation variable is set. Otherwise, the function
      * will create a new evaluation as long as both the user and
-     * assignment exist.
+     * assignment exist. Parameters are initially validated and
+     * sanitized.
      *
      * @param int|bool    $evaluationUser the user id of an evaluation
      * @param int|bool    $evaluationAssignment the assignment id of an evaluation
@@ -509,6 +585,36 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+
+        # Validate/sanitize evaluation parameters
+        $evaluationUser        = filter_var($evaluationUser, FILTER_VALIDATE_INT);
+        $evaluationAssignment  = filter_var($evaluationAssignment, FILTER_VALIDATE_INT);
+        $evaluationScore       = filter_var($evaluationScore, FILTER_VALIDATE_FLOAT);
+        if ( !is_bool($evaluationEnabled) ) {
+            $evaluationEnabled = filter_var($evaluationEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+        $evaluationDate        = filter_var($evaluationDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
+        $evaluationComment     = trim($evaluationComment);
+        if ( $evaluationUser === false ) {
+            $page->addWikiText('Invalid user id for evaluation (must be an integer).');
+            return;
+        }
+        if ( $evaluationAssignment === false ) {
+            $page->addWikiText('Invalid assignment id for evaluation (must be an integer).');
+            return;
+        }
+        if ( $evaluationScore === false ) {
+            $page->addWikiText('Invalid score for evaluation (must be a float).');
+            return;
+        }
+        if ( !is_bool($evaluationEnabled) ) {
+            $page->addWikiText('Invalid enabled status for evaluation (must be a boolean).');
+            return;
+        }
+        if ( $evaluationDate === false ) {
+            $page->addWikiText('Invalid date for evaluation (must have form YYYY-MM-DD).');
+            return;
+        }
 
         # Check whether user and assignment exist
         $users = $dbw->select('user', '*', array('user_id' => $evaluationUser));
@@ -578,6 +684,9 @@ class SpecialGrades extends SpecialPage {
                             Html::hidden('confirm-delete', true) .
                             Html::hidden('evaluation-params[0][evaluation-user]', $evaluationUser) .
                             Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignment) .
+                            Html::hidden('evaluation-params[0][evaluation-score]', $evaluationScore) .
+                            Html::hidden('evaluation-params[0][evaluation-date]', $evaluationDate) .
+                            Html::hidden('evaluation-params[0][evaluation-comment]', $evaluationComment) .
                             Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                         ));
 
@@ -664,7 +773,7 @@ class SpecialGrades extends SpecialPage {
         $fieldsetTitle = 'Create a new assignment';
         $buttons = Xml::submitButton('Create assignment', array('name' => 'create-assignment'));
         $assignmentTitleDefault = '';
-        $assignmentValueDefault = 0;
+        $assignmentValueDefault = '';
         $assignmentEnabledDefault = true;
         $assignmentDateDefault = date('Y-m-d');
 
@@ -774,7 +883,7 @@ class SpecialGrades extends SpecialPage {
                 # Set default parameters for creating a new evaluation
                 $fieldsetTitle = 'Create a new evaluation';
                 $buttons = Xml::submitButton('Create evaluation', array('name' => 'create-evaluation'));
-                $evaluationScoreDefault = 0;
+                $evaluationScoreDefault = '';
                 $evaluationEnabledDefault = true;
                 $evaluationDateDefault = $assignment->sga_date;
                 $evaluationCommentDefault = '';
