@@ -3,7 +3,6 @@ $(function() {
         dateFormat: "yy-mm-dd",
         showOtherMonths: true,
         selectOtherMonths: true,
-        showAnim: false,
     } );
 });
 
@@ -12,6 +11,5 @@ $(function() {
         dateFormat: "yy-mm-dd",
         showOtherMonths: true,
         selectOtherMonths: true,
-        showAnim: false,
     } );
 });
