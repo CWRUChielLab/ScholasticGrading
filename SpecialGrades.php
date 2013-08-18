@@ -84,11 +84,22 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
-        case 'edituser':
+        case 'edituserscores':
 
             if ( $this->canModify(true) ) {
-                $this->showUser(
+                $this->showUserEvaluations(
                     $request->getVal('user', false)
+                );
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
+        case 'editassignmentscores':
+
+            if ( $this->canModify(true) ) {
+                $this->showAssignmentEvaluations(
+                    $request->getVal('id', false)
                 );
             }
 
@@ -272,11 +283,11 @@ class SpecialGrades extends SpecialPage {
 
             switch ( $action ) {
 
-            case 'edituser':
+            case 'edituserscores':
 
                 # Check whether user exists
                 $dbr = wfGetDB(DB_SLAVE);
-                $users = $dbr->select('user', '*', array('user_id' => $request->getVal('user')));
+                $users = $dbr->select('user', '*', array('user_id' => $request->getVal('user', false)));
                 if ( $users->numRows() > 0 ) {
 
                     # The user exists
@@ -286,6 +297,26 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     # The user does not exist
+                    return $this->msg('grades')->plain();
+
+                }
+
+                break;
+
+            case 'editassignmentscores':
+
+                # Check whether assignment exists
+                $dbr = wfGetDB(DB_SLAVE);
+                $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $request->getVal('id', false)));
+                if ( $assignments->numRows() > 0 ) {
+
+                    # The assignment exists
+                    $assignment = $assignments->next();
+                    return 'Edit scores for ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')';
+
+                } else {
+
+                    # The assignment does not exist
                     return $this->msg('grades')->plain();
 
                 }
@@ -1027,7 +1058,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $user_id the user id
      */
 
-    public function showUser ( $user_id = false ) {
+    public function showUserEvaluations ( $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1051,7 +1082,7 @@ class SpecialGrades extends SpecialPage {
         $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
             array('ORDER BY' => 'sga_date'));
 
-        # Build the user page
+        # Build the user scores page
         $content = '';
         $content .= Html::openElement('form', array(
             'method' => 'post',
@@ -1130,7 +1161,117 @@ class SpecialGrades extends SpecialPage {
 
         $page->addHTML($content);
 
-    } /* end showUser */
+    } /* end showUserEvaluations */
+
+
+    /**
+     * Display all evaluations for an assignment
+     *
+     * Generates a page for creating and editing evaluations for
+     * all users for a single assignment.
+     *
+     * @param int|bool $id the assignment id
+     */
+
+    public function showAssignmentEvaluations ( $id = false ) {
+
+        $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
+
+        # Check whether assignment exists
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $id));
+        if ( $assignments->numRows() === 0 ) {
+
+            # The assignment does not exist
+            $page->addWikiText('Assignment (id=' . $id . ') does not exist.');
+            return;
+
+        } else {
+
+            # The assignment exists
+            $assignment = $assignments->next();
+
+        }
+
+        # Query for all users
+        $users = $dbr->select('user', '*');
+
+        # Build the assignment scores page
+        $content = '';
+        $content .= Html::openElement('form', array(
+            'method' => 'post',
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+        ));
+
+        # Create a form for each user
+        $paramSetCounter = 0;
+        foreach ( $users as $user ) {
+
+            # Check whether evaluation exists
+            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $id));
+            if ( $evaluations->numRows() === 0 ) {
+
+                # The evaluation does not exist
+                # Set default parameters for creating a new evaluation
+                $evaluationScoreDefault = '';
+                $evaluationEnabledDefault = true;
+                $evaluationDateDefault = $assignment->sga_date;
+                $evaluationCommentDefault = '';
+
+            } else {
+
+                # The evaluation exists
+                $evaluation = $evaluations->next();
+
+                # Use its values as default parameters
+                $evaluationScoreDefault = (float)$evaluation->sge_score;
+                $evaluationEnabledDefault = $evaluation->sge_enabled;
+                $evaluationDateDefault = $evaluation->sge_date;
+                $evaluationCommentDefault = $evaluation->sge_comment;
+
+            }
+
+            # Build the evaluation form
+            $content .= Html::rawElement('fieldset', null,
+                Html::element('legend', null, $user->user_real_name . ' (' . $user->user_name . ')') .
+                Html::rawElement('table', null,
+#                        Html::rawElement('tr', null,
+#                            Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
+#                            Html::rawElement('td', null, $user->user_real_name . ' (' . $user->user_name . ')')
+#                        ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
+                        Html::rawElement('td', null, Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault, array('id' => 'evaluation-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment')))
+                    )
+                ) .
+                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user->user_id) .
+                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-assignment]', $id)
+            );
+
+            $paramSetCounter += 1;
+
+        }
+
+        $content .= Xml::submitButton('Apply changes', array('name' => 'modify-evaluation'));
+        $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
+        $content .= Html::closeElement('form') . "\n";
+        $content .= Html::element('br') . "\n";
+
+        $page->addHTML($content);
+
+    } /* showAssignmentEvaluations */
 
 
     /**
@@ -1213,7 +1354,7 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::rawElement('th', array('class' => 'vertical'),
                 Html::rawElement('div', array('class' => 'vertical'),
                     Linker::linkKnown($this->getTitle(), $user->user_real_name, array(),
-                        array('action' => 'edituser', 'user' => $user->user_id))
+                        array('action' => 'edituserscores', 'user' => $user->user_id))
                 )
             );
 
@@ -1232,7 +1373,7 @@ class SpecialGrades extends SpecialPage {
                 $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
                 $content .= Html::rawElement('th', null,
                     Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
-                        array('action' => 'editassignment', 'id' => $assignment->sga_id)));
+                        array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
 
                 # Create a cell for each user
                 foreach ( $users as $user ) {
