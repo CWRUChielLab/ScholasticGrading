@@ -208,7 +208,7 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Validates a title string
+     * Validate a title string
      *
      * Returns the string with leading and trailing
      * whitespace removed if non-whitespace characters
@@ -230,7 +230,7 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Validates a date string
+     * Validate a date string
      *
      * Returns the date string if it has the form
      * YYYY-MM-DD. Otherwise, returns false.
@@ -251,6 +251,62 @@ class SpecialGrades extends SpecialPage {
         }
 
     } /* end validateDate */
+
+
+    /**
+     * Set the page title depending on context
+     *
+     * Creates the title shown at the top of each page
+     * and in the browser title bar. Title depends on
+     * the interface in use.
+     */
+
+    function getDescription() {
+
+        $request = $this->getRequest();
+        $action = $request->getVal('action');
+
+        if ( $request->getVal('title') == $this->getTitle() ) {
+
+            # User is visiting this special page
+
+            switch ( $action ) {
+
+            case 'edituser':
+
+                # Check whether user exists
+                $dbr = wfGetDB(DB_SLAVE);
+                $users = $dbr->select('user', '*', array('user_id' => $request->getVal('user')));
+                if ( $users->numRows() > 0 ) {
+
+                    # The user exists
+                    $user = $users->next();
+                    return 'Edit scores for ' . $user->user_real_name . ' (' . $user->user_name . ')';
+
+                } else {
+
+                    # The user does not exist
+                    return $this->msg('grades')->plain();
+
+                }
+
+                break;
+
+            default:
+
+                return $this->msg('grades')->plain();
+                break;
+
+            }
+
+        } else {
+
+            # User is viewing another page, such as Special:SpecialPages
+            return $this->msg('grades')->plain();
+
+        }
+
+    } /* end getDescription */
 
 
     /**
