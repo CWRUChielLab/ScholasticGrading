@@ -292,7 +292,7 @@ class SpecialGrades extends SpecialPage {
 
                     # The user exists
                     $user = $users->next();
-                    return 'Edit scores for ' . $user->user_real_name . ' (' . $user->user_name . ')';
+                    return 'Edit scores for ' . $this->getUserDisplayName($user->user_id);
 
                 } else {
 
@@ -338,6 +338,78 @@ class SpecialGrades extends SpecialPage {
         }
 
     } /* end getDescription */
+
+
+    /**
+     * Get the user display name
+     *
+     * If a valid user id is provided, returns the
+     * user's real name with user name in parentheses,
+     * or, if the user has no real name, returns the
+     * user name instead. If false is provided, uses
+     * the information of the user that executed the
+     * page. Returns false if an invalid id is provided.
+     *
+     * @param int|bool user_id the user id
+     * @return string|bool the user display name or false
+     */
+
+    public function getUserDisplayName ( $user_id = false ) {
+
+        if ( $user_id ) {
+
+            # Use the provided user id to look up
+            # the user in the database
+
+            $dbr = wfGetDB(DB_SLAVE);
+
+            # Check whether user exists
+            $users = $dbr->select('user', '*', array('user_id' => $user_id));
+            if ( $users->numRows() === 0 ) {
+
+                # The user does not exist
+                return false;
+
+            } else {
+
+                # The user exists
+                $user = $users->next();
+
+                # Determine if the user has a real name
+                if ( $user->user_real_name ) {
+
+                    # Return the user real name with user name
+                    return $user->user_real_name . ' (' . $user->user_name . ')';
+
+                } else {
+
+                    # Return user name only
+                    return $user->user_name;
+
+                }
+
+            }
+
+        } else {
+
+            # Use the user executing the page
+
+            # Determine if the user has a real name
+            if ( $this->getUser()->getRealName() ) {
+
+                # Return the user real name with user name
+                return $this->getUser()->getRealName() . ' (' . $this->getUser()->getName() . ')';
+
+            } else {
+
+                # Return user name only
+                return $this->getUser()->getName();
+
+            }
+
+        }
+
+    } /* end getUserDisplayName */
 
 
     /**
@@ -582,7 +654,7 @@ class SpecialGrades extends SpecialPage {
                         $content .= Html::openElement('ul', null);
                         foreach ( $evaluations as $evaluation ) {
                             $user = $dbw->select('user', '*', array('user_id' => $evaluation->sge_user_id))->next();
-                            $content .= Html::rawElement('li', null, $user->user_real_name) . "\n";
+                            $content .= Html::rawElement('li', null, $this->getUserDisplayName($user->user_id)) . "\n";
                         }
                         $content .= Html::closeElement('ul') . "\n";
                         $page->addHtml($content);
@@ -1134,10 +1206,10 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::rawElement('fieldset', null,
                 Html::element('legend', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')') .
                 Html::rawElement('table', null,
-#                        Html::rawElement('tr', null,
-#                            Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
-#                            Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')')
-#                        ) .
+#                    Html::rawElement('tr', null,
+#                        Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
+#                        Html::rawElement('td', null, $assignment->sga_title . ' (' . $assignment->sga_date . ')')
+#                    ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score-' . $paramSetCounter)) .
                         Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score-' . $paramSetCounter)) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
@@ -1247,12 +1319,12 @@ class SpecialGrades extends SpecialPage {
 
             # Build the evaluation form
             $content .= Html::rawElement('fieldset', null,
-                Html::element('legend', null, $user->user_real_name . ' (' . $user->user_name . ')') .
+                Html::element('legend', null, $this->getUserDisplayName($user->user_id)) .
                 Html::rawElement('table', null,
-#                        Html::rawElement('tr', null,
-#                            Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
-#                            Html::rawElement('td', null, $user->user_real_name . ' (' . $user->user_name . ')')
-#                        ) .
+#                    Html::rawElement('tr', null,
+#                        Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
+#                        Html::rawElement('td', null, $this->getUserDisplayName($user->user_id))
+#                    ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score-' . $paramSetCounter)) .
                         Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score-' . $paramSetCounter)) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
@@ -1367,7 +1439,7 @@ class SpecialGrades extends SpecialPage {
         foreach ( $users as $user ) {
             $content .= Html::rawElement('th', array('class' => 'vertical'),
                 Html::rawElement('div', array('class' => 'vertical'),
-                    Linker::linkKnown($this->getTitle(), $user->user_real_name, array(),
+                    Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
                         array('action' => 'edituserscores', 'user' => $user->user_id))
                 )
             );
