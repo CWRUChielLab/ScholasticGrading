@@ -2,6 +2,10 @@
  * CSS for Special:Grades
  */
 
+div.racetrack {
+    text-align: center;
+}
+
 th.vertical {
     vertical-align: bottom;
     height: 120px;
@@ -15,6 +19,29 @@ th.vertical div.vertical {
     -o-transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
     transform: rotate(-90deg);
+}
+
+table.sg-evaluationtable {
+    width: 100%;
+}
+
+table.sg-evaluationtable tr#evaluationtable-header {
+}
+
+table.sg-evaluationtable tr.sg-evaluationtable-row {
+}
+
+table.sg-evaluationtable td.sg-evaluationtable-date,
+table.sg-evaluationtable td.sg-evaluationtable-value,
+table.sg-evaluationtable td.sg-evaluationtable-score {
+    text-align:center;
+    width: 100px;
+}
+
+table.sg-evaluationtable td.sg-evaluationtable-title,
+table.sg-evaluationtable td.sg-evaluationtable-comment {
+    min-width: 200px;
+    max-width: 500px;
 }
 
 table.sg-assignmenttable {
@@ -36,8 +63,7 @@ table.sg-assignmenttable td.sg-assignmenttable-modify {
 }
 
 table.sg-assignmenttable td.sg-assignmenttable-title {
+    min-width: 200px;
+    max-width: 500px;
 }
 
-div.racetrack {
-    text-align: center;
-}

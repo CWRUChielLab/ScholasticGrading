@@ -136,13 +136,20 @@ class SpecialGrades extends SpecialPage {
 
         default:
 
-            $page->addHTML(Html::rawElement('p', null,
-                Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
+            if ( $this->canModify(false) ) {
+                $page->addHTML(Html::rawElement('p', null,
+                    Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
 
-            $this->showGradeTable();
-            //$this->showAssignments();
-            //$this->showEvaluations();
-            //$this->showUsers();
+                $this->showGradeTable();
+                //$this->showAssignments();
+                //$this->showEvaluations();
+                //$this->showUsers();
+            } else {
+                $this->showUserEvaluations(
+                    $this->getUser()->getId()
+                );
+            }
+
             break;
 
         } /* end switch action */
@@ -325,7 +332,29 @@ class SpecialGrades extends SpecialPage {
 
             default:
 
-                return $this->msg('grades')->plain();
+                if ( $this->getUser()->isAnon() ) {
+
+                    # User is anonymous
+                    return $this->msg('grades')->plain();
+
+                } else {
+
+                    # User is registered and logged in
+
+                    if ( !$this->canModify(false) ) {
+
+                        # Student interface
+                        return 'Grades for ' . $this->getUserDisplayName(false);
+
+                    } else {
+
+                        # Instructor interface
+                        return $this->msg('grades')->plain();
+
+                    }
+
+                }
+
                 break;
 
             }
@@ -1530,6 +1559,99 @@ class SpecialGrades extends SpecialPage {
         $page->addHTML($content);
 
     } /* end showGradeTable */
+
+
+    /**
+     * Display all evaluations for a user
+     *
+     * Generates a page for viewing evaluations for
+     * all enabled assignments for a single user.
+     *
+     * @param int|bool $user_id the user id
+     */
+
+    public function showUserEvaluations ( $user_id = false ) {
+
+        $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
+
+        # Check whether user exists
+        $users = $dbr->select('user', '*', array('user_id' => $user_id));
+        if ( $users->numRows() === 0 ) {
+
+            # The user does not exist
+            $page->addWikiText('Grades are only available to registered users. You must be logged in to see your grades.');
+            return;
+
+        } else {
+
+            # The user exists
+            $user = $users->next();
+
+        }
+
+        # Initialize the points earned, the ideal score,
+        # and the course total points for this student
+        $pointsEarned = 0;
+        $pointsIdeal = 0;
+        $pointsAllAssignments = 0;
+
+        # Query for all enabled assignments
+        $assignments = $dbr->select('scholasticgrading_assignment', '*',
+            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => 'sga_date'));
+
+        # Build the user scores page
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-evaluationtable')) . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', array('id' => 'evaluationtable-header'),
+            Html::element('th', null, 'Date') .
+            Html::element('th', null, 'Assignment') .
+            Html::element('th', null, 'Value') .
+            Html::element('th', null, 'Score') .
+            Html::element('th', null, 'Comment')
+        ) . "\n";
+
+        # Create a row for each enabled assignment that has an evaluation
+        foreach ( $assignments as $assignment ) {
+
+            # Increment the course total points
+            $pointsAllAssignments += $assignment->sga_value;
+
+            # Check whether evaluation exists
+            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
+            if ( $evaluations->numRows() > 0 ) {
+
+                # The evaluation exists
+                $evaluation = $evaluations->next();
+
+                # Increment the points earned and the ideal score
+                $pointsEarned += $evaluation->sge_score;
+                $pointsIdeal  += $assignment->sga_value;
+
+                $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row'),
+                    Html::element('td', array('class' => 'sg-evaluationtable-date'), $evaluation->sge_date) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-title'), $assignment->sga_title) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-score'), (float)$evaluation->sge_score) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-comment'), $evaluation->sge_comment)
+                ) . "\n";
+
+            }
+
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        # Insert the racetrack image at the top of the page
+        $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
+                Html::element('img', array('src' => 'https://neurowiki.case.edu/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+            )) . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showUserEvaluations */
 
 
     /**
