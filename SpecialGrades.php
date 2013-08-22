@@ -1282,7 +1282,7 @@ class SpecialGrades extends SpecialPage {
 
         # Insert the racetrack image at the top of the page
         $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
-                Html::element('img', array('src' => 'https://neurowiki.case.edu/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+                Html::element('img', array('src' => '/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
             )) . "\n";
 
         $page->addHTML($content);
@@ -1658,7 +1658,7 @@ class SpecialGrades extends SpecialPage {
 
         # Insert the racetrack image at the top of the page
         $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
-                Html::element('img', array('src' => 'https://neurowiki.case.edu/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+                Html::element('img', array('src' => '/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
             )) . "\n";
 
         $page->addHTML($content);
