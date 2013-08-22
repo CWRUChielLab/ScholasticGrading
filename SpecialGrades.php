@@ -319,7 +319,7 @@ class SpecialGrades extends SpecialPage {
 
                     # The assignment exists
                     $assignment = $assignments->next();
-                    return 'Edit scores for ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')';
+                    return 'Edit scores for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')';
 
                 } else {
 
@@ -1459,15 +1459,15 @@ class SpecialGrades extends SpecialPage {
 
         # Build the grade table
         $content = '';
-        $content .= Html::openElement('table', array('class' => 'wikitable')) . "\n";
+        $content .= Html::openElement('table', array('class' => 'wikitable sg-gradetable')) . "\n";
         $content .= Html::element('caption', null, 'Grades') . "\n";
 
         # Create a column header for each student
-        $content .= Html::openElement('tr');
+        $content .= Html::openElement('tr', array('id' => 'gradetable-header'));
         $content .= Html::element('td', null, '') . Html::element('td', null, '');
         foreach ( $users as $user ) {
-            $content .= Html::rawElement('th', array('class' => 'vertical'),
-                Html::rawElement('div', array('class' => 'vertical'),
+            $content .= Html::rawElement('th', array('class' => 'sg-gradetable-user'),
+                Html::rawElement('div', null,
                     Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
                         array('action' => 'edituserscores', 'user' => $user->user_id))
                 )
@@ -1482,9 +1482,10 @@ class SpecialGrades extends SpecialPage {
         # Create a row for each enabled assignment
         foreach ( $assignments as $assignment ) {
 
-            $content .= Html::openElement('tr');
-            $content .= Html::element('th', array('style' => 'text-align: right'), date_format(date_create($assignment->sga_date), 'D m/d'));
-            $content .= Html::rawElement('th', null,
+            $content .= Html::openElement('tr', array('class' => 'sg-gradetable-row'));
+#            $content .= Html::element('th', array('class' => 'sg-gradetable-date'), date_format(date_create($assignment->sga_date), 'D m/d'));
+            $content .= Html::element('th', array('class' => 'sg-gradetable-date'), $assignment->sga_date);
+            $content .= Html::rawElement('th', array('class' => 'sg-gradetable-assignment'),
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
                     array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
 
@@ -1503,14 +1504,14 @@ class SpecialGrades extends SpecialPage {
                         if ( $assignment->sga_value == 0 ) {
 
                             # The assignment is extra credit
-                            $content .= Html::rawElement('td', null, 
+                            $content .= Html::rawElement('td', array('class' => 'sg-gradetable-cell'), 
                                 Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                         } else {
 
                             # The assignment is not extra credit
-                            $content .= Html::rawElement('td', null, 
+                            $content .= Html::rawElement('td', array('class' => 'sg-gradetable-cell'), 
                                 Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
@@ -1523,7 +1524,7 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         # The evaluation is disabled
-                        $content .= Html::rawElement('td', null, 
+                        $content .= Html::rawElement('td', array('class' => 'sg-gradetable-cell'), 
                             Linker::linkKnown($this->getTitle(), '**', array(),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
@@ -1532,7 +1533,7 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     # An evaluation does not exist for this (user,assignment) combination
-                    $content .= Html::rawElement('td', null, 
+                    $content .= Html::rawElement('td', array('class' => 'sg-gradetable-cell'), 
                         Linker::linkKnown($this->getTitle(), '--', array(),
                             array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 

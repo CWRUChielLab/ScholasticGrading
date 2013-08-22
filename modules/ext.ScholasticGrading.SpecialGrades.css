@@ -6,12 +6,21 @@ div.racetrack {
     text-align: center;
 }
 
-th.vertical {
+table.sg-gradetable {
+}
+
+table.sg-gradetable tr#gradetable-header {
+}
+
+table.sg-gradetable tr.sg-gradetable-row {
+}
+
+table.sg-gradetable th.sg-gradetable-user {
     vertical-align: bottom;
     height: 120px;
 }
 
-th.vertical div.vertical {
+table.sg-gradetable th.sg-gradetable-user div {
     width: 20px;
     white-space: nowrap;
     -webkit-transform: rotate(-90deg);
@@ -19,6 +28,20 @@ th.vertical div.vertical {
     -o-transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
     transform: rotate(-90deg);
+}
+
+table.sg-gradetable th.sg-gradetable-date {
+    text-align: center;
+    width: 100px;
+}
+
+table.sg-gradetable th.sg-gradetable-assignment {
+    text-align: left;
+    max-width: 300px;
+}
+
+table.sg-gradetable td.sg-gradetable-cell {
+    text-align: center;
 }
 
 table.sg-evaluationtable {
@@ -34,12 +57,13 @@ table.sg-evaluationtable tr.sg-evaluationtable-row {
 table.sg-evaluationtable td.sg-evaluationtable-date,
 table.sg-evaluationtable td.sg-evaluationtable-value,
 table.sg-evaluationtable td.sg-evaluationtable-score {
-    text-align:center;
+    text-align: center;
     width: 100px;
 }
 
 table.sg-evaluationtable td.sg-evaluationtable-title,
 table.sg-evaluationtable td.sg-evaluationtable-comment {
+    text-align: left;
     min-width: 200px;
     max-width: 500px;
 }
@@ -58,7 +82,7 @@ table.sg-assignmenttable td.sg-assignmenttable-date,
 table.sg-assignmenttable td.sg-assignmenttable-value,
 table.sg-assignmenttable td.sg-assignmenttable-enabled,
 table.sg-assignmenttable td.sg-assignmenttable-modify {
-    text-align:center;
+    text-align: center;
     width: 100px;
 }
 
