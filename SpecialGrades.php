@@ -1620,11 +1620,11 @@ class SpecialGrades extends SpecialPage {
             # Increment the course total points
             $pointsAllAssignments += $assignment->sga_value;
 
-            # Check whether evaluation exists
-            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
+            # Check whether evaluation exists and is enabled
+            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id, 'sge_enabled' => true));
             if ( $evaluations->numRows() > 0 ) {
 
-                # The evaluation exists
+                # The evaluation exists and is enabled
                 $evaluation = $evaluations->next();
 
                 # Increment the points earned and the ideal score
