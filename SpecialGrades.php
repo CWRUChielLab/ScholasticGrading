@@ -926,7 +926,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date', 'class' => 'date-input')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date', 'class' => 'sg-date-input')))
                     )
                 ) .
                 $buttons .
@@ -1030,7 +1030,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date', 'class' => 'date-input')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date', 'class' => 'sg-date-input')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
@@ -1148,7 +1148,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date-' . $paramSetCounter, 'class' => 'date-input')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date-' . $paramSetCounter, 'class' => 'sg-date-input')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment-' . $paramSetCounter)) .
@@ -1263,7 +1263,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date-' . $paramSetCounter, 'class' => 'date-input')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date-' . $paramSetCounter, 'class' => 'sg-date-input')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment-' . $paramSetCounter)) .

@@ -3,7 +3,7 @@
  */
 
 $(function() {
-    $( ".date-input" ).datepicker( {
+    $( ".sg-date-input" ).datepicker( {
         dateFormat: "yy-mm-dd",
         showOtherMonths: true,
         selectOtherMonths: true,
