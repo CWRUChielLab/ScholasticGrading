@@ -136,18 +136,29 @@ class SpecialGrades extends SpecialPage {
 
         default:
 
-            if ( $this->canModify(false) ) {
-                $page->addHTML(Html::rawElement('p', null,
-                    Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
+            if ( !$this->getUser()->isAnon() ) {
 
-                $this->showGradeTable();
-                //$this->showAssignments();
-                //$this->showEvaluations();
-                //$this->showUsers();
+                # User is registered and logged in
+
+                if ( $this->canModify(false) ) {
+                    $page->addHTML(Html::rawElement('p', null,
+                        Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
+
+                    $this->showGradeTable();
+                    //$this->showAssignments();
+                    //$this->showEvaluations();
+                    //$this->showUsers();
+                } else {
+                    $this->showUserEvaluations(
+                        $this->getUser()->getId()
+                    );
+                }
+
             } else {
-                $this->showUserEvaluations(
-                    $this->getUser()->getId()
-                );
+
+                # The user is not logged in
+                $page->addWikiText('Grades are only available to registered users. You must be logged in to see your grades.');
+
             }
 
             break;
@@ -332,26 +343,26 @@ class SpecialGrades extends SpecialPage {
 
             default:
 
-                if ( $this->getUser()->isAnon() ) {
-
-                    # User is anonymous
-                    return $this->msg('grades')->plain();
-
-                } else {
+                if ( !$this->getUser()->isAnon() ) {
 
                     # User is registered and logged in
 
-                    if ( !$this->canModify(false) ) {
-
-                        # Student interface
-                        return 'Grades for ' . $this->getUserDisplayName(false);
-
-                    } else {
+                    if ( $this->canModify(false) ) {
 
                         # Instructor interface
                         return $this->msg('grades')->plain();
 
+                    } else {
+
+                        # Student interface
+                        return 'Grades for ' . $this->getUserDisplayName(false);
+
                     }
+
+                } else {
+
+                    # The user is not logged in
+                    return $this->msg('grades')->plain();
 
                 }
 
@@ -1565,8 +1576,8 @@ class SpecialGrades extends SpecialPage {
     /**
      * Display all evaluations for a user
      *
-     * Generates a page for viewing evaluations for
-     * all enabled assignments for a single user.
+     * Generates a page for viewing enabled evaluations
+     * for all enabled assignments for a single user.
      *
      * @param int|bool $user_id the user id
      */
@@ -1581,7 +1592,7 @@ class SpecialGrades extends SpecialPage {
         if ( $users->numRows() === 0 ) {
 
             # The user does not exist
-            $page->addWikiText('Grades are only available to registered users. You must be logged in to see your grades.');
+            $page->addWikiText('User (id=' . $user_id . ') does not exist.');
             return;
 
         } else {
