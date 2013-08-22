@@ -1,13 +1,9 @@
-$(function() {
-    $( "#assignment-date" ).datepicker( {
-        dateFormat: "yy-mm-dd",
-        showOtherMonths: true,
-        selectOtherMonths: true,
-    } );
-});
+/**
+ * JavaScript for Special:Grades
+ */
 
 $(function() {
-    $( "#evaluation-date" ).datepicker( {
+    $( ".date-input" ).datepicker( {
         dateFormat: "yy-mm-dd",
         showOtherMonths: true,
         selectOtherMonths: true,
