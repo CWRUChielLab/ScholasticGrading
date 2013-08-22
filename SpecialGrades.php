@@ -87,7 +87,7 @@ class SpecialGrades extends SpecialPage {
         case 'edituserscores':
 
             if ( $this->canModify(true) ) {
-                $this->showUserEvaluations(
+                $this->showUserEvaluationForms(
                     $request->getVal('user', false)
                 );
             }
@@ -98,7 +98,7 @@ class SpecialGrades extends SpecialPage {
         case 'editassignmentscores':
 
             if ( $this->canModify(true) ) {
-                $this->showAssignmentEvaluations(
+                $this->showAssignmentEvaluationForms(
                     $request->getVal('id', false)
                 );
             }
@@ -1050,7 +1050,7 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Display all evaluations for a user
+     * Display all evaluation forms for a user
      *
      * Generates a page for creating and editing evaluations for
      * all enabled assignments for a single user.
@@ -1058,7 +1058,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $user_id the user id
      */
 
-    public function showUserEvaluations ( $user_id = false ) {
+    public function showUserEvaluationForms ( $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1175,11 +1175,11 @@ class SpecialGrades extends SpecialPage {
 
         $page->addHTML($content);
 
-    } /* end showUserEvaluations */
+    } /* end showUserEvaluationForms */
 
 
     /**
-     * Display all evaluations for an assignment
+     * Display all evaluation forms for an assignment
      *
      * Generates a page for creating and editing evaluations for
      * all users for a single assignment.
@@ -1187,7 +1187,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $id the assignment id
      */
 
-    public function showAssignmentEvaluations ( $id = false ) {
+    public function showAssignmentEvaluationForms ( $id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1285,7 +1285,7 @@ class SpecialGrades extends SpecialPage {
 
         $page->addHTML($content);
 
-    } /* showAssignmentEvaluations */
+    } /* showAssignmentEvaluationForms */
 
 
     /**
