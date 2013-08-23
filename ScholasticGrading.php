@@ -76,6 +76,9 @@ function scholasticGradingSchemaUpdate ( $updater = null ) {
         $wgExtNewTables[] = array( 'scholasticgrading_evaluation',
             dirname(__FILE__) . '/sql/scholasticgrading_evaluation.sql');
 
+        $wgExtNewTables[] = array( 'scholasticgrading_adjustment',
+            dirname(__FILE__) . '/sql/scholasticgrading_adjustment.sql');
+
     } else {
         // >= 1.17 support
 
@@ -84,6 +87,9 @@ function scholasticGradingSchemaUpdate ( $updater = null ) {
 
         $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_evaluation',
             dirname(__FILE__) . '/sql/scholasticgrading_evaluation.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_adjustment',
+            dirname(__FILE__) . '/sql/scholasticgrading_adjustment.sql', true ) );
 
     }
 
