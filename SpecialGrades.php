@@ -982,6 +982,7 @@ class SpecialGrades extends SpecialPage {
         # Set default parameters for creating a new assignment
         $fieldsetTitle = 'Create a new assignment';
         $buttons = Xml::submitButton('Create assignment', array('name' => 'create-assignment'));
+        $assignmentIdDefault = false;
         $assignmentTitleDefault = '';
         $assignmentValueDefault = '';
         $assignmentEnabledDefault = true;
@@ -1007,6 +1008,7 @@ class SpecialGrades extends SpecialPage {
                 $fieldsetTitle = 'Edit an existing assignment';
                 $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-assignment')) .
                     Xml::submitButton('Delete assignment', array('name' => 'delete-assignment'));
+                $assignmentIdDefault = $id;
                 $assignmentTitleDefault = $assignment->sga_title;
                 $assignmentValueDefault = (float)$assignment->sga_value;
                 $assignmentEnabledDefault = $assignment->sga_enabled;
@@ -1042,7 +1044,7 @@ class SpecialGrades extends SpecialPage {
                     )
                 ) .
                 $buttons .
-                Html::hidden('assignment-params[0][assignment-id]', $id) .
+                Html::hidden('assignment-params[0][assignment-id]', $assignmentIdDefault) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
@@ -1093,6 +1095,8 @@ class SpecialGrades extends SpecialPage {
                 # Set default parameters for creating a new evaluation
                 $fieldsetTitle = 'Create a new evaluation';
                 $buttons = Xml::submitButton('Create evaluation', array('name' => 'create-evaluation'));
+                $evaluationUserIdDefault = $user_id;
+                $evaluationAssignmentIdDefault = $assignment_id;
                 $evaluationScoreDefault = '';
                 $evaluationEnabledDefault = true;
                 $evaluationDateDefault = $assignment->sga_date;
@@ -1107,6 +1111,8 @@ class SpecialGrades extends SpecialPage {
                 $fieldsetTitle = 'Edit an existing evaluation';
                 $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-evaluation')) .
                     Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation'));
+                $evaluationUserIdDefault = $user_id;
+                $evaluationAssignmentIdDefault = $assignment_id;
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
                 $evaluationDateDefault = $evaluation->sge_date;
@@ -1126,7 +1132,7 @@ class SpecialGrades extends SpecialPage {
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
-                        Html::rawElement('td', null, $user->user_name)
+                        Html::rawElement('td', null, $this->getUserDisplayName($user->user_id))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Assignment:', 'evaluation-assignment')) .
@@ -1150,8 +1156,8 @@ class SpecialGrades extends SpecialPage {
                     )
                 ) .
                 $buttons .
-                Html::hidden('evaluation-params[0][evaluation-user]', $user_id) .
-                Html::hidden('evaluation-params[0][evaluation-assignment]', $assignment_id) .
+                Html::hidden('evaluation-params[0][evaluation-user]', $evaluationUserIdDefault) .
+                Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignmentIdDefault) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
             )
         );
