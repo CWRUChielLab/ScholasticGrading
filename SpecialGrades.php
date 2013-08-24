@@ -1811,4 +1811,57 @@ class SpecialGrades extends SpecialPage {
     } /* end showEvaluations */
 
 
+    /**
+     * Displays a table of all adjustments
+     *
+     * Dumps the adjustments table from the wiki database.
+     * Used for development.
+     */
+
+    public function showAdjustments () {
+
+        $page = $this->getOutput();
+
+        # Query for all adjustments
+        $dbr = wfGetDB(DB_SLAVE);
+        $adjustments = $dbr->select('scholasticgrading_adjustment', '*');
+
+        # Build the adjustments table
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $content .= Html::element('caption', null, 'Adjustments') . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', null,
+            Html::element('th', null, 'id') .
+            Html::element('th', null, 'user id') .
+            Html::element('th', null, 'title') .
+            Html::element('th', null, 'score') .
+            Html::element('th', null, 'value') .
+            Html::element('th', null, 'enabled') .
+            Html::element('th', null, 'date') .
+            Html::element('th', null, 'comment')
+        ) . "\n";
+
+        # Create a row for each adjustment
+        foreach ( $adjustments as $adjustment ) {
+            $content .= Html::rawElement('tr', null,
+                Html::element('td', null, $adjustment->sgadj_id) .
+                Html::element('td', null, $adjustment->sgadj_user_id) .
+                Html::element('td', null, $adjustment->sgadj_title) .
+                Html::element('td', null, $adjustment->sgadj_score) .
+                Html::element('td', null, $adjustment->sgadj_value) .
+                Html::element('td', null, $adjustment->sgadj_enabled) .
+                Html::element('td', null, $adjustment->sgadj_date) .
+                Html::element('td', null, $adjustment->sgadj_comment)
+            ) . "\n";
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showAdjustments */
+
+
 } /* end SpecialGrades */
