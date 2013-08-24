@@ -1168,6 +1168,125 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Display the adjustment creation/modification form
+     *
+     * Generates a form for creating a new adjustment or editing an existing one.
+     * If the adjustment id is a valid key for an existing adjustment, the user id
+     * is ignored and the form is prepared for adjustment modification. Otherwise,
+     * the form is prepared for adjustment creation for the specified user.
+     *
+     * @param int|bool $id the optional id of an adjustment
+     * @param int|bool $user_id the optional user id of an adjustment
+     */
+
+    public function showAdjustmentForm ( $id = false, $user_id = false ) {
+
+        $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
+
+        # Check whether adjustment exists
+        $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $id));
+        if ( $adjustments->numRows() === 0 ) {
+
+            # The adjustment does not exist
+
+            # Check whether user exists
+            $users = $dbr->select('user', '*', array('user_id' => $user_id));
+            if ( $users->numRows() === 0 ) {
+
+                # Neither the user nor the adjustment exist
+                $page->addWikiText('Adjustment (id=' . $id . ') and user (id=' . $user_id . ') do not exist.');
+                return;
+
+            } else {
+
+                # The user exists
+                $user = $users->next();
+
+                # Set default parameters for creating a new adjustment
+                $fieldsetTitle = 'Create a new adjustment';
+                $buttons = Xml::submitButton('Create adjustment', array('name' => 'create-adjustment'));
+                $adjustmentIdDefault = false;
+                $adjustmentUserIdDefault = $user_id;
+                $adjustmentTitleDefault = '';
+                $adjustmentScoreDefault = '';
+                $adjustmentValueDefault = 0;
+                $adjustmentEnabledDefault = true;
+                $adjustmentDateDefault = date('Y-m-d');
+                $adjustmentCommentDefault = '';
+
+            }
+
+        } else {
+
+            # The adjustment exists
+            $adjustment = $adjustments->next();
+
+            # Use its values as default parameters
+            $fieldsetTitle = 'Edit an existing adjustment';
+            $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-adjustment')) .
+                Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment'));
+            $adjustmentIdDefault = $id;
+            $adjustmentUserIdDefault = $adjustment->sgadj_user_id;
+            $adjustmentTitleDefault = $adjustment->sgadj_title;
+            $adjustmentScoreDefault = (float)$adjustment->sgadj_score;
+            $adjustmentValueDefault = (float)$adjustment->sgadj_value;
+            $adjustmentEnabledDefault = $adjustment->sgadj_enabled;
+            $adjustmentDateDefault = $adjustment->sgadj_date;
+            $adjustmentCommentDefault = $adjustment->sgadj_comment;
+
+        }
+
+        # Build the evaluation form
+        $content = Xml::fieldset($fieldsetTitle,
+            Html::rawElement('form',
+                array(
+                    'method' => 'post',
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitadjustment'))
+                ),
+                Html::rawElement('table', null,
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('User:', 'adjustment-user')) .
+                        Html::rawElement('td', null, $this->getUserDisplayName($adjustmentUserIdDefault))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Title:', 'adjustment-title')) .
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-title]', 20, $adjustmentTitleDefault, array('id' => 'adjustment-title')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Score:', 'adjustment-score')) .
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-score]', 20, $adjustmentScoreDefault, array('id' => 'adjustment-score')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Value:', 'adjustment-value')) .
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-value]', 20, $adjustmentValueDefault, array('id' => 'adjustment-value')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'adjustment-enabled')) .
+                        Html::rawElement('td', null, Xml::check('adjustment-params[0][adjustment-enabled]', $adjustmentEnabledDefault, array('id' => 'adjustment-enabled')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Date:', 'adjustment-date')) .
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-date]', 20, $adjustmentDateDefault, array('id' => 'adjustment-date', 'class' => 'sg-date-input')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Comment:', 'adjustment-comment')) .
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-comment]', 20, $adjustmentCommentDefault, array('id' => 'adjustment-comment')))
+                    )
+                ) .
+                $buttons .
+                Html::hidden('adjustment-params[0][adjustment-id]', $adjustmentIdDefault) .
+                Html::hidden('adjustment-params[0][adjustment-user]', $adjustmentUserIdDefault) .
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+            )
+        );
+
+        $page->addHTML($content);
+
+    } /* end showAdjustmentForm */
+
+
+    /**
      * Display all evaluation forms for a user
      *
      * Generates a page for creating and editing evaluations for
