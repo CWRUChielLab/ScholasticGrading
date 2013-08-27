@@ -708,11 +708,11 @@ class SpecialGrades extends SpecialPage {
                         ),
                         Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
                         Html::hidden('confirm-delete', true) .
-                        Html::hidden('assignment-params[0][assignment-id]', $assignmentID) .
-                        Html::hidden('assignment-params[0][assignment-title]', $assignmentTitle) .
-                        Html::hidden('assignment-params[0][assignment-value]', $assignmentValue) .
+                        Html::hidden('assignment-params[0][assignment-id]',      $assignmentID) .
+                        Html::hidden('assignment-params[0][assignment-title]',   $assignmentTitle) .
+                        Html::hidden('assignment-params[0][assignment-value]',   $assignmentValue) .
                         Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled) .
-                        Html::hidden('assignment-params[0][assignment-date]', $assignmentDate) .
+                        Html::hidden('assignment-params[0][assignment-date]',    $assignmentDate) .
                         Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                     ));
 
@@ -892,11 +892,12 @@ class SpecialGrades extends SpecialPage {
                             ),
                             Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
                             Html::hidden('confirm-delete', true) .
-                            Html::hidden('evaluation-params[0][evaluation-user]', $evaluationUser) .
+                            Html::hidden('evaluation-params[0][evaluation-user]',       $evaluationUser) .
                             Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignment) .
-                            Html::hidden('evaluation-params[0][evaluation-score]', $evaluationScore) .
-                            Html::hidden('evaluation-params[0][evaluation-date]', $evaluationDate) .
-                            Html::hidden('evaluation-params[0][evaluation-comment]', $evaluationComment) .
+                            Html::hidden('evaluation-params[0][evaluation-score]',      $evaluationScore) .
+                            Html::hidden('evaluation-params[0][evaluation-enabled]',    $evaluationEnabled) .
+                            Html::hidden('evaluation-params[0][evaluation-date]',       $evaluationDate) .
+                            Html::hidden('evaluation-params[0][evaluation-comment]',    $evaluationComment) .
                             Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                         ));
 
