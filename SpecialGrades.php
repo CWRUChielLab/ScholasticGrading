@@ -599,6 +599,94 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Process sets of adjustment creation/modification/deletion requests
+     *
+     * Processes adjustment forms. Does not directly modify the
+     * database. Instead, each set of adjustment parameters is sent
+     * to the writeAdjustment function one at a time.
+     */
+
+    public function submitAdjustments () {
+
+        $page = $this->getOutput();
+        $request = $this->getRequest();
+
+        $adjustmentParams = $request->getArray('adjustment-params', false);
+        if ( $adjustmentParams ) {
+
+            # The adjustment-params array is present
+
+            # Make database changes for each adjustment in adjustment-params
+            foreach ( $adjustmentParams as $adjustment ) {
+
+                # Store each parameter for this adjustment if it exists
+                if ( array_key_exists('adjustment-id', $adjustment) ) {
+                    $adjustmentID = $adjustment['adjustment-id'];
+                } else {
+                    $adjustmentID = false;
+                }
+                if ( array_key_exists('adjustment-user', $adjustment) ) {
+                    $adjustmentUser = $adjustment['adjustment-user'];
+                } else {
+                    $adjustmentUser = false;
+                }
+                if ( array_key_exists('adjustment-title', $adjustment) ) {
+                    $adjustmentTitle = $adjustment['adjustment-title'];
+                } else {
+                    $adjustmentTitle = false;
+                }
+                if ( array_key_exists('adjustment-value', $adjustment) ) {
+                    $adjustmentValue = $adjustment['adjustment-value'];
+                } else {
+                    $adjustmentValue = false;
+                }
+                if ( array_key_exists('adjustment-score', $adjustment) ) {
+                    $adjustmentScore = $adjustment['adjustment-score'];
+                } else {
+                    $adjustmentScore = false;
+                }
+                if ( array_key_exists('adjustment-enabled', $adjustment) ) {
+                    $adjustmentEnabled = $adjustment['adjustment-enabled'] ? 1 : 0;
+                } else {
+                    # Form posts omit checkboxes that are unchecked
+                    $adjustmentEnabled = false;
+                }
+                if ( array_key_exists('adjustment-date', $adjustment) ) {
+                    $adjustmentDate = $adjustment['adjustment-date'];
+                } else {
+                    $adjustmentDate = false;
+                }
+                if ( array_key_exists('adjustment-comment', $adjustment) ) {
+                    $adjustmentComment = $adjustment['adjustment-comment'];
+                } else {
+                    $adjustmentComment = false;
+                }
+                
+                $this->writeAdjustment(
+                    $adjustmentID,
+                    $adjustmentUser,
+                    $adjustmentTitle,
+                    $adjustmentValue,
+                    $adjustmentScore,
+                    $adjustmentEnabled,
+                    $adjustmentDate,
+                    $adjustmentComment
+                );
+
+            }
+
+        } else {
+
+            # The adjustment-params array is missing or invalid
+            $page->addWikiText('Adjustment parameter array is missing or invalid.');
+            return;
+
+        }
+
+    } /* end submitAdjustments */
+
+
+    /**
      * Execute assignment creation/modification/deletion
      *
      * Creates, modifies, or deletes an assignment by directly
@@ -963,6 +1051,209 @@ class SpecialGrades extends SpecialPage {
         }
 
     } /* end writeEvaluation */
+
+
+    /**
+     * Execute an adjustment creation/modification/deletion
+     *
+     * Creates, modifies, or deletes an adjustment by directly
+     * modifying the database. If the (id) key provided corresponds
+     * to an existing adjustment, the function will modify or delete
+     * that adjustment depending on whether the delete-adjustment
+     * variable is set. Otherwise, the function will create a new
+     * adjustment as long as the user exists. Parameters are
+     * initially validated and sanitized.
+     *
+     * @param int|bool    $adjustmentID the id of an adjustment
+     * @param int|bool    $adjustmentUser the user id of an adjustment
+     * @param int|bool    $adjustmentTitle the title of an adjustment
+     * @param float|bool  $adjustmentValue the value of an adjustment
+     * @param float|bool  $adjustmentScore the score of an adjustment
+     * @param int|bool    $adjustmentEnabled the enabled status of an adjustment
+     * @param string|bool $adjustmentDate the date of an adjustment
+     * @param string|bool $adjustmentComment the comment of an adjustment
+     */
+
+    public function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false ) {
+
+        $page = $this->getOutput();
+        $request = $this->getRequest();
+        $dbw = wfGetDB(DB_MASTER);
+
+        # Validate/sanitize adjustment parameters
+        $adjustmentID          = filter_var($adjustmentID, FILTER_VALIDATE_INT);
+        $adjustmentUser        = filter_var($adjustmentUser, FILTER_VALIDATE_INT);
+        $adjustmentTitle       = filter_var($adjustmentTitle, FILTER_CALLBACK, array('options' => array($this, 'validateTitle')));
+        $adjustmentValue       = filter_var($adjustmentValue, FILTER_VALIDATE_FLOAT);
+        $adjustmentScore       = filter_var($adjustmentScore, FILTER_VALIDATE_FLOAT);
+        if ( !is_bool($adjustmentEnabled) ) {
+            $adjustmentEnabled = filter_var($adjustmentEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+        $adjustmentDate        = filter_var($adjustmentDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
+        $adjustmentComment     = trim($adjustmentComment);
+        if ( $adjustmentUser === false ) {
+            $page->addWikiText('Invalid user id for adjustment (must be an integer).');
+            return;
+        }
+        if ( $adjustmentTitle === false ) {
+            $page->addWikiText('Invalid title for adjustment (may not be empty).');
+            return;
+        }
+        if ( $adjustmentValue === false ) {
+            $page->addWikiText('Invalid value for adjustment (must be a float).');
+            return;
+        }
+        if ( $adjustmentScore === false ) {
+            $page->addWikiText('Invalid score for adjustment (must be a float).');
+            return;
+        }
+        if ( !is_bool($adjustmentEnabled) ) {
+            $page->addWikiText('Invalid enabled status for adjustment (must be a boolean).');
+            return;
+        }
+        if ( $adjustmentDate === false ) {
+            $page->addWikiText('Invalid date for adjustment (must have form YYYY-MM-DD).');
+            return;
+        }
+
+        # Check whether user exist
+        $users = $dbw->select('user', '*', array('user_id' => $adjustmentUser));
+        if ( $users->numRows() === 0 ) {
+
+            # User does not exist
+            $page->addWikiText('User (id=' . $adjustmentUser . ') does not exist.');
+            return;
+
+        } else {
+
+            # The user exists
+
+            # Check whether adjustment exists
+            $adjustments = $dbw->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $adjustmentID));
+            if ( $adjustments->numRows() > 0 ) {
+
+                # The adjustment exists
+                $adjustment = $adjustments->next();
+
+                if ( !$request->getVal('delete-adjustment') ) {
+
+                    # Edit the existing adjustment
+                    $dbw->update('scholasticgrading_adjustment', array(
+                        'sgadj_user_id' => $adjustmentUser,
+                        'sgadj_title'   => $adjustmentTitle,
+                        'sgadj_value'   => $adjustmentValue,
+                        'sgadj_score'   => $adjustmentScore,
+                        'sgadj_enabled' => $adjustmentEnabled,
+                        'sgadj_date'    => $adjustmentDate,
+                        'sgadj_comment' => $adjustmentComment,
+                    ), array('sgadj_id' => $adjustmentID));
+
+                    # Report success and create a new log entry
+                    if ( $dbw->affectedRows() === 0 ) {
+
+                        $page->addWikiText('Database unchanged.');
+
+                    } else {
+
+                        $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
+
+                        $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') updated!\'\'\'');
+
+                        $log = new LogPage('grades', false);
+                        $log->addEntry('editAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
+
+                    }
+
+                } else {
+
+                    # Prepare to delete the existing adjustment
+
+                    if ( !$request->getVal('confirm-delete') ) {
+
+                        # Ask for confirmation of delete
+                        $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
+                        $page->addWikiText('Are you sure you want to delete the adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ')?');
+
+                        # Provide a delete button
+                        $page->addHtml(Html::rawElement('form',
+                            array(
+                                'method' => 'post',
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitadjustment'))
+                            ),
+                            Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment')) .
+                            Html::hidden('confirm-delete', true) .
+                            Html::hidden('adjustment-params[0][adjustment-id]',      $adjustmentID) .
+                            Html::hidden('adjustment-params[0][adjustment-user]',    $adjustmentUser) .
+                            Html::hidden('adjustment-params[0][adjustment-title]',   $adjustmentTitle) .
+                            Html::hidden('adjustment-params[0][adjustment-value]',   $adjustmentValue) .
+                            Html::hidden('adjustment-params[0][adjustment-score]',   $adjustmentScore) .
+                            Html::hidden('adjustment-params[0][adjustment-enabled]', $adjustmentEnabled) .
+                            Html::hidden('adjustment-params[0][adjustment-date]',    $adjustmentDate) .
+                            Html::hidden('adjustment-params[0][adjustment-comment]', $adjustmentComment) .
+                            Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                        ));
+
+                    } else {
+
+                        # Delete is confirmed so delete the existing adjustment
+                        $dbw->delete('scholasticgrading_adjustment', array('sgadj_id' => $adjustmentID));
+
+                        # Report success and create a new log entry
+                        if ( $dbw->affectedRows() === 0 ) {
+
+                            $page->addWikiText('Database unchanged.');
+
+                        } else {
+
+                            $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
+
+                            $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') deleted!\'\'\'');
+
+                            $log = new LogPage('grades', false);
+                            $log->addEntry('deleteAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
+
+                        }
+
+                    }
+
+                }
+
+            } else {
+
+                # The adjustment does not exist
+
+                # Create a new adjustment
+                $dbw->insert('scholasticgrading_adjustment', array(
+                    'sgadj_user_id' => $adjustmentUser,
+                    'sgadj_title'   => $adjustmentTitle,
+                    'sgadj_value'   => $adjustmentValue,
+                    'sgadj_score'   => $adjustmentScore,
+                    'sgadj_enabled' => $adjustmentEnabled,
+                    'sgadj_date'    => $adjustmentDate,
+                    'sgadj_comment' => $adjustmentComment,
+                ));
+
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
+
+                    $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') added!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('addAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
+
+                }
+
+            }
+
+        }
+
+    } /* end writeAdjustment */
 
 
     /**
