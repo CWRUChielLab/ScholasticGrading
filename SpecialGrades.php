@@ -84,6 +84,18 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
+        case 'editadjustment':
+
+            if ( $this->canModify(true) ) {
+                $this->showAdjustmentForm(
+                    $request->getVal('id', false),
+                    $request->getVal('user', false)
+                );
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
         case 'edituserscores':
 
             if ( $this->canModify(true) ) {
@@ -125,6 +137,20 @@ class SpecialGrades extends SpecialPage {
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
                     $this->submitEvaluations();
+                } else {
+                    # Prevent cross-site request forgeries
+                    $page->addWikiMsg('sessionfailure');
+                }
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
+        case 'submitadjustment':
+
+            if ( $this->canModify(true) ) {
+                if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
+                    $this->submitAdjustments();
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
