@@ -30,12 +30,12 @@ table.sg-gradetable th.sg-gradetable-user div {
     transform: rotate(-90deg);
 }
 
-table.sg-gradetable th.sg-gradetable-date {
+table.sg-gradetable td.sg-gradetable-date {
     text-align: center;
     width: 100px;
 }
 
-table.sg-gradetable th.sg-gradetable-assignment {
+table.sg-gradetable td.sg-gradetable-assignment {
     text-align: left;
     max-width: 300px;
 }
@@ -55,8 +55,8 @@ table.sg-evaluationtable tr.sg-evaluationtable-row {
 }
 
 table.sg-evaluationtable td.sg-evaluationtable-date,
-table.sg-evaluationtable td.sg-evaluationtable-value,
-table.sg-evaluationtable td.sg-evaluationtable-score {
+table.sg-evaluationtable td.sg-evaluationtable-score,
+table.sg-evaluationtable td.sg-evaluationtable-value {
     text-align: center;
     width: 100px;
 }

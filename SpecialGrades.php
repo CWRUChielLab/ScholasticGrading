@@ -1913,12 +1913,12 @@ class SpecialGrades extends SpecialPage {
 
         # Build the grade table
         $content = '';
-        $content .= Html::openElement('table', array('class' => 'wikitable sg-gradetable')) . "\n";
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-gradetable')) . "\n";
         $content .= Html::element('caption', null, 'Grades') . "\n";
 
         # Create a column header for each student
         $content .= Html::openElement('tr', array('id' => 'gradetable-header'));
-        $content .= Html::element('td', null, '') . Html::element('td', null, '');
+        $content .= Html::element('th', null, 'Date') . Html::element('th', null, 'Assignment');
         foreach ( $users as $user ) {
             $content .= Html::rawElement('th', array('class' => 'sg-gradetable-user'),
                 Html::rawElement('div', null,
@@ -1937,9 +1937,8 @@ class SpecialGrades extends SpecialPage {
         foreach ( $assignments as $assignment ) {
 
             $content .= Html::openElement('tr', array('class' => 'sg-gradetable-row'));
-#            $content .= Html::element('th', array('class' => 'sg-gradetable-date'), date_format(date_create($assignment->sga_date), 'D m/d'));
-            $content .= Html::element('th', array('class' => 'sg-gradetable-date'), $assignment->sga_date);
-            $content .= Html::rawElement('th', array('class' => 'sg-gradetable-assignment'),
+            $content .= Html::element('td', array('class' => 'sg-gradetable-date', 'data-sort-value' => $assignment->sga_date), date_format(date_create($assignment->sga_date), 'D m/d'));
+            $content .= Html::rawElement('td', array('class' => 'sg-gradetable-assignment'),
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
                     array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
 
@@ -2001,9 +2000,9 @@ class SpecialGrades extends SpecialPage {
 
         # Report point totals for each student
         $content .= Html::openElement('tr');
-        $content .= Html::element('th', null, '') . Html::element('th', null, 'TOTAL');
+        $content .= Html::element('th', null, '') . Html::element('th', null, '');
         foreach ( $users as $user ) {
-            $content .= Html::element('td', null,
+            $content .= Html::element('th', null,
                 $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
             );
         }
@@ -2063,8 +2062,8 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::rawElement('tr', array('id' => 'evaluationtable-header'),
             Html::element('th', null, 'Date') .
             Html::element('th', null, 'Assignment') .
-            Html::element('th', null, 'Value') .
             Html::element('th', null, 'Score') .
+            Html::element('th', null, 'Value') .
             Html::element('th', null, 'Comment')
         ) . "\n";
 
@@ -2086,10 +2085,10 @@ class SpecialGrades extends SpecialPage {
                 $pointsIdeal  += $assignment->sga_value;
 
                 $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row'),
-                    Html::element('td', array('class' => 'sg-evaluationtable-date'), $evaluation->sge_date) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-date', 'data-sort-value' => $evaluation->sge_date), date_format(date_create($evaluation->sge_date), 'D m/d')) .
                     Html::element('td', array('class' => 'sg-evaluationtable-title'), $assignment->sga_title) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
                     Html::element('td', array('class' => 'sg-evaluationtable-score'), (float)$evaluation->sge_score) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
                     Html::element('td', array('class' => 'sg-evaluationtable-comment'), $evaluation->sge_comment)
                 ) . "\n";
 
@@ -2097,6 +2096,13 @@ class SpecialGrades extends SpecialPage {
 
         }
 
+        $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row'),
+            Html::element('th', null, '') .
+            Html::element('th', null, '') .
+            Html::element('th', null, $pointsEarned) .
+            Html::element('th', null, $pointsIdeal) .
+            Html::element('th', null, '')
+        ) . "\n";
         $content .= Html::closeElement('table') . "\n";
 
         # Insert the racetrack image at the top of the page
