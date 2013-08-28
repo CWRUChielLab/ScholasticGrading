@@ -55,9 +55,8 @@ table.sg-evaluationtable tr.sg-evaluationtable-row {
 }
 
 table.sg-evaluationtable tr.sg-evaluationtable-disabled {
-    background-color: white;
     font-style: italic;
-    color: #666666;
+    color: gray;
 }
 
 table.sg-evaluationtable td.sg-evaluationtable-date,
