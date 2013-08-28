@@ -2092,6 +2092,18 @@ class SpecialGrades extends SpecialPage {
                     Html::element('td', array('class' => 'sg-evaluationtable-comment'), $evaluation->sge_comment)
                 ) . "\n";
 
+            } else {
+
+                # The evaluation either does not exist or is disabled
+
+                $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row sg-evaluationtable-disabled'),
+                    Html::element('td', array('class' => 'sg-evaluationtable-date', 'data-sort-value' => $assignment->sga_date), date_format(date_create($assignment->sga_date), 'D m/d')) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-title'), $assignment->sga_title) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-score'), '-') .
+                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
+                    Html::element('td', array('class' => 'sg-evaluationtable-comment'), '')
+                ) . "\n";
+
             }
 
         }

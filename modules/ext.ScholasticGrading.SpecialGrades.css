@@ -54,6 +54,12 @@ table.sg-evaluationtable tr#evaluationtable-header {
 table.sg-evaluationtable tr.sg-evaluationtable-row {
 }
 
+table.sg-evaluationtable tr.sg-evaluationtable-disabled {
+    background-color: white;
+    font-style: italic;
+    color: #666666;
+}
+
 table.sg-evaluationtable td.sg-evaluationtable-date,
 table.sg-evaluationtable td.sg-evaluationtable-score,
 table.sg-evaluationtable td.sg-evaluationtable-value {
