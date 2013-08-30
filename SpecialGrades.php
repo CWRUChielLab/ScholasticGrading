@@ -132,25 +132,11 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
-        case 'submitevaluation':
+        case 'submitscores':
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitEvaluations();
-                } else {
-                    # Prevent cross-site request forgeries
-                    $page->addWikiMsg('sessionfailure');
-                }
-            }
-
-            $page->returnToMain(false, $this->getTitle());
-            break;
-
-        case 'submitadjustment':
-
-            if ( $this->canModify(true) ) {
-                if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitAdjustments();
+                    $this->submitScores();
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -511,7 +497,8 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
 
-        $assignmentParams = $request->getArray('assignment-params', false);
+        $assignmentParams = $request->getArray('assignment-params');
+
         if ( $assignmentParams ) {
 
             # The assignment-params array is present
@@ -569,19 +556,23 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Process sets of evaluation creation/modification/deletion requests
+     * Process sets of evaluation and adjustment creation/modification/deletion requests
      *
-     * Processes evaluation forms. Does not directly modify the
-     * database. Instead, each set of evaluation parameters is sent
-     * to the writeEvaluation function one at a time.
+     * Processes evaluation and adjustment forms. Does not directly
+     * modify the database. Instead, each set of evaluation parameters
+     * is sent to the writeEvaluation function one at a time, and each
+     * set of adjustment parameters is sent to the writeAdjustment
+     * function one at a time.
      */
 
-    function submitEvaluations () {
+    function submitScores () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
 
-        $evaluationParams = $request->getArray('evaluation-params', false);
+        $evaluationParams = $request->getArray('evaluation-params');
+        $adjustmentParams = $request->getArray('adjustment-params');
+
         if ( $evaluationParams ) {
 
             # The evaluation-params array is present
@@ -633,31 +624,8 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-        } else {
-
-            # The evaluation-params array is missing or invalid
-            $page->addWikiText('Evaluation parameter array is missing or invalid.');
-            return;
-
         }
 
-    } /* end submitEvaluations */
-
-
-    /**
-     * Process sets of adjustment creation/modification/deletion requests
-     *
-     * Processes adjustment forms. Does not directly modify the
-     * database. Instead, each set of adjustment parameters is sent
-     * to the writeAdjustment function one at a time.
-     */
-
-    function submitAdjustments () {
-
-        $page = $this->getOutput();
-        $request = $this->getRequest();
-
-        $adjustmentParams = $request->getArray('adjustment-params', false);
         if ( $adjustmentParams ) {
 
             # The adjustment-params array is present
@@ -721,15 +689,17 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-        } else {
-
-            # The adjustment-params array is missing or invalid
-            $page->addWikiText('Adjustment parameter array is missing or invalid.');
-            return;
-
         }
 
-    } /* end submitAdjustments */
+        if ( !$evaluationParams && !$adjustmentParams ) {
+
+            # Something is wrong with both parameter arrays
+            $page->addWikiText('Evaluation and adjustment parameter arrays are both missing or invalid.');
+            return;
+        
+        }
+
+    } /* end submitScores */
 
 
     /**
@@ -1022,7 +992,7 @@ class SpecialGrades extends SpecialPage {
                         $page->addHtml(Html::rawElement('form',
                             array(
                                 'method' => 'post',
-                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
                             ),
                             Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
                             Html::hidden('confirm-delete', true) .
@@ -1218,13 +1188,13 @@ class SpecialGrades extends SpecialPage {
 
                         # Ask for confirmation of delete
                         $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
-                        $page->addWikiText('Are you sure you want to delete the adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ')?');
+                        $page->addWikiText('Are you sure you want to delete the point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ')?');
 
                         # Provide a delete button
                         $page->addHtml(Html::rawElement('form',
                             array(
                                 'method' => 'post',
-                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitadjustment'))
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
                             ),
                             Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment')) .
                             Html::hidden('confirm-delete', true) .
@@ -1465,7 +1435,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
                 ),
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -1580,7 +1550,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitadjustment'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
                 ),
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -1694,7 +1664,7 @@ class SpecialGrades extends SpecialPage {
         $content = '';
         $content .= Html::openElement('form', array(
             'method' => 'post',
-            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
         ));
         $content .= Html::openElement('table', array('class' => 'wikitable sg-userscoresformtable')) . "\n";
 
@@ -1876,7 +1846,7 @@ class SpecialGrades extends SpecialPage {
         $content = '';
         $content .= Html::openElement('form', array(
             'method' => 'post',
-            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
         ));
         $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-assignmentscoresformtable')) . "\n";
 
