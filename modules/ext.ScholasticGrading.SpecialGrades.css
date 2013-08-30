@@ -44,30 +44,33 @@ table.sg-gradetable td.sg-gradetable-cell {
     text-align: center;
 }
 
-table.sg-evaluationtable {
+table.sg-userscorestable {
     width: 100%;
 }
 
-table.sg-evaluationtable tr#evaluationtable-header {
+table.sg-userscorestable tr#userscorestable-header {
 }
 
-table.sg-evaluationtable tr.sg-evaluationtable-row {
+table.sg-userscorestable tr#userscorestable-footer {
 }
 
-table.sg-evaluationtable tr.sg-evaluationtable-disabled {
+table.sg-userscorestable tr.sg-userscorestable-row {
+}
+
+table.sg-userscorestable tr.sg-userscorestable-unevaluated {
     font-style: italic;
     color: gray;
 }
 
-table.sg-evaluationtable td.sg-evaluationtable-date,
-table.sg-evaluationtable td.sg-evaluationtable-score,
-table.sg-evaluationtable td.sg-evaluationtable-value {
+table.sg-userscorestable td.sg-userscorestable-date,
+table.sg-userscorestable td.sg-userscorestable-score,
+table.sg-userscorestable td.sg-userscorestable-value {
     text-align: center;
     width: 100px;
 }
 
-table.sg-evaluationtable td.sg-evaluationtable-title,
-table.sg-evaluationtable td.sg-evaluationtable-comment {
+table.sg-userscorestable td.sg-userscorestable-title,
+table.sg-userscorestable td.sg-userscorestable-comment {
     text-align: left;
     min-width: 200px;
     max-width: 500px;

@@ -175,7 +175,7 @@ class SpecialGrades extends SpecialPage {
                     //$this->showEvaluations();
                     //$this->showUsers();
                 } else {
-                    $this->showUserEvaluations(
+                    $this->showUserScores(
                         $this->getUser()->getId()
                     );
                 }
@@ -306,6 +306,25 @@ class SpecialGrades extends SpecialPage {
         }
 
     } /* end validateDate */
+
+
+    /**
+     * Compare two scores and sort by date then title
+     *
+     * @param array $score1 score array containing date and title keys
+     * @param array $score2 score array containing date and title keys
+     * @return int -1, 1, or 0 if $score1 should be sorted before, after, or is equivalent to $score2
+     */
+
+    function sortScores ( $score1, $score2 ) {
+
+        if ( strcmp($score1['date'], $score2['date']) ) {
+            return strcmp($score1['date'], $score2['date']);
+        } else {
+            return strcmp($score1['title'], $score2['title']);
+        }
+
+    } /* end sortScores */
 
 
     /**
@@ -2016,15 +2035,17 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Display all evaluations for a user
+     * Display all scores for a user
      *
-     * Generates a page for viewing enabled evaluations
-     * for all enabled assignments for a single user.
+     * Generates a page for viewing all enabled evaluations for
+     * all enabled assignments, all enabled assignments that do
+     * not have an enabled evaluation, and all adjustments for
+     * a single user.
      *
      * @param int|bool $user_id the user id
      */
 
-    function showUserEvaluations ( $user_id = false ) {
+    function showUserScores ( $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -2044,30 +2065,19 @@ class SpecialGrades extends SpecialPage {
 
         }
 
+        $scores = array();
+
         # Initialize the points earned, the ideal score,
         # and the course total points for this student
         $pointsEarned = 0;
         $pointsIdeal = 0;
         $pointsAllAssignments = 0;
 
-        # Query for all enabled assignments
-        $assignments = $dbr->select('scholasticgrading_assignment', '*',
-            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => 'sga_date'));
+        # Query for all enabled assignments and all enabled adjustments
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true));
+        $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_enabled' => true));
 
-        # Build the user scores page
-        $content = '';
-        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-evaluationtable')) . "\n";
-
-        # Create a column header for each field
-        $content .= Html::rawElement('tr', array('id' => 'evaluationtable-header'),
-            Html::element('th', null, 'Date') .
-            Html::element('th', null, 'Assignment') .
-            Html::element('th', null, 'Score') .
-            Html::element('th', null, 'Value') .
-            Html::element('th', null, 'Comment')
-        ) . "\n";
-
-        # Create a row for each enabled assignment that has an evaluation
+        # Store scores for each enabled assignment
         foreach ( $assignments as $assignment ) {
 
             # Increment the course total points
@@ -2084,31 +2094,99 @@ class SpecialGrades extends SpecialPage {
                 $pointsEarned += $evaluation->sge_score;
                 $pointsIdeal  += $assignment->sga_value;
 
-                $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row'),
-                    Html::element('td', array('class' => 'sg-evaluationtable-date', 'data-sort-value' => $evaluation->sge_date), date_format(date_create($evaluation->sge_date), 'D m/d')) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-title'), $assignment->sga_title) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-score'), (float)$evaluation->sge_score) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-comment'), $evaluation->sge_comment)
-                ) . "\n";
+                # Store the score for this assignment
+                array_push($scores, array(
+                    'date'    => $evaluation->sge_date,
+                    'title'   => $assignment->sga_title,
+                    'score'   => $evaluation->sge_score,
+                    'value'   => $assignment->sga_value,
+                    'comment' => $evaluation->sge_comment
+                ));
 
             } else {
 
                 # The evaluation either does not exist or is disabled
 
-                $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row sg-evaluationtable-disabled'),
-                    Html::element('td', array('class' => 'sg-evaluationtable-date', 'data-sort-value' => $assignment->sga_date), date_format(date_create($assignment->sga_date), 'D m/d')) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-title'), $assignment->sga_title) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-score'), '-') .
-                    Html::element('td', array('class' => 'sg-evaluationtable-value'), (float)$assignment->sga_value) .
-                    Html::element('td', array('class' => 'sg-evaluationtable-comment'), '')
+                # Store the score for this assignment
+                array_push($scores, array(
+                    'date'    => $assignment->sga_date,
+                    'title'   => $assignment->sga_title,
+                    'score'   => false,
+                    'value'   => $assignment->sga_value,
+                    'comment' => ''
+                ));
+
+            }
+
+        }
+
+        # Store scores for each enabled adjustment
+        foreach ( $adjustments as $adjustment ) {
+
+            # Increment the course total points
+            $pointsAllAssignments += $adjustment->sgadj_value;
+
+            # Increment the points earned and the ideal score
+            $pointsEarned += $adjustment->sgadj_score;
+            $pointsIdeal  += $adjustment->sgadj_value;
+
+            # Store the score for this adjustment
+            array_push($scores, array(
+                'date'    => $adjustment->sgadj_date,
+                'title'   => $adjustment->sgadj_title,
+                'score'   => $adjustment->sgadj_score,
+                'value'   => $adjustment->sgadj_value,
+                'comment' => $adjustment->sgadj_comment
+            ));
+
+        }
+
+        # Sort the scores by date, or title if dates are equivalent
+        usort($scores, array("SpecialGrades", "sortScores"));
+
+        # Build the user scores page
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-userscorestable')) . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', array('id' => 'userscorestable-header'),
+            Html::element('th', null, 'Date') .
+            Html::element('th', null, 'Assignment') .
+            Html::element('th', null, 'Score') .
+            Html::element('th', null, 'Value') .
+            Html::element('th', null, 'Comment')
+        ) . "\n";
+
+        # Create a row for each score
+        foreach ( $scores as $score ) {
+
+            if ( $score['score'] ) {
+
+                # Evaluated assignments and adjustments have scores
+                $content .= Html::rawElement('tr', array('class' => 'sg-userscorestable-row'),
+                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date']), date_format(date_create($score['date']), 'D m/d')) .
+                    Html::element('td', array('class' => 'sg-userscorestable-title'), $score['title']) .
+                    Html::element('td', array('class' => 'sg-userscorestable-score'), (float)$score['score']) .
+                    Html::element('td', array('class' => 'sg-userscorestable-value'), (float)$score['value']) .
+                    Html::element('td', array('class' => 'sg-userscorestable-comment'), $score['comment'])
+                ) . "\n";
+
+            } else {
+
+                # Unevaluated assignments do not have scores
+                $content .= Html::rawElement('tr', array('class' => 'sg-userscorestable-row sg-userscorestable-unevaluated'),
+                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date']), date_format(date_create($score['date']), 'D m/d')) .
+                    Html::element('td', array('class' => 'sg-userscorestable-title'), $score['title']) .
+                    Html::element('td', array('class' => 'sg-userscorestable-score'), '-') .
+                    Html::element('td', array('class' => 'sg-userscorestable-value'), (float)$score['value']) .
+                    Html::element('td', array('class' => 'sg-userscorestable-comment'), $score['comment'])
                 ) . "\n";
 
             }
 
         }
 
-        $content .= Html::rawElement('tr', array('class' => 'sg-evaluationtable-row'),
+        $content .= Html::rawElement('tr', array('id' => 'userscorestable-footer'),
             Html::element('th', null, '') .
             Html::element('th', null, '') .
             Html::element('th', null, $pointsEarned) .
@@ -2124,7 +2202,7 @@ class SpecialGrades extends SpecialPage {
 
         $page->addHTML($content);
 
-    } /* end showUserEvaluations */
+    } /* end showUserScores */
 
 
     /**
