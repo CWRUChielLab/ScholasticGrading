@@ -63,6 +63,17 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
+        case 'viewuserscores':
+
+            if ( $this->canModify(true) ) {
+                $this->showUserScores(
+                    $request->getVal('user', false)
+                );
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
         case 'editassignment':
 
             if ( $this->canModify(true) ) {
@@ -101,6 +112,9 @@ class SpecialGrades extends SpecialPage {
         case 'edituserscores':
 
             if ( $this->canModify(true) ) {
+                $page->addHTML(Html::rawElement('p', null,
+                    Linker::linkKnown($this->getTitle(), 'See student\'s view', array(),
+                        array('action' => 'viewuserscores', 'user' => $request->getVal('user', false)))) . "\n");
                 $this->showUserScoreForms(
                     $request->getVal('user', false)
                 );
@@ -372,6 +386,12 @@ class SpecialGrades extends SpecialPage {
                     return $this->msg('grades')->plain();
 
                 }
+
+                break;
+
+            case 'viewuserscores':
+
+                return 'Grades for ' . $this->getUserDisplayName($request->getVal('user', false));
 
                 break;
 
