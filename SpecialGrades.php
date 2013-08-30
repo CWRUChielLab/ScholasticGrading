@@ -201,7 +201,7 @@ class SpecialGrades extends SpecialPage {
      * and provides warnings if any do not.
      */
 
-    public function allTablesExist () {
+    function allTablesExist () {
 
         $page = $this->getOutput();
         $allTablesExist = true;
@@ -235,7 +235,7 @@ class SpecialGrades extends SpecialPage {
      * @return bool whether the user can modify assignments and grades
      */
 
-    public function canModify ( $printErrors = false ) {
+    function canModify ( $printErrors = false ) {
 
         $page = $this->getOutput();
 
@@ -269,7 +269,7 @@ class SpecialGrades extends SpecialPage {
      * whitespace removed if non-whitespace characters
      * are present. Otherwise, returns false.
      *
-     * @param string title string to validate
+     * @param string $test_title title string to validate
      * @return sting|bool the trimmed string or false
      */
 
@@ -290,7 +290,7 @@ class SpecialGrades extends SpecialPage {
      * Returns the date string if it has the form
      * YYYY-MM-DD. Otherwise, returns false.
      *
-     * @param string date string to validate
+     * @param string $test_date date string to validate
      * @return sting|bool the date string or false
      */
 
@@ -420,7 +420,7 @@ class SpecialGrades extends SpecialPage {
      * @return string|bool the user display name or false
      */
 
-    public function getUserDisplayName ( $user_id = false ) {
+    function getUserDisplayName ( $user_id = false ) {
 
         if ( $user_id ) {
 
@@ -486,7 +486,7 @@ class SpecialGrades extends SpecialPage {
      * to the writeAssignment function one at a time.
      */
 
-    public function submitAssignments () {
+    function submitAssignments () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -556,7 +556,7 @@ class SpecialGrades extends SpecialPage {
      * to the writeEvaluation function one at a time.
      */
 
-    public function submitEvaluations () {
+    function submitEvaluations () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -632,7 +632,7 @@ class SpecialGrades extends SpecialPage {
      * to the writeAdjustment function one at a time.
      */
 
-    public function submitAdjustments () {
+    function submitAdjustments () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -729,7 +729,7 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $assignmentDate the date of an assignment
      */
 
-    public function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
+    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -904,7 +904,7 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $evaluationComment the comment of an evaluation
      */
 
-    public function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
+    function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1100,7 +1100,7 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $adjustmentComment the comment of an adjustment
      */
 
-    public function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false ) {
+    function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1293,7 +1293,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $id an optional assignment id
      */
 
-    public function showAssignmentForm ( $id = false ) {
+    function showAssignmentForm ( $id = false ) {
 
         $page = $this->getOutput();
 
@@ -1385,7 +1385,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $assignment_id the assignment id of an evaluation
      */
 
-    public function showEvaluationForm ( $user_id = false, $assignment_id = false ) {
+    function showEvaluationForm ( $user_id = false, $assignment_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1497,7 +1497,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $user_id the optional user id of an adjustment
      */
 
-    public function showAdjustmentForm ( $id = false, $user_id = false ) {
+    function showAdjustmentForm ( $id = false, $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1613,7 +1613,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $user_id the user id
      */
 
-    public function showUserEvaluationForms ( $user_id = false ) {
+    function showUserEvaluationForms ( $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1742,7 +1742,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $id the assignment id
      */
 
-    public function showAssignmentEvaluationForms ( $id = false ) {
+    function showAssignmentEvaluationForms ( $id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -1850,7 +1850,7 @@ class SpecialGrades extends SpecialPage {
      * for modifying and deleting assignments
      */
 
-    public function showAllAssignments () {
+    function showAllAssignments () {
 
         $page = $this->getOutput();
 
@@ -1899,7 +1899,7 @@ class SpecialGrades extends SpecialPage {
      * students and rows represent assignments.
      */
 
-    public function showGradeTable () {
+    function showGradeTable () {
 
         $page = $this->getOutput();
         $pointsEarned = array();
@@ -2024,7 +2024,7 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool $user_id the user id
      */
 
-    public function showUserEvaluations ( $user_id = false ) {
+    function showUserEvaluations ( $user_id = false ) {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -2134,7 +2134,7 @@ class SpecialGrades extends SpecialPage {
      * Used for development.
      */
 
-    public function showUsers () {
+    function showUsers () {
 
         $page = $this->getOutput();
 
@@ -2177,7 +2177,7 @@ class SpecialGrades extends SpecialPage {
      * Used for development.
      */
 
-    public function showAssignments () {
+    function showAssignments () {
 
         $page = $this->getOutput();
 
@@ -2224,7 +2224,7 @@ class SpecialGrades extends SpecialPage {
      * Used for development.
      */
 
-    public function showEvaluations () {
+    function showEvaluations () {
 
         $page = $this->getOutput();
 
@@ -2273,7 +2273,7 @@ class SpecialGrades extends SpecialPage {
      * Used for development.
      */
 
-    public function showAdjustments () {
+    function showAdjustments () {
 
         $page = $this->getOutput();
 
