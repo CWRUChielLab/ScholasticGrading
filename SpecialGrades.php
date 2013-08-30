@@ -2191,7 +2191,7 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, '') .
             Html::element('th', null, $pointsEarned) .
             Html::element('th', null, $pointsIdeal) .
-            Html::element('th', null, '')
+            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%')
         ) . "\n";
         $content .= Html::closeElement('table') . "\n";
 
