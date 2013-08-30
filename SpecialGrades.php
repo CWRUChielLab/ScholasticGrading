@@ -1790,8 +1790,19 @@ class SpecialGrades extends SpecialPage {
             'method' => 'post',
             'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitevaluation'))
         ));
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-assignmentscorestable')) . "\n";
 
-        # Create a form for each user
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', array('id' => 'assignmentscorestable-header'),
+            Html::element('th', null, 'User') .
+            Html::element('th', array('class' => 'unsortable'), 'Date') .
+            Html::element('th', array('class' => 'unsortable'), 'Score') .
+            Html::element('th', array('class' => 'unsortable'), 'Value') .
+            Html::element('th', array('class' => 'unsortable'), 'Comment') .
+            Html::element('th', array('class' => 'unsortable'), 'Enabled')
+        ) . "\n";
+
+        # Create a row for each user
         $paramSetCounter = 0;
         foreach ( $users as $user ) {
 
@@ -1801,10 +1812,10 @@ class SpecialGrades extends SpecialPage {
 
                 # The evaluation does not exist
                 # Set default parameters for creating a new evaluation
-                $evaluationScoreDefault = '';
-                $evaluationEnabledDefault = true;
                 $evaluationDateDefault = $assignment->sga_date;
+                $evaluationScoreDefault = '';
                 $evaluationCommentDefault = '';
+                $evaluationEnabledDefault = true;
 
             } else {
 
@@ -1812,46 +1823,31 @@ class SpecialGrades extends SpecialPage {
                 $evaluation = $evaluations->next();
 
                 # Use its values as default parameters
-                $evaluationScoreDefault = (float)$evaluation->sge_score;
-                $evaluationEnabledDefault = $evaluation->sge_enabled;
                 $evaluationDateDefault = $evaluation->sge_date;
+                $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationCommentDefault = $evaluation->sge_comment;
+                $evaluationEnabledDefault = $evaluation->sge_enabled;
 
             }
 
-            # Build the evaluation form
-            $content .= Html::rawElement('fieldset', null,
-                Html::element('legend', null, $this->getUserDisplayName($user->user_id)) .
-                Html::rawElement('table', null,
-#                    Html::rawElement('tr', null,
-#                        Html::rawElement('td', null, Xml::label('User:', 'evaluation-user')) .
-#                        Html::rawElement('td', null, $this->getUserDisplayName($user->user_id))
-#                    ) .
-                    Html::rawElement('tr', null,
-                        Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score-' . $paramSetCounter)) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
-                    ) .
-                    Html::rawElement('tr', null,
-                        Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault, array('id' => 'evaluation-enabled-' . $paramSetCounter)))
-                    ) .
-                    Html::rawElement('tr', null,
-                        Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date-' . $paramSetCounter, 'class' => 'sg-date-input')))
-                    ) .
-                    Html::rawElement('tr', null,
-                        Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment-' . $paramSetCounter)) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 20, $evaluationCommentDefault, array('id' => 'evaluation-comment-' . $paramSetCounter)))
-                    )
-                ) .
-                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user->user_id) .
-                Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-assignment]', $id)
+            $content .= Html::rawElement('tr', array('class' => 'sg-assignmentscorestable-row'),
+                Html::element('td', array('class' => 'sg-assignmentscorestable-user'), $this->getUserDisplayName($user->user_id)) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscorestable-date'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('class' => 'sg-date-input'))) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscorestable-score'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
+                Html::element('td', array('class' => 'sg-assignmentscorestable-value'), (float)$assignment->sga_value) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscorestable-comment'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 50, $evaluationCommentDefault)) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscorestable-enabled'), Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault))
             );
+
+            $content .= Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user->user_id);
+            $content .= Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-assignment]', $id);
+            $content .= "\n";
 
             $paramSetCounter += 1;
 
         }
 
+        $content .= Html::closeElement('table') . "\n";
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-evaluation'));
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";

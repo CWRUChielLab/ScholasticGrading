@@ -2,9 +2,13 @@
  * CSS for Special:Grades
  */
 
+
 div.racetrack {
     text-align: center;
 }
+
+
+/* Styles for instructor interface with grade grid*/
 
 table.sg-gradetable {
 }
@@ -44,6 +48,9 @@ table.sg-gradetable td.sg-gradetable-cell {
     text-align: center;
 }
 
+
+/* Styles for the student interface */
+
 table.sg-userscorestable {
     width: 100%;
 }
@@ -75,6 +82,40 @@ table.sg-userscorestable td.sg-userscorestable-comment {
     min-width: 200px;
     max-width: 500px;
 }
+
+
+/* Styles for instructor interface for editing all evaluations for one assignment */
+
+table.sg-assignmentscorestable {
+    width: 100%;
+}
+
+table.sg-assignmentscorestable tr#assignmentscorestable-header {
+}
+
+table.sg-assignmentscorestable tr.sg-assignmentscorestable-row {
+}
+
+table.sg-assignmentscorestable td.sg-assignmentscorestable-user {
+    text-align: left;
+    width: 200px;
+}
+
+table.sg-assignmentscorestable td.sg-assignmentscorestable-date,
+table.sg-assignmentscorestable td.sg-assignmentscorestable-score,
+table.sg-assignmentscorestable td.sg-assignmentscorestable-value,
+table.sg-assignmentscorestable td.sg-assignmentscorestable-enabled {
+    text-align: center;
+    width: 75px;
+}
+
+table.sg-assignmentscorestable td.sg-assignmentscorestable-comment {
+    text-align: left;
+    width: 270px;
+}
+
+
+/* Styles for instructor interface for managing assignments */
 
 table.sg-assignmenttable {
     width: 100%;
