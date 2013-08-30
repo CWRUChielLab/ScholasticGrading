@@ -13,7 +13,7 @@ div.racetrack {
 table.sg-gradetable {
 }
 
-table.sg-gradetable tr#gradetable-header {
+table.sg-gradetable tr#sg-gradetable-header {
 }
 
 table.sg-gradetable tr.sg-gradetable-row {
@@ -55,10 +55,10 @@ table.sg-userscorestable {
     width: 100%;
 }
 
-table.sg-userscorestable tr#userscorestable-header {
+table.sg-userscorestable tr#sg-userscorestable-header {
 }
 
-table.sg-userscorestable tr#userscorestable-footer {
+table.sg-userscorestable tr#sg-userscorestable-footer {
 }
 
 table.sg-userscorestable tr.sg-userscorestable-row {
@@ -86,56 +86,98 @@ table.sg-userscorestable td.sg-userscorestable-comment {
 
 /* Styles for instructor interface for editing all evaluations for one assignment */
 
-table.sg-assignmentscorestable {
+table.sg-assignmentscoresformtable {
     width: 100%;
 }
 
-table.sg-assignmentscorestable tr#assignmentscorestable-header {
+table.sg-assignmentscoresformtable tr#sg-assignmentscoresformtable-header {
 }
 
-table.sg-assignmentscorestable tr.sg-assignmentscorestable-row {
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-row {
 }
 
-table.sg-assignmentscorestable td.sg-assignmentscorestable-user {
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-user {
     text-align: left;
     width: 200px;
 }
 
-table.sg-assignmentscorestable td.sg-assignmentscorestable-date,
-table.sg-assignmentscorestable td.sg-assignmentscorestable-score,
-table.sg-assignmentscorestable td.sg-assignmentscorestable-value,
-table.sg-assignmentscorestable td.sg-assignmentscorestable-enabled {
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-date,
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-score,
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-value,
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-enabled {
     text-align: center;
     width: 75px;
 }
 
-table.sg-assignmentscorestable td.sg-assignmentscorestable-comment {
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-comment {
     text-align: left;
     width: 270px;
+}
+
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-date input,
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-score input {
+    text-align: center;
+}
+
+
+/* Styles for instructor interface for editing all evaluations for one user */
+
+table.sg-userscoresformtable {
+    width: 100%;
+}
+
+table.sg-userscoresformtable tr#sg-userscoresformtable-header {
+}
+
+table.sg-userscoresformtable tr.sg-userscoresformtable-row {
+}
+
+table.sg-userscoresformtable td.sg-userscoresformtable-title {
+    text-align: left;
+    width: 200px;
+}
+
+table.sg-userscoresformtable td.sg-userscoresformtable-date,
+table.sg-userscoresformtable td.sg-userscoresformtable-score,
+table.sg-userscoresformtable td.sg-userscoresformtable-value,
+table.sg-userscoresformtable td.sg-userscoresformtable-enabled {
+    text-align: center;
+    width: 75px;
+}
+
+table.sg-userscoresformtable td.sg-userscoresformtable-comment {
+    text-align: left;
+    width: 270px;
+}
+
+table.sg-userscoresformtable td.sg-userscoresformtable-date input,
+table.sg-userscoresformtable td.sg-userscoresformtable-score input,
+table.sg-userscoresformtable td.sg-userscoresformtable-value input {
+    text-align: center;
 }
 
 
 /* Styles for instructor interface for managing assignments */
 
-table.sg-assignmenttable {
+table.sg-manageassignmentstable {
     width: 100%;
 }
 
-table.sg-assignmenttable tr#assignmenttable-header {
+table.sg-manageassignmentstable tr#sg-manageassignmentstable-header {
 }
 
-table.sg-assignmenttable tr.sg-assignmenttable-row {
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-row {
 }
 
-table.sg-assignmenttable td.sg-assignmenttable-date,
-table.sg-assignmenttable td.sg-assignmenttable-value,
-table.sg-assignmenttable td.sg-assignmenttable-enabled,
-table.sg-assignmenttable td.sg-assignmenttable-modify {
+table.sg-manageassignmentstable td.sg-manageassignmentstable-date,
+table.sg-manageassignmentstable td.sg-manageassignmentstable-value,
+table.sg-manageassignmentstable td.sg-manageassignmentstable-enabled,
+table.sg-manageassignmentstable td.sg-manageassignmentstable-modify {
     text-align: center;
     width: 100px;
 }
 
-table.sg-assignmenttable td.sg-assignmenttable-title {
+table.sg-manageassignmentstable td.sg-manageassignmentstable-title {
     min-width: 200px;
     max-width: 500px;
 }
