@@ -2129,7 +2129,7 @@ class SpecialGrades extends SpecialPage {
 
         # Query for all enabled assignments and all enabled adjustments
         $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true));
-        $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_enabled' => true));
+        $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_user_id' => $user_id, 'sgadj_enabled' => true));
 
         # Store scores for each enabled assignment
         foreach ( $assignments as $assignment ) {
