@@ -53,10 +53,12 @@ class SpecialGrades extends SpecialPage {
 
         case 'assignments':
 
-            $page->addHTML(Html::element('p', null, 'Create, modify, and delete assignments.') . "\n");
-            $page->addHTML(Html::rawElement('p', null,
-                Linker::linkKnown($this->getTitle('editassignment'), 'Create a new assignment')) . "\n");
-            $this->showAllAssignments();
+            if ( $this->canModify(true) ) {
+                $page->addHTML(Html::element('p', null, 'Create, modify, and delete assignments.') . "\n");
+                $page->addHTML(Html::rawElement('p', null,
+                    Linker::linkKnown($this->getTitle('editassignment'), 'Create a new assignment')) . "\n");
+                $this->showAllAssignments();
+            }
 
             $page->returnToMain(false, $this->getTitle());
             break;
