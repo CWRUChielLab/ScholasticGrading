@@ -8,23 +8,23 @@ div.racetrack {
 }
 
 
-/* Styles for instructor interface with grade grid*/
+/* Styles for instructor interface with grade grid */
 
-table.sg-gradetable {
+table.sg-gradegrid {
 }
 
-table.sg-gradetable tr#sg-gradetable-header {
+table.sg-gradegrid tr#sg-gradegrid-header {
 }
 
-table.sg-gradetable tr.sg-gradetable-row {
+table.sg-gradegrid tr.sg-gradegrid-row {
 }
 
-table.sg-gradetable th.sg-gradetable-user {
+table.sg-gradegrid th.sg-gradegrid-user {
     vertical-align: bottom;
     height: 120px;
 }
 
-table.sg-gradetable th.sg-gradetable-user div {
+table.sg-gradegrid th.sg-gradegrid-user div {
     width: 20px;
     white-space: nowrap;
     -webkit-transform: rotate(-90deg);
@@ -34,17 +34,17 @@ table.sg-gradetable th.sg-gradetable-user div {
     transform: rotate(-90deg);
 }
 
-table.sg-gradetable td.sg-gradetable-date {
+table.sg-gradegrid td.sg-gradegrid-date {
     text-align: center;
     width: 100px;
 }
 
-table.sg-gradetable td.sg-gradetable-assignment {
+table.sg-gradegrid td.sg-gradegrid-assignment {
     text-align: left;
     max-width: 300px;
 }
 
-table.sg-gradetable td.sg-gradetable-cell {
+table.sg-gradegrid td.sg-gradegrid-cell {
     text-align: center;
 }
 
