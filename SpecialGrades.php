@@ -2093,8 +2093,39 @@ class SpecialGrades extends SpecialPage {
 
         } /* end for each enabled assignment */
 
+        # Create a row listing point adjustment sums
+        $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
+        $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => '9999'), '');
+        $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'), 'Point adjustments');
+
+        # Create a cell for each user
+        foreach ( $users as $user ) {
+
+            $adjustmentScoreSum = 0;
+            $adjustmentValueSum = 0;
+
+            $adjustments = $dbr->select('scholasticgrading_adjustment', '*',
+                array('sgadj_user_id' => $user->user_id, 'sgadj_enabled' => true));
+            foreach ( $adjustments as $adjustment ) {
+
+                $adjustmentScoreSum += $adjustment->sgadj_score;
+                $adjustmentValueSum += $adjustment->sgadj_value;
+
+                # Increment the points earned and the ideal score for this student
+                $pointsEarned[$user->user_name] += $adjustment->sgadj_score;
+                $pointsIdeal[$user->user_name] += $adjustment->sgadj_value;
+
+            }
+
+            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'),
+                $adjustmentScoreSum . ' / ' . $adjustmentValueSum);
+
+        }
+
+        $content .= Html::closeElement('tr') . "\n";
+
         # Report point totals for each student
-        $content .= Html::openElement('tr');
+        $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
         $content .= Html::element('th', null, '') . Html::element('th', null, '');
         foreach ( $users as $user ) {
             $content .= Html::element('th', null,
