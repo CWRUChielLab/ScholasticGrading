@@ -54,9 +54,6 @@ class SpecialGrades extends SpecialPage {
         case 'assignments':
 
             if ( $this->canModify(true) ) {
-                $page->addHTML(Html::element('p', null, 'Create, modify, and delete assignments.') . "\n");
-                $page->addHTML(Html::rawElement('p', null,
-                    Linker::linkKnown($this->getTitle('editassignment'), 'Create a new assignment')) . "\n");
                 $this->showAllAssignments();
             }
 
@@ -156,7 +153,8 @@ class SpecialGrades extends SpecialPage {
 
                 if ( $this->canModify(false) ) {
                     $page->addHTML(Html::rawElement('p', null,
-                        Linker::linkKnown($this->getTitle('assignments'), 'Manage assignments')) . "\n");
+                        Linker::linkKnown($this->getTitle(), 'Manage assignments', array(),
+                            array('action' => 'assignments'))) . "\n");
 
                     $this->showGradeGrid();
                     //$this->showAssignments();
@@ -334,6 +332,12 @@ class SpecialGrades extends SpecialPage {
             # User is visiting this special page
 
             switch ( $action ) {
+
+            case 'assignments':
+
+                return 'Manage assignments';
+
+                break;
 
             case 'edituserscores':
 
@@ -1973,7 +1977,11 @@ class SpecialGrades extends SpecialPage {
 
         # Build the assignment table
         $content = '';
-        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-manageassignmentstable')) . "\n";
+        $content .= Html::openElement('form', array(
+            'method' => 'post',
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+        ));
+        $content .= Html::openElement('table', array('class' => 'wikitable sg-manageassignmentstable')) . "\n";
 
         # Create a column header for each field
         $content .= Html::rawElement('tr', array('id' => 'sg-manageassignmentstable-header'),
@@ -1981,10 +1989,11 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, 'Title') .
             Html::element('th', null, 'Value') .
             Html::element('th', null, 'Enabled') .
-            Html::element('th', array('class' => 'unsortable'), 'Edit')
+            Html::element('th', null, 'Delete')
         ) . "\n";
 
         # Create a row for each assignment
+        $paramSetCounter = 0;
         foreach ( $assignments as $assignment ) {
 
             if ( $assignment->sga_enabled ) {
@@ -1994,17 +2003,39 @@ class SpecialGrades extends SpecialPage {
             }
 
             $content .= Html::rawElement('tr', array('class' => $assignmentRowClass),
-                Html::element('td', array('class' => 'sg-manageassignmentstable-date'), $assignment->sga_date) .
-                Html::element('td', array('class' => 'sg-manageassignmentstable-title'), $assignment->sga_title) .
-                Html::element('td', array('class' => 'sg-manageassignmentstable-value'), (float)$assignment->sga_value) .
-                Html::element('td', array('class' => 'sg-manageassignmentstable-enabled'), $assignment->sga_enabled ? 'Yes' : 'No') .
-                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-modify'),
-                    Linker::linkKnown($this->getTitle(), 'Edit', array(),
-                        array('action' => 'editassignment', 'id' => $assignment->sga_id)))
-            ) . "\n";
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, $assignment->sga_date, array('class' => 'sg-date-input'))) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, $assignment->sga_title)) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, (float)$assignment->sga_value)) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', $assignment->sga_enabled)) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter)))
+            );
+
+            $content .= Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-id]', $assignment->sga_id);
+            $content .= "\n";
+
+            $paramSetCounter += 1;
+
         }
 
+        # Create a row for a new assignment
+        $content .= Html::rawElement('tr', array('class' => $assignmentRowClass),
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('class' => 'sg-date-input'))) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, '')) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '')) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', true)) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter, 'disabled')))
+        );
+
+        $content .= Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-id]', false);
+        $content .= "\n";
+
+        $paramSetCounter += 1;
+
         $content .= Html::closeElement('table') . "\n";
+        $content .= Xml::submitButton('Apply changes', array('name' => 'modify-assignment'));
+        $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
+        $content .= Html::closeElement('form') . "\n";
+        $content .= Html::element('br') . "\n";
 
         $page->addHTML($content);
 

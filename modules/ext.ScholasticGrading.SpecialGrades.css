@@ -8,7 +8,9 @@ div.racetrack {
 }
 
 
-/* Styles for instructor interface with grade grid */
+/***************************************************
+ * Styles for instructor interface with grade grid *
+ ***************************************************/
 
 table.sg-gradegrid {
 }
@@ -52,7 +54,9 @@ table.sg-gradegrid td.sg-gradegrid-cell {
 }
 
 
-/* Styles for the student interface */
+/************************************
+ * Styles for the student interface *
+ ************************************/
 
 table.sg-userscorestable {
     width: 100%;
@@ -87,7 +91,9 @@ table.sg-userscorestable td.sg-userscorestable-comment {
 }
 
 
-/* Styles for instructor interface for editing all evaluations for one assignment */
+/**********************************************************************************
+ * Styles for instructor interface for editing all evaluations for one assignment *
+ **********************************************************************************/
 
 table.sg-assignmentscoresformtable {
     width: 100%;
@@ -136,7 +142,9 @@ table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-score input {
 }
 
 
-/* Styles for instructor interface for editing all evaluations for one user */
+/****************************************************************************
+ * Styles for instructor interface for editing all evaluations for one user *
+ ****************************************************************************/
 
 table.sg-userscoresformtable {
     width: 100%;
@@ -193,7 +201,9 @@ table.sg-userscoresformtable td.sg-userscoresformtable-value input {
 }
 
 
-/* Styles for instructor interface for managing assignments */
+/************************************************************
+ * Styles for instructor interface for managing assignments *
+ ************************************************************/
 
 table.sg-manageassignmentstable {
     width: 100%;
@@ -205,7 +215,10 @@ table.sg-manageassignmentstable tr#sg-manageassignmentstable-header {
 table.sg-manageassignmentstable tr.sg-manageassignmentstable-row {
 }
 
-table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled {
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled,
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled td.sg-manageassignmentstable-date input,
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled td.sg-manageassignmentstable-title input,
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled td.sg-manageassignmentstable-value input {
     font-style: italic;
     color: gray;
 }
@@ -213,13 +226,18 @@ table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled {
 table.sg-manageassignmentstable td.sg-manageassignmentstable-date,
 table.sg-manageassignmentstable td.sg-manageassignmentstable-value,
 table.sg-manageassignmentstable td.sg-manageassignmentstable-enabled,
-table.sg-manageassignmentstable td.sg-manageassignmentstable-modify {
+table.sg-manageassignmentstable td.sg-manageassignmentstable-delete {
     text-align: center;
-    width: 100px;
+    width: 75px;
 }
 
 table.sg-manageassignmentstable td.sg-manageassignmentstable-title {
-    min-width: 200px;
-    max-width: 500px;
+    text-align: left;
+    width: 270px;
+}
+
+table.sg-manageassignmentstable td.sg-manageassignmentstable-date input,
+table.sg-manageassignmentstable td.sg-manageassignmentstable-value input {
+    text-align: center;
 }
 
