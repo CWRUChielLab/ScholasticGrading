@@ -135,6 +135,14 @@ table.sg-userscoresformtable tr#sg-userscoresformtable-header {
 table.sg-userscoresformtable tr.sg-userscoresformtable-row {
 }
 
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled input {
+    font-style: italic;
+    color: gray;
+}
+
 table.sg-userscoresformtable td.sg-userscoresformtable-title {
     text-align: left;
     width: 200px;
@@ -170,6 +178,11 @@ table.sg-manageassignmentstable tr#sg-manageassignmentstable-header {
 }
 
 table.sg-manageassignmentstable tr.sg-manageassignmentstable-row {
+}
+
+table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled {
+    font-style: italic;
+    color: gray;
 }
 
 table.sg-manageassignmentstable td.sg-manageassignmentstable-date,

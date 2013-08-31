@@ -1722,6 +1722,7 @@ class SpecialGrades extends SpecialPage {
                     $evaluationScoreDefault = '';
                     $evaluationCommentDefault = '';
                     $evaluationEnabledDefault = true;
+                    $evaluationRowClass = 'sg-userscoresformtable-row sg-userscoresformtable-unevaluated';
 
                 } else {
 
@@ -1736,15 +1737,21 @@ class SpecialGrades extends SpecialPage {
 
                     if ( $evaluation->sge_enabled ) {
 
+                        $evaluationRowClass = 'sg-userscoresformtable-row';
+
                         # Increment the points earned and the ideal score
                         $pointsEarned += $evaluation->sge_score;
                         $pointsIdeal  += $assignment->sga_value;
+
+                    } else {
+
+                        $evaluationRowClass = 'sg-userscoresformtable-row sg-userscoresformtable-disabled';
 
                     }
 
                 }
 
-                $content .= Html::rawElement('tr', array('class' => 'sg-userscoresformtable-row'),
+                $content .= Html::rawElement('tr', array('class' => $evaluationRowClass),
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('class' => 'sg-date-input'))) .
                     Html::element('td', array('class' => 'sg-userscoresformtable-title'), $assignment->sga_title . ' (' . $assignment->sga_date . ')') .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
@@ -1766,6 +1773,8 @@ class SpecialGrades extends SpecialPage {
 
                 if ( $adjustment->sgadj_enabled ) {
 
+                    $adjustmentRowClass = 'sg-userscoresformtable-row';
+
                     # Increment the course total points
                     $pointsAllAssignments += $adjustment->sgadj_value;
 
@@ -1773,9 +1782,13 @@ class SpecialGrades extends SpecialPage {
                     $pointsEarned += $adjustment->sgadj_score;
                     $pointsIdeal  += $adjustment->sgadj_value;
 
+                } else {
+
+                    $adjustmentRowClass = 'sg-userscoresformtable-row sg-userscoresformtable-disabled';
+
                 }
 
-                $content .= Html::rawElement('tr', array('class' => 'sg-userscoresformtable-row'),
+                $content .= Html::rawElement('tr', array('class' => $adjustmentRowClass),
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-date]', 10, $adjustment->sgadj_date, array('class' => 'sg-date-input'))) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-title'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-title]', 50, $adjustment->sgadj_title)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, (float)$adjustment->sgadj_score)) .
@@ -1969,7 +1982,14 @@ class SpecialGrades extends SpecialPage {
 
         # Create a row for each assignment
         foreach ( $assignments as $assignment ) {
-            $content .= Html::rawElement('tr', array('class' => 'sg-manageassignmentstable-row'),
+
+            if ( $assignment->sga_enabled ) {
+                $assignmentRowClass = 'sg-manageassignmentstable-row';
+            } else {
+                $assignmentRowClass = 'sg-manageassignmentstable-row sg-manageassignmentstable-disabled';
+            }
+
+            $content .= Html::rawElement('tr', array('class' => $assignmentRowClass),
                 Html::element('td', array('class' => 'sg-manageassignmentstable-date'), $assignment->sga_date) .
                 Html::element('td', array('class' => 'sg-manageassignmentstable-title'), $assignment->sga_title) .
                 Html::element('td', array('class' => 'sg-manageassignmentstable-value'), (float)$assignment->sga_value) .
