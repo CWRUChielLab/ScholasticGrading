@@ -109,12 +109,12 @@ class SpecialGrades extends SpecialPage {
         case 'edituserscores':
 
             if ( $this->canModify(true) ) {
-                $page->addHTML(Html::rawElement('p', null,
-                    Linker::linkKnown($this->getTitle(), 'See student\'s view', array(),
-                        array('action' => 'viewuserscores', 'user' => $request->getVal('user', false)))) . "\n");
                 $this->showUserScoreForms(
                     $request->getVal('user', false)
                 );
+                $page->addHTML(Html::rawElement('p', null,
+                    Linker::linkKnown($this->getTitle(), 'See student\'s view.', array(),
+                        array('action' => 'viewuserscores', 'user' => $request->getVal('user', false)))) . "\n");
             }
 
             $page->returnToMain(false, $this->getTitle());
