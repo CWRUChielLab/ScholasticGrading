@@ -1816,7 +1816,16 @@ class SpecialGrades extends SpecialPage {
 
         $adjustmentParamSetCounter += 1;
 
+        # Create a row for point totals
+        $content .= Html::rawElement('tr', array('id' => 'sg-userscoresformtable-footer'),
+            Html::element('th', null, '') .
+            Html::element('th', null, '') .
+            Html::element('th', null, $pointsEarned) .
+            Html::element('th', null, $pointsIdeal) .
+            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%')
+        ) . "\n";
         $content .= Html::closeElement('table') . "\n";
+
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-evaluation'));
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";
@@ -2300,6 +2309,7 @@ class SpecialGrades extends SpecialPage {
 
         }
 
+        # Create a row for point totals
         $content .= Html::rawElement('tr', array('id' => 'sg-userscorestable-footer'),
             Html::element('th', null, '') .
             Html::element('th', null, '') .
