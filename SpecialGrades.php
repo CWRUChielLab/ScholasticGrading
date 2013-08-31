@@ -1684,7 +1684,8 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, 'Score') .
             Html::element('th', null, 'Value') .
             Html::element('th', null, 'Comment') .
-            Html::element('th', null, 'Enabled')
+            Html::element('th', null, 'Enabled') .
+            Html::element('th', null, 'Delete')
         ) . "\n";
 
         # Create a row for each score
@@ -1710,6 +1711,7 @@ class SpecialGrades extends SpecialPage {
                     $evaluationCommentDefault = '';
                     $evaluationEnabledDefault = true;
                     $evaluationRowClass = 'sg-userscoresformtable-row sg-userscoresformtable-unevaluated';
+                    $evaluationDeleteButtonAttr = array('name' => 'delete-evaluation-' . $evaluationParamSetCounter, 'disabled');
 
                 } else {
 
@@ -1721,6 +1723,7 @@ class SpecialGrades extends SpecialPage {
                     $evaluationScoreDefault = (float)$evaluation->sge_score;
                     $evaluationCommentDefault = $evaluation->sge_comment;
                     $evaluationEnabledDefault = $evaluation->sge_enabled;
+                    $evaluationDeleteButtonAttr = array('name' => 'delete-evaluation-' . $evaluationParamSetCounter);
 
                     if ( $evaluation->sge_enabled ) {
 
@@ -1744,7 +1747,8 @@ class SpecialGrades extends SpecialPage {
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
                     Html::element('td', array('class' => 'sg-userscoresformtable-value'), (float)$assignment->sga_value) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-comment]', 50, $evaluationCommentDefault)) .
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault))
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault)) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-delete'), Xml::submitButton('Delete', $evaluationDeleteButtonAttr))
                 );
 
                 $content .= Html::hidden('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-user]', $user_id);
@@ -1781,7 +1785,8 @@ class SpecialGrades extends SpecialPage {
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, (float)$adjustment->sgadj_score)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, (float)$adjustment->sgadj_value)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-comment]', 50, $adjustment->sgadj_comment)) .
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', $adjustment->sgadj_enabled))
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', $adjustment->sgadj_enabled)) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-delete'), Xml::submitButton('Delete', array('name' => 'delete-adjustment-' . $adjustmentParamSetCounter)))
                 );
 
                 $content .= Html::hidden('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-id]', $adjustment->sgadj_id);
@@ -1807,7 +1812,8 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, '')) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, '0')) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-comment]', 50, '')) .
-            Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', true))
+            Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', true)) .
+            Html::rawElement('td', array('class' => 'sg-userscoresformtable-delete'), Xml::submitButton('Delete', array('name' => 'delete-adjustment-' . $adjustmentParamSetCounter, 'disabled')))
         );
 
         $content .= Html::hidden('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-id]', false);
@@ -1822,7 +1828,9 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, '') .
             Html::element('th', null, $pointsEarned) .
             Html::element('th', null, $pointsIdeal) .
-            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%')
+            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%') .
+            Html::element('th', null, '') .
+            Html::element('th', null, '')
         ) . "\n";
         $content .= Html::closeElement('table') . "\n";
 
@@ -1888,7 +1896,8 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', array('class' => 'unsortable'), 'Score') .
             Html::element('th', array('class' => 'unsortable'), 'Value') .
             Html::element('th', array('class' => 'unsortable'), 'Comment') .
-            Html::element('th', array('class' => 'unsortable'), 'Enabled')
+            Html::element('th', array('class' => 'unsortable'), 'Enabled') .
+            Html::element('th', array('class' => 'unsortable'), 'Delete')
         ) . "\n";
 
         # Create a row for each user
@@ -1905,6 +1914,8 @@ class SpecialGrades extends SpecialPage {
                 $evaluationScoreDefault = '';
                 $evaluationCommentDefault = '';
                 $evaluationEnabledDefault = true;
+                $evaluationRowClass = 'sg-assignmentscoresformtable-row sg-assignmentscoresformtable-unevaluated';
+                $evaluationDeleteButtonAttr = array('name' => 'delete-evaluation-' . $paramSetCounter, 'disabled');
 
             } else {
 
@@ -1916,16 +1927,28 @@ class SpecialGrades extends SpecialPage {
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
                 $evaluationCommentDefault = $evaluation->sge_comment;
                 $evaluationEnabledDefault = $evaluation->sge_enabled;
+                $evaluationDeleteButtonAttr = array('name' => 'delete-evaluation-' . $paramSetCounter);
+
+                if ( $evaluation->sge_enabled ) {
+
+                    $evaluationRowClass = 'sg-assignmentscoresformtable-row';
+
+                } else {
+
+                    $evaluationRowClass = 'sg-assignmentscoresformtable-row sg-assignmentscoresformtable-disabled';
+
+                }
 
             }
 
-            $content .= Html::rawElement('tr', array('class' => 'sg-assignmentscoresformtable-row'),
+            $content .= Html::rawElement('tr', array('class' => $evaluationRowClass),
                 Html::element('td', array('class' => 'sg-assignmentscoresformtable-user'), $this->getUserDisplayName($user->user_id)) .
                 Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-date'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('class' => 'sg-date-input'))) .
                 Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-score'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
                 Html::element('td', array('class' => 'sg-assignmentscoresformtable-value'), (float)$assignment->sga_value) .
                 Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-comment'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 50, $evaluationCommentDefault)) .
-                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-enabled'), Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault))
+                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-enabled'), Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault)) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-delete'), Xml::submitButton('Delete', $evaluationDeleteButtonAttr))
             );
 
             $content .= Html::hidden('evaluation-params[' . $paramSetCounter . '][evaluation-user]', $user->user_id);

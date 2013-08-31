@@ -99,6 +99,18 @@ table.sg-assignmentscoresformtable tr#sg-assignmentscoresformtable-header {
 table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-row {
 }
 
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-unevaluated,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-unevaluated td.sg-assignmentscoresformtable-date input,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-unevaluated td.sg-assignmentscoresformtable-score input,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-unevaluated td.sg-assignmentscoresformtable-comment input,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-disabled,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-disabled td.sg-assignmentscoresformtable-date input,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-disabled td.sg-assignmentscoresformtable-score input,
+table.sg-assignmentscoresformtable tr.sg-assignmentscoresformtable-disabled td.sg-assignmentscoresformtable-comment input {
+    font-style: italic;
+    color: gray;
+}
+
 table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-user {
     text-align: left;
     width: 200px;
@@ -107,7 +119,8 @@ table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-user {
 table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-date,
 table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-score,
 table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-value,
-table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-enabled {
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-enabled,
+table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-delete {
     text-align: center;
     width: 75px;
 }
@@ -139,9 +152,17 @@ table.sg-userscoresformtable tr.sg-userscoresformtable-row {
 }
 
 table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated,
-table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated td.sg-userscoresformtable-date input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated td.sg-userscoresformtable-title input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated td.sg-userscoresformtable-score input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated td.sg-userscoresformtable-value input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-unevaluated td.sg-userscoresformtable-comment input,
 table.sg-userscoresformtable tr.sg-userscoresformtable-disabled,
-table.sg-userscoresformtable tr.sg-userscoresformtable-disabled input {
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled td.sg-userscoresformtable-date input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled td.sg-userscoresformtable-title input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled td.sg-userscoresformtable-score input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled td.sg-userscoresformtable-value input,
+table.sg-userscoresformtable tr.sg-userscoresformtable-disabled td.sg-userscoresformtable-comment input {
     font-style: italic;
     color: gray;
 }
@@ -154,7 +175,8 @@ table.sg-userscoresformtable td.sg-userscoresformtable-title {
 table.sg-userscoresformtable td.sg-userscoresformtable-date,
 table.sg-userscoresformtable td.sg-userscoresformtable-score,
 table.sg-userscoresformtable td.sg-userscoresformtable-value,
-table.sg-userscoresformtable td.sg-userscoresformtable-enabled {
+table.sg-userscoresformtable td.sg-userscoresformtable-enabled,
+table.sg-userscoresformtable td.sg-userscoresformtable-delete {
     text-align: center;
     width: 75px;
 }
