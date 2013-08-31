@@ -500,7 +500,10 @@ class SpecialGrades extends SpecialPage {
      * is sent to the writeAssignment function one at a time, each set of
      * evaluation parameters is sent to the writeEvaluation function one at a
      * time, and each set of adjustment parameters is sent to the
-     * writeAdjustment function one at a time.
+     * writeAdjustment function one at a time. The function first checks whether
+     * a delete button was pressed for any assignment, evaluation, or adjustment.
+     * If one was, all other requests are ignored, and the delete request is
+     * sent to the appropriate database function.
      */
 
     function submitForms () {
@@ -522,45 +525,141 @@ class SpecialGrades extends SpecialPage {
 
         if ( $assignmentParams ) {
 
-            # The assignment-params array is present
+            foreach ( $assignmentParams as $key => $assignment ) {
+
+                # Store default values for missing parameters
+                if ( !array_key_exists('assignment-id', $assignment) )
+                    $assignmentParams[$key]['assignment-id'] = false;
+                if ( !array_key_exists('assignment-title', $assignment) )
+                    $assignmentParams[$key]['assignment-title'] = false;
+                if ( !array_key_exists('assignment-value', $assignment) )
+                    $assignmentParams[$key]['assignment-value'] = false;
+                if ( !array_key_exists('assignment-enabled', $assignment) ) {
+                    # Form posts omit checkboxes that are unchecked
+                    $assignmentParams[$key]['assignment-enabled'] = false;
+                }
+                if ( !array_key_exists('assignment-date', $assignment) )
+                    $assignmentParams[$key]['assignment-date'] = false;
+
+                # Check whether a delete button was pressed
+                if ( $request->getVal('delete-assignment-' . $key, false) ) {
+
+                    $this->writeAssignment(
+                        $assignmentParams[$key]['assignment-id'],
+                        $assignmentParams[$key]['assignment-title'],
+                        $assignmentParams[$key]['assignment-value'],
+                        $assignmentParams[$key]['assignment-enabled'],
+                        $assignmentParams[$key]['assignment-date'],
+                        true
+                    );
+                    return;
+
+                }
+
+            }
+
+        }
+
+        if ( $evaluationParams ) {
+
+            foreach ( $evaluationParams as $key => $evaluation ) {
+
+                # Store default values for missing parameters
+                if ( !array_key_exists('evaluation-user', $evaluation) )
+                    $evaluationParams[$key]['evaluation-user'] = false;
+                if ( !array_key_exists('evaluation-assignment', $evaluation) )
+                    $evaluationParams[$key]['evaluation-assignment'] = false;
+                if ( !array_key_exists('evaluation-score', $evaluation) )
+                    $evaluationParams[$key]['evaluation-score'] = false;
+                if ( !array_key_exists('evaluation-enabled', $evaluation) ) {
+                    # Form posts omit checkboxes that are unchecked
+                    $evaluationParams[$key]['evaluation-enabled'] = false;
+                }
+                if ( !array_key_exists('evaluation-date', $evaluation) )
+                    $evaluationParams[$key]['evaluation-date'] = false;
+                if ( !array_key_exists('evaluation-comment', $evaluation) )
+                    $evaluationParams[$key]['evaluation-comment'] = false;
+                    
+                # Check whether a delete button was pressed
+                if ( $request->getVal('delete-evaluation-' . $key, false) ) {
+
+                    $this->writeEvaluation(
+                        $evaluationParams[$key]['evaluation-user'],
+                        $evaluationParams[$key]['evaluation-assignment'],
+                        $evaluationParams[$key]['evaluation-score'],
+                        $evaluationParams[$key]['evaluation-enabled'],
+                        $evaluationParams[$key]['evaluation-date'],
+                        $evaluationParams[$key]['evaluation-comment'],
+                        true
+                    );
+                    return;
+
+                }
+
+            }
+
+        }
+
+        if ( $adjustmentParams ) {
+
+            foreach ( $adjustmentParams as $key => $adjustment ) {
+
+                # Store default values for missing parameters
+                if ( !array_key_exists('adjustment-id', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-id'] = false;
+                if ( !array_key_exists('adjustment-user', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-user'] = false;
+                if ( !array_key_exists('adjustment-title', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-title'] = false;
+                if ( !array_key_exists('adjustment-value', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-value'] = false;
+                if ( !array_key_exists('adjustment-score', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-score'] = false;
+                if ( !array_key_exists('adjustment-enabled', $adjustment) ) {
+                    # Form posts omit checkboxes that are unchecked
+                    $adjustmentParams[$key]['adjustment-enabled'] = false;
+                }
+                if ( !array_key_exists('adjustment-date', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-date'] = false;
+                if ( !array_key_exists('adjustment-comment', $adjustment) )
+                    $adjustmentParams[$key]['adjustment-comment'] = false;
+
+                # Check whether a delete button was pressed
+                if ( $request->getVal('delete-adjustment-' . $key, false) ) {
+
+                    $this->writeAdjustment(
+                        $adjustmentParams[$key]['adjustment-id'],
+                        $adjustmentParams[$key]['adjustment-user'],
+                        $adjustmentParams[$key]['adjustment-title'],
+                        $adjustmentParams[$key]['adjustment-value'],
+                        $adjustmentParams[$key]['adjustment-score'],
+                        $adjustmentParams[$key]['adjustment-enabled'],
+                        $adjustmentParams[$key]['adjustment-date'],
+                        $adjustmentParams[$key]['adjustment-comment'],
+                        true
+                    );
+                    return;
+
+                }
+
+            }
+
+        }
+
+        # A delete button was not pressed, so write all changes
+
+        if ( $assignmentParams ) {
 
             # Make database changes for each assignment in assignment-params
             foreach ( $assignmentParams as $assignment ) {
 
-                # Store each parameter for this assignment if it exists
-                if ( array_key_exists('assignment-id', $assignment) ) {
-                    $assignmentID = $assignment['assignment-id'];
-                } else {
-                    $assignmentID = false;
-                }
-                if ( array_key_exists('assignment-title', $assignment) ) {
-                    $assignmentTitle = $assignment['assignment-title'];
-                } else {
-                    $assignmentTitle = false;
-                }
-                if ( array_key_exists('assignment-value', $assignment) ) {
-                    $assignmentValue = $assignment['assignment-value'];
-                } else {
-                    $assignmentValue = false;
-                }
-                if ( array_key_exists('assignment-enabled', $assignment) ) {
-                    $assignmentEnabled = $assignment['assignment-enabled'] ? 1 : 0;
-                } else {
-                    # Form posts omit checkboxes that are unchecked
-                    $assignmentEnabled = false;
-                }
-                if ( array_key_exists('assignment-date', $assignment) ) {
-                    $assignmentDate = $assignment['assignment-date'];
-                } else {
-                    $assignmentDate = false;
-                }
-                
                 $this->writeAssignment(
-                    $assignmentID,
-                    $assignmentTitle,
-                    $assignmentValue,
-                    $assignmentEnabled,
-                    $assignmentDate
+                    $assignment['assignment-id'],
+                    $assignment['assignment-title'],
+                    $assignment['assignment-value'],
+                    $assignment['assignment-enabled'],
+                    $assignment['assignment-date'],
+                    false
                 );
 
             }
@@ -569,51 +668,17 @@ class SpecialGrades extends SpecialPage {
 
         if ( $evaluationParams ) {
 
-            # The evaluation-params array is present
-
             # Make database changes for each evaluation in evaluation-params
             foreach ( $evaluationParams as $evaluation ) {
-
-                # Store each parameter for this evaluation if it exists
-                if ( array_key_exists('evaluation-user', $evaluation) ) {
-                    $evaluationUser = $evaluation['evaluation-user'];
-                } else {
-                    $evaluationUser = false;
-                }
-                if ( array_key_exists('evaluation-assignment', $evaluation) ) {
-                    $evaluationAssignment = $evaluation['evaluation-assignment'];
-                } else {
-                    $evaluationAssignment = false;
-                }
-                if ( array_key_exists('evaluation-score', $evaluation) ) {
-                    $evaluationScore = $evaluation['evaluation-score'];
-                } else {
-                    $evaluationScore = false;
-                }
-                if ( array_key_exists('evaluation-enabled', $evaluation) ) {
-                    $evaluationEnabled = $evaluation['evaluation-enabled'] ? 1 : 0;
-                } else {
-                    # Form posts omit checkboxes that are unchecked
-                    $evaluationEnabled = false;
-                }
-                if ( array_key_exists('evaluation-date', $evaluation) ) {
-                    $evaluationDate = $evaluation['evaluation-date'];
-                } else {
-                    $evaluationDate = false;
-                }
-                if ( array_key_exists('evaluation-comment', $evaluation) ) {
-                    $evaluationComment = $evaluation['evaluation-comment'];
-                } else {
-                    $evaluationComment = false;
-                }
                 
                 $this->writeEvaluation(
-                    $evaluationUser,
-                    $evaluationAssignment,
-                    $evaluationScore,
-                    $evaluationEnabled,
-                    $evaluationDate,
-                    $evaluationComment
+                    $evaluation['evaluation-user'],
+                    $evaluation['evaluation-assignment'],
+                    $evaluation['evaluation-score'],
+                    $evaluation['evaluation-enabled'],
+                    $evaluation['evaluation-date'],
+                    $evaluation['evaluation-comment'],
+                    false
                 );
 
             }
@@ -622,63 +687,19 @@ class SpecialGrades extends SpecialPage {
 
         if ( $adjustmentParams ) {
 
-            # The adjustment-params array is present
-
             # Make database changes for each adjustment in adjustment-params
             foreach ( $adjustmentParams as $adjustment ) {
 
-                # Store each parameter for this adjustment if it exists
-                if ( array_key_exists('adjustment-id', $adjustment) ) {
-                    $adjustmentID = $adjustment['adjustment-id'];
-                } else {
-                    $adjustmentID = false;
-                }
-                if ( array_key_exists('adjustment-user', $adjustment) ) {
-                    $adjustmentUser = $adjustment['adjustment-user'];
-                } else {
-                    $adjustmentUser = false;
-                }
-                if ( array_key_exists('adjustment-title', $adjustment) ) {
-                    $adjustmentTitle = $adjustment['adjustment-title'];
-                } else {
-                    $adjustmentTitle = false;
-                }
-                if ( array_key_exists('adjustment-value', $adjustment) ) {
-                    $adjustmentValue = $adjustment['adjustment-value'];
-                } else {
-                    $adjustmentValue = false;
-                }
-                if ( array_key_exists('adjustment-score', $adjustment) ) {
-                    $adjustmentScore = $adjustment['adjustment-score'];
-                } else {
-                    $adjustmentScore = false;
-                }
-                if ( array_key_exists('adjustment-enabled', $adjustment) ) {
-                    $adjustmentEnabled = $adjustment['adjustment-enabled'] ? 1 : 0;
-                } else {
-                    # Form posts omit checkboxes that are unchecked
-                    $adjustmentEnabled = false;
-                }
-                if ( array_key_exists('adjustment-date', $adjustment) ) {
-                    $adjustmentDate = $adjustment['adjustment-date'];
-                } else {
-                    $adjustmentDate = false;
-                }
-                if ( array_key_exists('adjustment-comment', $adjustment) ) {
-                    $adjustmentComment = $adjustment['adjustment-comment'];
-                } else {
-                    $adjustmentComment = false;
-                }
-                
                 $this->writeAdjustment(
-                    $adjustmentID,
-                    $adjustmentUser,
-                    $adjustmentTitle,
-                    $adjustmentValue,
-                    $adjustmentScore,
-                    $adjustmentEnabled,
-                    $adjustmentDate,
-                    $adjustmentComment
+                    $adjustment['adjustment-id'],
+                    $adjustment['adjustment-user'],
+                    $adjustment['adjustment-title'],
+                    $adjustment['adjustment-value'],
+                    $adjustment['adjustment-score'],
+                    $adjustment['adjustment-enabled'],
+                    $adjustment['adjustment-date'],
+                    $adjustment['adjustment-comment'],
+                    false
                 );
 
             }
@@ -694,18 +715,19 @@ class SpecialGrades extends SpecialPage {
      * Creates, modifies, or deletes an assignment by directly
      * modifying the database. If the (id) key provided corresponds
      * to an existing assignment, the function will modify or delete
-     * that assignment depending on whether the delete-assignment
-     * variable is set. Otherwise, the function will create a new
-     * assignment. Parameters are initially validated and sanitized.
+     * that assignment depending on whether the delete flag is set.
+     * Otherwise, the function will create a new assignment.
+     * Parameters are initially validated and sanitized.
      *
      * @param int|bool    $assignmentID the id of an assignment
      * @param int|bool    $assignmentTitle the title of an assignment
      * @param float|bool  $assignmentValue the value of an assignment
      * @param int|bool    $assignmentEnabled the enabled status of an assignment
      * @param string|bool $assignmentDate the date of an assignment
+     * @param bool        $delete whether to delete the assignment or not
      */
 
-    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false ) {
+    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false, $delete = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -743,7 +765,7 @@ class SpecialGrades extends SpecialPage {
             # The assignment exists
             $assignment = $assignments->next();
 
-            if ( !$request->getVal('delete-assignment') ) {
+            if ( !$delete ) {
 
                 # Edit the existing assignment
                 $dbw->update('scholasticgrading_assignment', array(
@@ -796,7 +818,7 @@ class SpecialGrades extends SpecialPage {
                             'method' => 'post',
                             'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                         ),
-                        Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
+                        Xml::submitButton('Delete assignment', array('name' => 'delete-assignment-0')) .
                         Html::hidden('confirm-delete', true) .
                         Html::hidden('assignment-params[0][assignment-id]',      $assignmentID) .
                         Html::hidden('assignment-params[0][assignment-title]',   $assignmentTitle) .
@@ -867,10 +889,9 @@ class SpecialGrades extends SpecialPage {
      * modifying the database. If the (user,assignment) key provided
      * corresponds to an existing evaluation, the function will
      * modify or delete that evaluation depending on whether the
-     * delete-evaluation variable is set. Otherwise, the function
-     * will create a new evaluation as long as both the user and
-     * assignment exist. Parameters are initially validated and
-     * sanitized.
+     * delete flag is set. Otherwise, the function will create a new
+     * evaluation as long as both the user and assignment exist.
+     * Parameters are initially validated and sanitized.
      *
      * @param int|bool    $evaluationUser the user id of an evaluation
      * @param int|bool    $evaluationAssignment the assignment id of an evaluation
@@ -878,9 +899,10 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool    $evaluationEnabled the enabled status of an evaluation
      * @param string|bool $evaluationDate the date of an evaluation
      * @param string|bool $evaluationComment the comment of an evaluation
+     * @param bool        $delete whether to delete the evaluation or not
      */
 
-    function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false ) {
+    function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false, $delete = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -936,7 +958,7 @@ class SpecialGrades extends SpecialPage {
                 # The evaluation exists
                 $evaluation = $evaluations->next();
 
-                if ( !$request->getVal('delete-evaluation') ) {
+                if ( !$delete ) {
 
                     # Edit the existing evaluation
                     $dbw->update('scholasticgrading_evaluation', array(
@@ -980,7 +1002,7 @@ class SpecialGrades extends SpecialPage {
                                 'method' => 'post',
                                 'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                             ),
-                            Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
+                            Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation-0')) .
                             Html::hidden('confirm-delete', true) .
                             Html::hidden('evaluation-params[0][evaluation-user]',       $evaluationUser) .
                             Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignment) .
@@ -1061,10 +1083,10 @@ class SpecialGrades extends SpecialPage {
      * Creates, modifies, or deletes an adjustment by directly
      * modifying the database. If the (id) key provided corresponds
      * to an existing adjustment, the function will modify or delete
-     * that adjustment depending on whether the delete-adjustment
-     * variable is set. Otherwise, the function will create a new
-     * adjustment as long as the user exists. Parameters are
-     * initially validated and sanitized.
+     * that adjustment depending on whether the delete flag is set.
+     * Otherwise, the function will create a new adjustment as long
+     * as the user exists. Parameters are initially validated and
+     * sanitized.
      *
      * @param int|bool    $adjustmentID the id of an adjustment
      * @param int|bool    $adjustmentUser the user id of an adjustment
@@ -1074,9 +1096,10 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool    $adjustmentEnabled the enabled status of an adjustment
      * @param string|bool $adjustmentDate the date of an adjustment
      * @param string|bool $adjustmentComment the comment of an adjustment
+     * @param bool        $delete whether to delete the adjustment or not
      */
 
-    function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false ) {
+    function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false, $delete = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1137,7 +1160,7 @@ class SpecialGrades extends SpecialPage {
                 # The adjustment exists
                 $adjustment = $adjustments->next();
 
-                if ( !$request->getVal('delete-adjustment') ) {
+                if ( !$delete ) {
 
                     # Edit the existing adjustment
                     $dbw->update('scholasticgrading_adjustment', array(
@@ -1182,7 +1205,7 @@ class SpecialGrades extends SpecialPage {
                                 'method' => 'post',
                                 'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                             ),
-                            Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment')) .
+                            Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment-0')) .
                             Html::hidden('confirm-delete', true) .
                             Html::hidden('adjustment-params[0][adjustment-id]',      $adjustmentID) .
                             Html::hidden('adjustment-params[0][adjustment-user]',    $adjustmentUser) .
@@ -1301,7 +1324,7 @@ class SpecialGrades extends SpecialPage {
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing assignment';
                 $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-assignment')) .
-                    Xml::submitButton('Delete assignment', array('name' => 'delete-assignment'));
+                    Xml::submitButton('Delete assignment', array('name' => 'delete-assignment-0'));
                 $assignmentIdDefault = $id;
                 $assignmentTitleDefault = $assignment->sga_title;
                 $assignmentValueDefault = (float)$assignment->sga_value;
@@ -1404,7 +1427,7 @@ class SpecialGrades extends SpecialPage {
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing evaluation';
                 $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-evaluation')) .
-                    Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation'));
+                    Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation-0'));
                 $evaluationUserIdDefault = $user_id;
                 $evaluationAssignmentIdDefault = $assignment_id;
                 $evaluationScoreDefault = (float)$evaluation->sge_score;
@@ -1519,7 +1542,7 @@ class SpecialGrades extends SpecialPage {
             # Use its values as default parameters
             $fieldsetTitle = 'Edit an existing adjustment';
             $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-adjustment')) .
-                Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment'));
+                Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment-0'));
             $adjustmentIdDefault = $id;
             $adjustmentUserIdDefault = $adjustment->sgadj_user_id;
             $adjustmentTitleDefault = $adjustment->sgadj_title;
