@@ -823,7 +823,7 @@ class SpecialGrades extends SpecialPage {
                         Html::hidden('assignment-params[0][assignment-id]',      $assignmentID) .
                         Html::hidden('assignment-params[0][assignment-title]',   $assignmentTitle) .
                         Html::hidden('assignment-params[0][assignment-value]',   $assignmentValue) .
-                        Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled) .
+                        Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled ? 1 : 0) .
                         Html::hidden('assignment-params[0][assignment-date]',    $assignmentDate) .
                         Html::hidden('wpEditToken', $this->getUser()->getEditToken())
                     ));
@@ -1007,7 +1007,7 @@ class SpecialGrades extends SpecialPage {
                             Html::hidden('evaluation-params[0][evaluation-user]',       $evaluationUser) .
                             Html::hidden('evaluation-params[0][evaluation-assignment]', $evaluationAssignment) .
                             Html::hidden('evaluation-params[0][evaluation-score]',      $evaluationScore) .
-                            Html::hidden('evaluation-params[0][evaluation-enabled]',    $evaluationEnabled) .
+                            Html::hidden('evaluation-params[0][evaluation-enabled]',    $evaluationEnabled ? 1 : 0) .
                             Html::hidden('evaluation-params[0][evaluation-date]',       $evaluationDate) .
                             Html::hidden('evaluation-params[0][evaluation-comment]',    $evaluationComment) .
                             Html::hidden('wpEditToken', $this->getUser()->getEditToken())
@@ -1212,7 +1212,7 @@ class SpecialGrades extends SpecialPage {
                             Html::hidden('adjustment-params[0][adjustment-title]',   $adjustmentTitle) .
                             Html::hidden('adjustment-params[0][adjustment-value]',   $adjustmentValue) .
                             Html::hidden('adjustment-params[0][adjustment-score]',   $adjustmentScore) .
-                            Html::hidden('adjustment-params[0][adjustment-enabled]', $adjustmentEnabled) .
+                            Html::hidden('adjustment-params[0][adjustment-enabled]', $adjustmentEnabled ? 1 : 0) .
                             Html::hidden('adjustment-params[0][adjustment-date]',    $adjustmentDate) .
                             Html::hidden('adjustment-params[0][adjustment-comment]', $adjustmentComment) .
                             Html::hidden('wpEditToken', $this->getUser()->getEditToken())
