@@ -134,25 +134,11 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
-        case 'submitassignment':
+        case 'submit':
 
             if ( $this->canModify(true) ) {
                 if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitAssignments();
-                } else {
-                    # Prevent cross-site request forgeries
-                    $page->addWikiMsg('sessionfailure');
-                }
-            }
-
-            $page->returnToMain(false, $this->getTitle());
-            break;
-
-        case 'submitscores':
-
-            if ( $this->canModify(true) ) {
-                if ( $request->wasPosted() && $this->getUser()->matchEditToken($request->getVal('wpEditToken')) ) {
-                    $this->submitScores();
+                    $this->submitForms();
                 } else {
                     # Prevent cross-site request forgeries
                     $page->addWikiMsg('sessionfailure');
@@ -507,19 +493,32 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Process sets of assignment creation/modification/deletion requests
+     * Process sets of assignment/evaluation/adjustment creation/modification/deletion requests
      *
-     * Processes assignment forms. Does not directly modify the
-     * database. Instead, each set of assignment parameters is sent
-     * to the writeAssignment function one at a time.
+     * Processes assignment, evaluation, and adjustment forms. Does not
+     * directly modify the database. Instead, each set of assignment parameters
+     * is sent to the writeAssignment function one at a time, each set of
+     * evaluation parameters is sent to the writeEvaluation function one at a
+     * time, and each set of adjustment parameters is sent to the
+     * writeAdjustment function one at a time.
      */
 
-    function submitAssignments () {
+    function submitForms () {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
 
         $assignmentParams = $request->getArray('assignment-params');
+        $evaluationParams = $request->getArray('evaluation-params');
+        $adjustmentParams = $request->getArray('adjustment-params');
+
+        if ( !$assignmentParams && !$evaluationParams && !$adjustmentParams ) {
+
+            # No parameters are available to be processed
+            $page->addWikiText('Parameter arrays are missing or invalid.');
+            return;
+        
+        }
 
         if ( $assignmentParams ) {
 
@@ -566,34 +565,7 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-        } else {
-
-            # The assignment-params array is missing or invalid
-            $page->addWikiText('Assignment parameter array is missing or invalid.');
-            return;
-
         }
-
-    } /* end submitAssignments */
-
-
-    /**
-     * Process sets of evaluation and adjustment creation/modification/deletion requests
-     *
-     * Processes evaluation and adjustment forms. Does not directly
-     * modify the database. Instead, each set of evaluation parameters
-     * is sent to the writeEvaluation function one at a time, and each
-     * set of adjustment parameters is sent to the writeAdjustment
-     * function one at a time.
-     */
-
-    function submitScores () {
-
-        $page = $this->getOutput();
-        $request = $this->getRequest();
-
-        $evaluationParams = $request->getArray('evaluation-params');
-        $adjustmentParams = $request->getArray('adjustment-params');
 
         if ( $evaluationParams ) {
 
@@ -713,15 +685,7 @@ class SpecialGrades extends SpecialPage {
 
         }
 
-        if ( !$evaluationParams && !$adjustmentParams ) {
-
-            # Something is wrong with both parameter arrays
-            $page->addWikiText('Evaluation and adjustment parameter arrays are both missing or invalid.');
-            return;
-        
-        }
-
-    } /* end submitScores */
+    } /* end submitForms */
 
 
     /**
@@ -830,7 +794,7 @@ class SpecialGrades extends SpecialPage {
                     $page->addHtml(Html::rawElement('form',
                         array(
                             'method' => 'post',
-                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitassignment'))
+                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                         ),
                         Xml::submitButton('Delete assignment', array('name' => 'delete-assignment')) .
                         Html::hidden('confirm-delete', true) .
@@ -1014,7 +978,7 @@ class SpecialGrades extends SpecialPage {
                         $page->addHtml(Html::rawElement('form',
                             array(
                                 'method' => 'post',
-                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                             ),
                             Xml::submitButton('Delete evaluation', array('name' => 'delete-evaluation')) .
                             Html::hidden('confirm-delete', true) .
@@ -1216,7 +1180,7 @@ class SpecialGrades extends SpecialPage {
                         $page->addHtml(Html::rawElement('form',
                             array(
                                 'method' => 'post',
-                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+                                'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                             ),
                             Xml::submitButton('Delete adjustment', array('name' => 'delete-adjustment')) .
                             Html::hidden('confirm-delete', true) .
@@ -1353,7 +1317,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitassignment'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                  ),
                  Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -1457,7 +1421,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                 ),
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -1572,7 +1536,7 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('form',
                 array(
                     'method' => 'post',
-                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
                 ),
                 Html::rawElement('table', null,
                     Html::rawElement('tr', null,
@@ -1686,7 +1650,7 @@ class SpecialGrades extends SpecialPage {
         $content = '';
         $content .= Html::openElement('form', array(
             'method' => 'post',
-            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
         ));
         $content .= Html::openElement('table', array('class' => 'wikitable sg-userscoresformtable')) . "\n";
 
@@ -1881,7 +1845,7 @@ class SpecialGrades extends SpecialPage {
         $content = '';
         $content .= Html::openElement('form', array(
             'method' => 'post',
-            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submitscores'))
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
         ));
         $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-assignmentscoresformtable')) . "\n";
 
