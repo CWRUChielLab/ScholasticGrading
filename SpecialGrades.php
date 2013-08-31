@@ -950,6 +950,8 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The user and assignment both exist
+            $user = $users->next();
+            $assignment = $assignments->next();
 
             # Check whether evaluation exists
             $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
@@ -975,9 +977,6 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                        $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
-
                         $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
 
                         $log = new LogPage('grades', false);
@@ -992,8 +991,6 @@ class SpecialGrades extends SpecialPage {
                     if ( !$request->getVal('confirm-delete') ) {
 
                         # Ask for confirmation of delete
-                        $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                        $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
                         $page->addWikiText('Are you sure you want to delete the evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
 
                         # Provide a delete button
@@ -1024,9 +1021,6 @@ class SpecialGrades extends SpecialPage {
                             $page->addWikiText('Database unchanged.');
 
                         } else {
-
-                            $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                            $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
 
                             $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
 
@@ -1059,9 +1053,6 @@ class SpecialGrades extends SpecialPage {
                     $page->addWikiText('Database unchanged.');
 
                 } else {
-
-                    $user = $dbw->select('user', '*', array('user_id' => $evaluationUser))->next();
-                    $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment))->next();
 
                     $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
 
@@ -1152,6 +1143,7 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The user exists
+            $user = $users->next();
 
             # Check whether adjustment exists
             $adjustments = $dbw->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $adjustmentID));
@@ -1180,8 +1172,6 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
-
                         $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') updated!\'\'\'');
 
                         $log = new LogPage('grades', false);
@@ -1196,7 +1186,6 @@ class SpecialGrades extends SpecialPage {
                     if ( !$request->getVal('confirm-delete') ) {
 
                         # Ask for confirmation of delete
-                        $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
                         $page->addWikiText('Are you sure you want to delete the point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ')?');
 
                         # Provide a delete button
@@ -1230,8 +1219,6 @@ class SpecialGrades extends SpecialPage {
 
                         } else {
 
-                            $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
-
                             $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') deleted!\'\'\'');
 
                             $log = new LogPage('grades', false);
@@ -1264,8 +1251,6 @@ class SpecialGrades extends SpecialPage {
                     $page->addWikiText('Database unchanged.');
 
                 } else {
-
-                    $user = $dbw->select('user', '*', array('user_id' => $adjustmentUser))->next();
 
                     $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') added!\'\'\'');
 
