@@ -106,6 +106,17 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
+        case 'editgroup':
+
+            if ( $this->canModify(true) ) {
+                $this->showGroupForm(
+                    $request->getVal('id', false)
+                );
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
         case 'edituserscores':
 
             if ( $this->canModify(true) ) {
@@ -515,17 +526,18 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Process sets of assignment/evaluation/adjustment creation/modification/deletion requests
+     * Process sets of assignment/evaluation/adjustment/group creation/modification/deletion requests
      *
-     * Processes assignment, evaluation, and adjustment forms. Does not
+     * Processes assignment, evaluation, adjustment, and group forms. Does not
      * directly modify the database. Instead, each set of assignment parameters
      * is sent to the writeAssignment function one at a time, each set of
      * evaluation parameters is sent to the writeEvaluation function one at a
-     * time, and each set of adjustment parameters is sent to the
-     * writeAdjustment function one at a time. The function first checks whether
-     * a delete button was pressed for any assignment, evaluation, or adjustment.
-     * If one was, all other requests are ignored, and the delete request is
-     * sent to the appropriate database function.
+     * time, each set of adjustment parameters is sent to the writeAdjustment
+     * function one at a time, and each set of group parameters is sent to the
+     * writeGroup function one at a time. The function first checks whether
+     * a delete button was pressed for any assignment, evaluation, adjustment,
+     * or group. If one was, all other requests are ignored, and the delete
+     * request is sent to the appropriate database function.
      */
 
     function submitForms () {
@@ -536,8 +548,9 @@ class SpecialGrades extends SpecialPage {
         $assignmentParams = $request->getArray('assignment-params');
         $evaluationParams = $request->getArray('evaluation-params');
         $adjustmentParams = $request->getArray('adjustment-params');
+        $groupParams      = $request->getArray('group-params');
 
-        if ( !$assignmentParams && !$evaluationParams && !$adjustmentParams ) {
+        if ( !$assignmentParams && !$evaluationParams && !$adjustmentParams && !$groupParams ) {
 
             # No parameters are available to be processed
             $page->addWikiText('Parameter arrays are missing or invalid.');
@@ -668,6 +681,37 @@ class SpecialGrades extends SpecialPage {
 
         }
 
+        if ( $groupParams ) {
+
+            foreach ( $groupParams as $key => $group ) {
+
+                # Store default values for missing parameters
+                if ( !array_key_exists('group-id', $group) )
+                    $groupParams[$key]['group-id'] = false;
+                if ( !array_key_exists('group-title', $group) )
+                    $groupParams[$key]['group-title'] = false;
+                if ( !array_key_exists('group-enabled', $group) ) {
+                    # Form posts omit checkboxes that are unchecked
+                    $groupParams[$key]['group-enabled'] = false;
+                }
+
+                # Check whether a delete button was pressed
+                if ( $request->getVal('delete-group-' . $key, false) ) {
+
+                    $this->writeGroup(
+                        $groupParams[$key]['group-id'],
+                        $groupParams[$key]['group-title'],
+                        $groupParams[$key]['group-enabled'],
+                        true
+                    );
+                    return;
+
+                }
+
+            }
+
+        }
+
         # A delete button was not pressed, so write all changes
 
         if ( $assignmentParams ) {
@@ -721,6 +765,22 @@ class SpecialGrades extends SpecialPage {
                     $adjustment['adjustment-enabled'],
                     $adjustment['adjustment-date'],
                     $adjustment['adjustment-comment'],
+                    false
+                );
+
+            }
+
+        }
+
+        if ( $groupParams ) {
+
+            # Make database changes for each group in group-params
+            foreach ( $groupParams as $group ) {
+
+                $this->writeGroup(
+                    $group['group-id'],
+                    $group['group-title'],
+                    $group['group-enabled'],
                     false
                 );
 
@@ -813,7 +873,7 @@ class SpecialGrades extends SpecialPage {
 
             } else {
 
-                # Prepare to delete the existing evaluation
+                # Prepare to delete the existing assignment
 
                 if ( !$request->getVal('confirm-delete') ) {
 
@@ -852,7 +912,7 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    # Delete is confirmed so delete the existing evaluation
+                    # Delete is confirmed so delete the existing assignment
                     $dbw->delete('scholasticgrading_assignment', array('sga_id' => $assignmentID));
 
                     # Report success and create a new log entry
@@ -1289,6 +1349,147 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
+     * Execute group creation/modification/deletion
+     *
+     * Creates, modifies, or deletes a group by directly modifying
+     * the database. If the (id) key provided corresponds to an
+     * existing group, the function will modify or delete that
+     * group depending on whether the delete flag is set.
+     * Otherwise, the function will create a new group.
+     * Parameters are initially validated and sanitized.
+     *
+     * @param int|bool    $groupID the id of a group
+     * @param int|bool    $groupTitle the title of a group
+     * @param int|bool    $groupEnabled the enabled status of a group
+     * @param bool        $delete whether to delete the group or not
+     */
+
+    function writeGroup ( $groupID = false, $groupTitle = false, $groupEnabled = false, $delete = false ) {
+
+        $page = $this->getOutput();
+        $request = $this->getRequest();
+        $dbw = wfGetDB(DB_MASTER);
+
+        # Validate/sanitize group parameters
+        $groupID          = filter_var($groupID, FILTER_VALIDATE_INT);
+        $groupTitle       = filter_var($groupTitle, FILTER_CALLBACK, array('options' => array($this, 'validateTitle')));
+        if ( !is_bool($groupEnabled) ) {
+            $groupEnabled = filter_var($groupEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+        if ( $groupTitle === false ) {
+            $page->addWikiText('Invalid title for group (may not be empty).');
+            return;
+        }
+        if ( !is_bool($groupEnabled) ) {
+            $page->addWikiText('Invalid enabled status for group (must be a boolean).');
+            return;
+        }
+
+        # Check whether group exists
+        $groups = $dbw->select('scholasticgrading_group', '*', array('sgg_id' => $groupID));
+        if ( $groups->numRows() > 0 ) {
+
+            # The group exists
+            $group = $groups->next();
+
+            if ( !$delete ) {
+
+                # Edit the existing group
+                $dbw->update('scholasticgrading_group', array(
+                    'sgg_title'   => $groupTitle,
+                    'sgg_enabled' => $groupEnabled,
+                ), array('sgg_id' => $groupID));
+
+                # Report success and create a new log entry
+                if ( $dbw->affectedRows() === 0 ) {
+
+                    $page->addWikiText('Database unchanged.');
+
+                } else {
+
+                    $page->addWikiText('\'\'\'"' . $groupTitle . '" updated!\'\'\'');
+
+                    $log = new LogPage('grades', false);
+                    $log->addEntry('editGroup', $this->getTitle(), null, array($groupTitle));
+
+                }
+
+            } else {
+
+                # Prepare to delete the existing group
+
+                if ( !$request->getVal('confirm-delete') ) {
+
+                    # Ask for confirmation of delete
+                    $page->addWikiText('Are you sure you want to delete "' . $group->sgg_title . '"?');
+
+                    # Provide a delete button
+                    $page->addHtml(Html::rawElement('form',
+                        array(
+                            'method' => 'post',
+                            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+                        ),
+                        Xml::submitButton('Delete group', array('name' => 'delete-group-0')) .
+                        Html::hidden('confirm-delete', true) .
+                        Html::hidden('group-params[0][group-id]',      $groupID) .
+                        Html::hidden('group-params[0][group-title]',   $groupTitle) .
+                        Html::hidden('group-params[0][group-enabled]', $groupEnabled ? 1 : 0) .
+                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+                    ));
+
+                } else {
+
+                    # Delete is confirmed so delete the existing group
+                    $dbw->delete('scholasticgrading_group', array('sgg_id' => $groupID));
+
+                    # Report success and create a new log entry
+                    if ( $dbw->affectedRows() === 0 ) {
+
+                        $page->addWikiText('Database unchanged.');
+
+                    } else {
+
+                        $page->addWikiText('\'\'\'"' . $group->sgg_title . '" deleted!\'\'\'');
+
+                        $log = new LogPage('grades', false);
+                        $log->addEntry('deleteGroup', $this->getTitle(), null, array($group->sgg_title));
+
+                    }
+
+                }
+
+            }
+
+        } else {
+
+            # The group does not exist
+
+            # Create a new group
+            $dbw->insert('scholasticgrading_group', array(
+                'sgg_title'   => $groupTitle,
+                'sgg_enabled' => $groupEnabled,
+            ));
+
+            # Report success and create a new log entry
+            if ( $dbw->affectedRows() === 0 ) {
+
+                $page->addWikiText('Database unchanged.');
+
+            } else {
+
+                $page->addWikiText('\'\'\'"' . $groupTitle . '" added!\'\'\'');
+
+                $log = new LogPage('grades', false);
+                $log->addEntry('addGroup', $this->getTitle(), null, array($groupTitle));
+
+            }
+
+        }
+
+    } /* end writeGroup */
+
+
+    /**
      * Display the assignment creation/modification form
      *
      * Generates a form for creating a new assignment or editing an existing one.
@@ -1608,6 +1809,84 @@ class SpecialGrades extends SpecialPage {
         $page->addHTML($content);
 
     } /* end showAdjustmentForm */
+
+
+    /**
+     * Display the group creation/modification form
+     *
+     * Generates a form for creating a new group or editing an existing one.
+     * If no group id is provided, the form will be prepared for group creation.
+     * If a valid group id is provided, the form will be prepared for group modification.
+     * If an invalid group id is provided, report an error.
+     *
+     * @param int|bool $id an optional group id
+     */
+
+    function showGroupForm ( $id = false ) {
+
+        $page = $this->getOutput();
+
+        # Set default parameters for creating a new group
+        $fieldsetTitle = 'Create a new group';
+        $buttons = Xml::submitButton('Create group', array('name' => 'create-group'));
+        $groupIdDefault = false;
+        $groupTitleDefault = '';
+        $groupEnabledDefault = true;
+
+        if ( $id ) {
+
+            # Check whether group exists
+            $dbr = wfGetDB(DB_SLAVE);
+            $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_id' => $id));
+            if ( $groups->numRows() === 0 ) {
+
+                # The group does not exist
+                $page->addWikiText('Group (id=' . $id . ') does not exist.');
+                return;
+
+            } else {
+
+                # The group exists
+                $group = $groups->next();
+
+                # Use its values as default parameters
+                $fieldsetTitle = 'Edit an existing group';
+                $buttons = Xml::submitButton('Apply changes', array('name' => 'modify-group')) .
+                    Xml::submitButton('Delete group', array('name' => 'delete-group-0'));
+                $groupIdDefault = $id;
+                $groupTitleDefault = $group->sgg_title;
+                $groupEnabledDefault = $group->sgg_enabled;
+
+            }
+
+        }
+
+        # Build the group form
+        $content = Xml::fieldset($fieldsetTitle,
+            Html::rawElement('form',
+                array(
+                    'method' => 'post',
+                    'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+                 ),
+                 Html::rawElement('table', null,
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Title:', 'group-title')) .
+                        Html::rawElement('td', null, Xml::input('group-params[0][group-title]', 20, $groupTitleDefault, array('id' => 'group-title')))
+                    ) .
+                    Html::rawElement('tr', null,
+                        Html::rawElement('td', null, Xml::label('Enabled:', 'group-enabled')) .
+                        Html::rawElement('td', null, Xml::check('group-params[0][group-enabled]', $groupEnabledDefault, array('id' => 'group-enabled')))
+                    )
+                ) .
+                $buttons .
+                Html::hidden('group-params[0][group-id]', $groupIdDefault) .
+                Html::hidden('wpEditToken', $this->getUser()->getEditToken())
+            )
+        );
+
+        $page->addHTML($content);
+
+    } /* end showGroupForm */
 
 
     /**
