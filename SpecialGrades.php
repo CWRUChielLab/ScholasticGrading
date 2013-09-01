@@ -204,6 +204,11 @@ class SpecialGrades extends SpecialPage {
             $allTablesExist = false;
         }
 
+        if ( !$dbr->tableExists('scholasticgrading_adjustment') ) {
+            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_adjustment does not exist.') . "\n");
+            $allTablesExist = false;
+        }
+
         if ( !$allTablesExist ) {
             $page->addHTML(Html::element('p', null, 'Run maintenance/update.php.') . "\n");
         }
@@ -275,13 +280,17 @@ class SpecialGrades extends SpecialPage {
      * Validate a date string
      *
      * Returns the date string if it has the form
-     * YYYY-MM-DD. Otherwise, returns false.
+     * YYYY-MM-DD or null if it is an empty string.
+     * Otherwise, returns false.
      *
      * @param string $test_date date string to validate
      * @return sting|bool the date string or false
      */
 
     function validateDate ( $test_date ) {
+
+        if ( trim($test_date) == '' )
+            return null;
 
         $date = DateTime::createFromFormat('Y-m-d', trim($test_date));
         $date_errors = DateTime::getLastErrors();
@@ -305,7 +314,13 @@ class SpecialGrades extends SpecialPage {
 
     function sortScores ( $score1, $score2 ) {
 
-        if ( strcmp($score1['date'], $score2['date']) ) {
+        if ( $score1['date'] === null && $score2['date'] === null ) {
+            return strcmp($score1['title'], $score2['title']);
+        } elseif ( $score1['date'] === null ) {
+            return 1;
+        } elseif ( $score2['date'] === null ) {
+            return -1;
+        } elseif ( strcmp($score1['date'], $score2['date']) ) {
             return strcmp($score1['date'], $score2['date']);
         } else {
             return strcmp($score1['title'], $score2['title']);
@@ -1973,7 +1988,7 @@ class SpecialGrades extends SpecialPage {
         # Query for all assignments
         $dbr = wfGetDB(DB_SLAVE);
         $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
-            array('ORDER BY' => 'sga_date'));
+            array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
         # Build the assignment table
         $content = '';
@@ -2059,7 +2074,7 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
         $users = $dbr->select('user', '*');
         $assignments = $dbr->select('scholasticgrading_assignment', '*',
-            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => 'sga_date'));
+            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
         # Build the grade grid
         $content = '';
@@ -2087,7 +2102,7 @@ class SpecialGrades extends SpecialPage {
         foreach ( $assignments as $assignment ) {
 
             $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
-            $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => $assignment->sga_date), date_format(date_create($assignment->sga_date), 'D m/d'));
+            $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => $assignment->sga_date ? $assignment->sga_date : '9999'), $assignment->sga_date ? date_format(date_create($assignment->sga_date), 'D m/d') : '');
             $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'),
                 Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
                     array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
@@ -2326,7 +2341,7 @@ class SpecialGrades extends SpecialPage {
 
                 # Evaluated assignments and adjustments have scores
                 $content .= Html::rawElement('tr', array('class' => 'sg-userscorestable-row'),
-                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date']), date_format(date_create($score['date']), 'D m/d')) .
+                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date'] ? $score['date'] : '9999'), $score['date'] ? date_format(date_create($score['date']), 'D m/d') : '') .
                     Html::element('td', array('class' => 'sg-userscorestable-title'), $score['title']) .
                     Html::element('td', array('class' => 'sg-userscorestable-score'), (float)$score['score']) .
                     Html::element('td', array('class' => 'sg-userscorestable-value'), (float)$score['value']) .
@@ -2337,7 +2352,7 @@ class SpecialGrades extends SpecialPage {
 
                 # Unevaluated assignments do not have scores
                 $content .= Html::rawElement('tr', array('class' => 'sg-userscorestable-row sg-userscorestable-unevaluated'),
-                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date']), date_format(date_create($score['date']), 'D m/d')) .
+                    Html::element('td', array('class' => 'sg-userscorestable-date', 'data-sort-value' => $score['date'] ? $score['date'] : '9999'), $score['date'] ? date_format(date_create($score['date']), 'D m/d') : '') .
                     Html::element('td', array('class' => 'sg-userscorestable-title'), $score['title']) .
                     Html::element('td', array('class' => 'sg-userscorestable-score'), '-') .
                     Html::element('td', array('class' => 'sg-userscorestable-value'), (float)$score['value']) .
