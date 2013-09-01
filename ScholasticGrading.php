@@ -79,6 +79,15 @@ function scholasticGradingSchemaUpdate ( $updater = null ) {
         $wgExtNewTables[] = array( 'scholasticgrading_adjustment',
             dirname(__FILE__) . '/sql/scholasticgrading_adjustment.sql');
 
+        $wgExtNewTables[] = array( 'scholasticgrading_group',
+            dirname(__FILE__) . '/sql/scholasticgrading_group.sql');
+
+        $wgExtNewTables[] = array( 'scholasticgrading_groupuser',
+            dirname(__FILE__) . '/sql/scholasticgrading_groupuser.sql');
+
+        $wgExtNewTables[] = array( 'scholasticgrading_groupassignment',
+            dirname(__FILE__) . '/sql/scholasticgrading_groupassignment.sql');
+
     } else {
         // >= 1.17 support
 
@@ -90,6 +99,15 @@ function scholasticGradingSchemaUpdate ( $updater = null ) {
 
         $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_adjustment',
             dirname(__FILE__) . '/sql/scholasticgrading_adjustment.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_group',
+            dirname(__FILE__) . '/sql/scholasticgrading_group.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_groupuser',
+            dirname(__FILE__) . '/sql/scholasticgrading_groupuser.sql', true ) );
+
+        $updater->addExtensionUpdate( array( 'addTable', 'scholasticgrading_groupassignment',
+            dirname(__FILE__) . '/sql/scholasticgrading_groupassignment.sql', true ) );
 
     }
 

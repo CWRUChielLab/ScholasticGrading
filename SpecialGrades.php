@@ -191,27 +191,27 @@ class SpecialGrades extends SpecialPage {
     function allTablesExist () {
 
         $page = $this->getOutput();
-        $allTablesExist = true;
         $dbr = wfGetDB(DB_SLAVE);
 
-        if ( !$dbr->tableExists('scholasticgrading_assignment') ) {
-            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_assignment does not exist.') . "\n");
-            $allTablesExist = false;
+        $allTablesExist = true;
+        $tables = array(
+            'scholasticgrading_assignment',
+            'scholasticgrading_evaluation',
+            'scholasticgrading_adjustment',
+            'scholasticgrading_group',
+            'scholasticgrading_groupuser',
+            'scholasticgrading_groupassignment'
+        );
+
+        foreach ( $tables as $table ) {
+            if ( !$dbr->tableExists($table) ) {
+                $page->addHTML(Html::element('p', null, 'Database table ' . $table . ' does not exist.') . "\n");
+                $allTablesExist = false;
+            }
         }
 
-        if ( !$dbr->tableExists('scholasticgrading_evaluation') ) {
-            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_evaluation does not exist.') . "\n");
-            $allTablesExist = false;
-        }
-
-        if ( !$dbr->tableExists('scholasticgrading_adjustment') ) {
-            $page->addHTML(Html::element('p', null, 'Database table scholasticgrading_adjustment does not exist.') . "\n");
-            $allTablesExist = false;
-        }
-
-        if ( !$allTablesExist ) {
+        if ( !$allTablesExist )
             $page->addHTML(Html::element('p', null, 'Run maintenance/update.php.') . "\n");
-        }
 
         return $allTablesExist;
 
