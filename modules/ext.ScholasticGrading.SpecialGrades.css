@@ -241,3 +241,35 @@ table.sg-manageassignmentstable td.sg-manageassignmentstable-value input {
     text-align: center;
 }
 
+
+/*******************************************************
+ * Styles for instructor interface for managing groups *
+ *******************************************************/
+
+table.sg-managegroupstable {
+    width: 100%;
+}
+
+table.sg-managegroupstable tr#sg-managegroupstable-header {
+}
+
+table.sg-managegroupstable tr.sg-managegroupstable-row {
+}
+
+table.sg-managegroupstable tr.sg-managegroupstable-disabled,
+table.sg-managegroupstable tr.sg-managegroupstable-disabled td.sg-managegroupstable-title input {
+    font-style: italic;
+    color: gray;
+}
+
+table.sg-managegroupstable td.sg-managegroupstable-enabled,
+table.sg-managegroupstable td.sg-managegroupstable-delete {
+    text-align: center;
+    width: 75px;
+}
+
+table.sg-managegroupstable td.sg-managegroupstable-title {
+    text-align: left;
+    width: 270px;
+}
+

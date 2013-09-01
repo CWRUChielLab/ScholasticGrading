@@ -60,6 +60,15 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
+        case 'groups':
+
+            if ( $this->canModify(true) ) {
+                $this->showAllGroups();
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
         case 'viewuserscores':
 
             if ( $this->canModify(true) ) {
@@ -166,6 +175,10 @@ class SpecialGrades extends SpecialPage {
                     $page->addHTML(Html::rawElement('p', null,
                         Linker::linkKnown($this->getTitle(), 'Manage assignments', array(),
                             array('action' => 'assignments'))) . "\n");
+
+                    $page->addHTML(Html::rawElement('p', null,
+                        Linker::linkKnown($this->getTitle(), 'Manage groups', array(),
+                            array('action' => 'groups'))) . "\n");
 
                     $this->showGradeGrid();
                     //$this->showAssignments();
@@ -365,6 +378,12 @@ class SpecialGrades extends SpecialPage {
             case 'assignments':
 
                 return 'Manage assignments';
+
+                break;
+
+            case 'groups':
+
+                return 'Manage groups';
 
                 break;
 
@@ -2315,7 +2334,7 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Create a row for a new assignment
-        $content .= Html::rawElement('tr', array('class' => $assignmentRowClass),
+        $content .= Html::rawElement('tr', array('class' => 'sg-manageassignmentstable-row'),
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('class' => 'sg-date-input'))) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, '')) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '')) .
@@ -2337,6 +2356,83 @@ class SpecialGrades extends SpecialPage {
         $page->addHTML($content);
 
     } /* end showAllAssignments */
+
+
+    /**
+     * Display a table of all groups
+     *
+     * Generates a table of groups with controls
+     * for modifying and deleting groups
+     */
+
+    function showAllGroups () {
+
+        $page = $this->getOutput();
+
+        # Query for all groups
+        $dbr = wfGetDB(DB_SLAVE);
+        $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
+            array('ORDER BY' => array('sgg_title')));
+
+        # Build the group table
+        $content = '';
+        $content .= Html::openElement('form', array(
+            'method' => 'post',
+            'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
+        ));
+        $content .= Html::openElement('table', array('class' => 'wikitable sg-managegroupstable')) . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', array('id' => 'sg-managegroupstable-header'),
+            Html::element('th', null, 'Title') .
+            Html::element('th', null, 'Enabled') .
+            Html::element('th', null, 'Delete')
+        ) . "\n";
+
+        # Create a row for each group
+        $paramSetCounter = 0;
+        foreach ( $groups as $group ) {
+
+            if ( $group->sgg_enabled ) {
+                $groupRowClass = 'sg-managegroupstable-row';
+            } else {
+                $groupRowClass = 'sg-managegroupstable-row sg-managegroupstable-disabled';
+            }
+
+            $content .= Html::rawElement('tr', array('class' => $groupRowClass),
+                Html::rawElement('td', array('class' => 'sg-managegroupstable-title'), Xml::input('group-params[' . $paramSetCounter . '][group-title]', 50, $group->sgg_title)) .
+                Html::rawElement('td', array('class' => 'sg-managegroupstable-enabled'), Xml::check('group-params[' . $paramSetCounter . '][group-enabled]', $group->sgg_enabled)) .
+                Html::rawElement('td', array('class' => 'sg-managegroupstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-group-' . $paramSetCounter)))
+            );
+
+            $content .= Html::hidden('group-params[' . $paramSetCounter . '][group-id]', $group->sgg_id);
+            $content .= "\n";
+
+            $paramSetCounter += 1;
+
+        }
+
+        # Create a row for a new group
+        $content .= Html::rawElement('tr', array('class' => 'sg-managegroupstable-row'),
+            Html::rawElement('td', array('class' => 'sg-managegroupstable-title'), Xml::input('group-params[' . $paramSetCounter . '][group-title]', 50, '')) .
+            Html::rawElement('td', array('class' => 'sg-managegroupstable-enabled'), Xml::check('group-params[' . $paramSetCounter . '][group-enabled]', true)) .
+            Html::rawElement('td', array('class' => 'sg-managegroupstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-group-' . $paramSetCounter, 'disabled')))
+        );
+
+        $content .= Html::hidden('group-params[' . $paramSetCounter . '][group-id]', false);
+        $content .= "\n";
+
+        $paramSetCounter += 1;
+
+        $content .= Html::closeElement('table') . "\n";
+        $content .= Xml::submitButton('Apply changes', array('name' => 'modify-group'));
+        $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
+        $content .= Html::closeElement('form') . "\n";
+        $content .= Html::element('br') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showAllGroups */
 
 
     /**
