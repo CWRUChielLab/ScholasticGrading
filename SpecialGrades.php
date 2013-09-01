@@ -160,6 +160,9 @@ class SpecialGrades extends SpecialPage {
                     //$this->showAssignments();
                     //$this->showEvaluations();
                     //$this->showAdjustments();
+                    //$this->showGroups();
+                    //$this->showGroupUsers();
+                    //$this->showGroupAssignments();
                     //$this->showUsers();
                 } else {
                     $this->showUserScores(
@@ -2429,7 +2432,7 @@ class SpecialGrades extends SpecialPage {
     /**
      * Display a table of all assignments
      *
-     * Dumps the assignments table from the wiki database.
+     * Dumps the assignment table from the wiki database.
      * Used for development.
      */
 
@@ -2476,7 +2479,7 @@ class SpecialGrades extends SpecialPage {
     /**
      * Displays a table of all evaluations
      *
-     * Dumps the evaluations table from the wiki database.
+     * Dumps the evaluation table from the wiki database.
      * Used for development.
      */
 
@@ -2525,7 +2528,7 @@ class SpecialGrades extends SpecialPage {
     /**
      * Displays a table of all adjustments
      *
-     * Dumps the adjustments table from the wiki database.
+     * Dumps the adjustment table from the wiki database.
      * Used for development.
      */
 
@@ -2573,6 +2576,131 @@ class SpecialGrades extends SpecialPage {
         $page->addHTML($content);
 
     } /* end showAdjustments */
+
+
+    /**
+     * Displays a table of all groups
+     *
+     * Dumps the group table from the wiki database.
+     * Used for development.
+     */
+
+    function showGroups () {
+
+        $page = $this->getOutput();
+
+        # Query for all groups
+        $dbr = wfGetDB(DB_SLAVE);
+        $groups = $dbr->select('scholasticgrading_group', '*');
+
+        # Build the groups table
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $content .= Html::element('caption', null, 'Groups') . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', null,
+            Html::element('th', null, 'id') .
+            Html::element('th', null, 'title') .
+            Html::element('th', null, 'enabled')
+        ) . "\n";
+
+        # Create a row for each group
+        foreach ( $groups as $group ) {
+            $content .= Html::rawElement('tr', null,
+                Html::element('td', null, $group->sgg_id) .
+                Html::element('td', null, $group->sgg_title) .
+                Html::element('td', null, $group->sgg_enabled)
+            ) . "\n";
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showGroups */
+
+
+    /**
+     * Displays a table of all group users
+     *
+     * Dumps the groupuser table from the wiki database.
+     * Used for development.
+     */
+
+    function showGroupUsers () {
+
+        $page = $this->getOutput();
+
+        # Query for all group users
+        $dbr = wfGetDB(DB_SLAVE);
+        $groupusers = $dbr->select('scholasticgrading_groupuser', '*');
+
+        # Build the group users table
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $content .= Html::element('caption', null, 'Group Users') . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', null,
+            Html::element('th', null, 'group id') .
+            Html::element('th', null, 'user id')
+        ) . "\n";
+
+        # Create a row for each group user
+        foreach ( $groupusers as $groupuser ) {
+            $content .= Html::rawElement('tr', null,
+                Html::element('td', null, $groupuser->sggu_group_id) .
+                Html::element('td', null, $groupuser->sggu_user_id)
+            ) . "\n";
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showGroupUsers */
+
+
+    /**
+     * Displays a table of all group assignments
+     *
+     * Dumps the groupassignment table from the wiki database.
+     * Used for development.
+     */
+
+    function showGroupAssignments () {
+
+        $page = $this->getOutput();
+
+        # Query for all group assignments
+        $dbr = wfGetDB(DB_SLAVE);
+        $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*');
+
+        # Build the group assignments table
+        $content = '';
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable')) . "\n";
+        $content .= Html::element('caption', null, 'Group Assignments') . "\n";
+
+        # Create a column header for each field
+        $content .= Html::rawElement('tr', null,
+            Html::element('th', null, 'group id') .
+            Html::element('th', null, 'assignment id')
+        ) . "\n";
+
+        # Create a row for each group assignment
+        foreach ( $groupassignments as $groupassignment ) {
+            $content .= Html::rawElement('tr', null,
+                Html::element('td', null, $groupassignment->sgga_group_id) .
+                Html::element('td', null, $groupassignment->sgga_assignment_id)
+            ) . "\n";
+        }
+
+        $content .= Html::closeElement('table') . "\n";
+
+        $page->addHTML($content);
+
+    } /* end showGroupAssignments */
 
 
 } /* end SpecialGrades */
