@@ -226,6 +226,7 @@ table.sg-manageassignmentstable tr.sg-manageassignmentstable-disabled td.sg-mana
 table.sg-manageassignmentstable td.sg-manageassignmentstable-date,
 table.sg-manageassignmentstable td.sg-manageassignmentstable-value,
 table.sg-manageassignmentstable td.sg-manageassignmentstable-enabled,
+table.sg-manageassignmentstable td.sg-manageassignmentstable-group,
 table.sg-manageassignmentstable td.sg-manageassignmentstable-delete {
     text-align: center;
     width: 75px;

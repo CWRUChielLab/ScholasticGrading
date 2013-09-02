@@ -594,6 +594,8 @@ class SpecialGrades extends SpecialPage {
                 }
                 if ( !array_key_exists('assignment-date', $assignment) )
                     $assignmentParams[$key]['assignment-date'] = false;
+                if ( !array_key_exists('assignment-group', $assignment) )
+                    $assignmentParams[$key]['assignment-group'] = false;
 
                 # Check whether a delete button was pressed
                 if ( $request->getVal('delete-assignment-' . $key, false) ) {
@@ -604,6 +606,7 @@ class SpecialGrades extends SpecialPage {
                         $assignmentParams[$key]['assignment-value'],
                         $assignmentParams[$key]['assignment-enabled'],
                         $assignmentParams[$key]['assignment-date'],
+                        $assignmentParams[$key]['assignment-group'],
                         true
                     );
                     return;
@@ -744,6 +747,7 @@ class SpecialGrades extends SpecialPage {
                     $assignment['assignment-value'],
                     $assignment['assignment-enabled'],
                     $assignment['assignment-date'],
+                    $assignment['assignment-group'],
                     false
                 );
 
@@ -818,17 +822,19 @@ class SpecialGrades extends SpecialPage {
      * to an existing assignment, the function will modify or delete
      * that assignment depending on whether the delete flag is set.
      * Otherwise, the function will create a new assignment.
-     * Parameters are initially validated and sanitized.
+     * Also handles group memberships. Parameters are initially
+     * validated and sanitized.
      *
      * @param int|bool    $assignmentID the id of an assignment
      * @param int|bool    $assignmentTitle the title of an assignment
      * @param float|bool  $assignmentValue the value of an assignment
      * @param int|bool    $assignmentEnabled the enabled status of an assignment
      * @param string|bool $assignmentDate the date of an assignment
+     * @param array|bool  $assignmentGroups the group memberships of an assignment
      * @param bool        $delete whether to delete the assignment or not
      */
 
-    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false, $delete = false ) {
+    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false, $assignmentGroups = false, $delete = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -858,6 +864,10 @@ class SpecialGrades extends SpecialPage {
             $page->addWikiText('Invalid date for assignment (must have form YYYY-MM-DD).');
             return;
         }
+        if ( !is_array($assignmentGroups) ) {
+            $page->addWikiText('Invalid group membership array for assignment (must be an array).');
+            return;
+        }
 
         # Check whether assignment exists
         $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
@@ -875,9 +885,22 @@ class SpecialGrades extends SpecialPage {
                     'sga_enabled' => $assignmentEnabled,
                     'sga_date'    => $assignmentDate,
                 ), array('sga_id' => $assignmentID));
+                $affectedRows = $dbw->affectedRows();
+
+                # Edit the assignment's group memberships
+                foreach ( $assignmentGroups as $groupID => $isMember ) {
+                    $memberships = $dbw->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
+                    if ( $memberships->numRows() > 0 && !$isMember ) {
+                        $dbw->delete('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
+                        $affectedRows += $dbw->affectedRows();
+                    } elseif ( $memberships->numRows() == 0 && $isMember ) {
+                        $dbw->insert('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
+                        $affectedRows += $dbw->affectedRows();
+                    }
+                }
 
                 # Report success and create a new log entry
-                if ( $dbw->affectedRows() === 0 ) {
+                if ( $affectedRows === 0 ) {
 
                     $page->addWikiText('Database unchanged.');
 
@@ -963,9 +986,33 @@ class SpecialGrades extends SpecialPage {
                 'sga_enabled' => $assignmentEnabled,
                 'sga_date'    => $assignmentDate,
             ));
+            $affectedRows = $dbw->affectedRows();
+
+            # Attempt to get the id for the newly created assignment
+            $maxAssignmentID = $dbw->select('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'))->next()->maxid;
+            $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $maxAssignmentID))->next();
+            if ( $assignment->sga_title != $assignmentTitle || $assignment->sga_value != $assignmentValue || $assignment->sga_enabled != $assignmentEnabled || $assignment->sga_date != $assignmentDate ) {
+
+                # The query result does not match the new assignment
+                $page->addWikiText('Unable to retrieve id of new assignment. Groups were not assigned.');
+                return;
+
+            }
+
+            # Create the assignment's group memberships
+            foreach ( $assignmentGroups as $groupID => $isMember ) {
+
+                if ( $isMember ) {
+
+                    $dbw->insert('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignment->sga_id));
+                    $affectedRows += $dbw->affectedRows();
+
+                }
+
+            }
 
             # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+            if ( $affectedRows === 0 ) {
 
                 $page->addWikiText('Database unchanged.');
 
@@ -2286,10 +2333,12 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
 
-        # Query for all assignments
+        # Query for all assignments and groups
         $dbr = wfGetDB(DB_SLAVE);
         $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
             array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
+        $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
+            array('ORDER BY' => array('sgg_title')));
 
         # Build the assignment table
         $content = '';
@@ -2300,13 +2349,16 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::openElement('table', array('class' => 'wikitable sg-manageassignmentstable')) . "\n";
 
         # Create a column header for each field
-        $content .= Html::rawElement('tr', array('id' => 'sg-manageassignmentstable-header'),
+        $content .= Html::openElement('tr', array('id' => 'sg-manageassignmentstable-header')) .
             Html::element('th', null, 'Date') .
             Html::element('th', null, 'Title') .
             Html::element('th', null, 'Value') .
-            Html::element('th', null, 'Enabled') .
-            Html::element('th', null, 'Delete')
-        ) . "\n";
+            Html::element('th', null, 'Enabled');
+        foreach ( $groups as $group )
+            $content .= Html::element('th', null, $group->sgg_title);
+        $content .= Html::element('th', null, 'Delete');
+        $content .= Html::closeElement('tr');
+        $content .= "\n";
 
         # Create a row for each assignment
         $paramSetCounter = 0;
@@ -2318,13 +2370,39 @@ class SpecialGrades extends SpecialPage {
                 $assignmentRowClass = 'sg-manageassignmentstable-row sg-manageassignmentstable-disabled';
             }
 
-            $content .= Html::rawElement('tr', array('class' => $assignmentRowClass),
+            $content .= Html::openElement('tr', array('class' => $assignmentRowClass)) .
                 Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, $assignment->sga_date, array('class' => 'sg-date-input'))) .
                 Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, $assignment->sga_title)) .
                 Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, (float)$assignment->sga_value)) .
-                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', $assignment->sga_enabled)) .
-                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter)))
-            );
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', $assignment->sga_enabled));
+
+            # Create a cell for each group
+            foreach ( $groups as $group ) {
+
+                $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*',
+                    array('sgga_group_id' => $group->sgg_id, 'sgga_assignment_id' => $assignment->sga_id));
+                if ( $groupassignments->numRows() > 0 ) {
+
+                    # The assignment is a member of the group
+                    $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-group'),
+                        Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', 0) .
+                        Xml::check('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', true)
+                    );
+
+                } else {
+
+                    # The assignment is not a member of the group
+                    $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-group'),
+                        Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', 0) .
+                        Xml::check('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', false)
+                    );
+
+                }
+
+            }
+
+            $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter)));
+            $content .= Html::closeElement('tr');
 
             $content .= Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-id]', $assignment->sga_id);
             $content .= "\n";
@@ -2334,13 +2412,21 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Create a row for a new assignment
-        $content .= Html::rawElement('tr', array('class' => 'sg-manageassignmentstable-row'),
+        $content .= Html::openElement('tr', array('class' => 'sg-manageassignmentstable-row')) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('class' => 'sg-date-input'))) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, '')) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '')) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', true)) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter, 'disabled')))
-        );
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', true));
+
+        foreach ( $groups as $group ) {
+            $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-group'),
+                Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', 0) .
+                Xml::check('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', false)
+            );
+        }
+
+        $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter, 'disabled')));
+        $content .= Html::closeElement('tr');
 
         $content .= Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-id]', false);
         $content .= "\n";
