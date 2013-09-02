@@ -713,6 +713,8 @@ class SpecialGrades extends SpecialPage {
                     # Form posts omit checkboxes that are unchecked
                     $groupParams[$key]['group-enabled'] = false;
                 }
+                if ( !array_key_exists('group-user', $group) )
+                    $groupParams[$key]['group-user'] = false;
 
                 # Check whether a delete button was pressed
                 if ( $request->getVal('delete-group-' . $key, false) ) {
@@ -721,6 +723,7 @@ class SpecialGrades extends SpecialPage {
                         $groupParams[$key]['group-id'],
                         $groupParams[$key]['group-title'],
                         $groupParams[$key]['group-enabled'],
+                        $groupParams[$key]['group-user'],
                         true
                     );
                     return;
@@ -801,6 +804,7 @@ class SpecialGrades extends SpecialPage {
                     $group['group-id'],
                     $group['group-title'],
                     $group['group-enabled'],
+                    $group['group-user'],
                     false
                 );
 
@@ -1418,15 +1422,17 @@ class SpecialGrades extends SpecialPage {
      * existing group, the function will modify or delete that
      * group depending on whether the delete flag is set.
      * Otherwise, the function will create a new group.
-     * Parameters are initially validated and sanitized.
+     * Also handles user memberships. Parameters are initially
+     * validated and sanitized.
      *
      * @param int|bool    $groupID the id of a group
      * @param int|bool    $groupTitle the title of a group
      * @param int|bool    $groupEnabled the enabled status of a group
+     * @param array|bool  $groupUsers the user memberships of a group
      * @param bool        $delete whether to delete the group or not
      */
 
-    function writeGroup ( $groupID = false, $groupTitle = false, $groupEnabled = false, $delete = false ) {
+    function writeGroup ( $groupID = false, $groupTitle = false, $groupEnabled = false, $groupUsers = false, $delete = false ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1446,6 +1452,10 @@ class SpecialGrades extends SpecialPage {
             $page->addWikiText('Invalid enabled status for group (must be a boolean).');
             return;
         }
+        if ( !is_array($groupUsers) ) {
+            $page->addWikiText('Invalid user membership array for group (must be an array).');
+            return;
+        }
 
         # Check whether group exists
         $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupID));
@@ -1460,9 +1470,22 @@ class SpecialGrades extends SpecialPage {
                     'sgg_title'   => $groupTitle,
                     'sgg_enabled' => $groupEnabled,
                 ), array('sgg_id' => $groupID));
+                $affectedRows = $dbw->affectedRows();
+
+                # Edit the group's user memberships
+                foreach ( $groupUsers as $userID => $isMember ) {
+                    $membership = $dbw->selectRow('scholasticgrading_groupuser', '*', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
+                    if ( $membership && !$isMember ) {
+                        $dbw->delete('scholasticgrading_groupuser', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
+                        $affectedRows += $dbw->affectedRows();
+                    } elseif ( !$membership && $isMember ) {
+                        $dbw->insert('scholasticgrading_groupuser', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
+                        $affectedRows += $dbw->affectedRows();
+                    }
+                }
 
                 # Report success and create a new log entry
-                if ( $dbw->affectedRows() === 0 ) {
+                if ( $affectedRows === 0 ) {
 
                     $page->addWikiText('Database unchanged.');
 
@@ -1485,18 +1508,24 @@ class SpecialGrades extends SpecialPage {
                     $page->addWikiText('Are you sure you want to delete "' . $group->sgg_title . '"?');
 
                     # Provide a delete button
-                    $page->addHtml(Html::rawElement('form',
+                    $content = '';
+                    $content .= Html::openElement('form',
                         array(
                             'method' => 'post',
                             'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
-                        ),
-                        Xml::submitButton('Delete group', array('name' => 'delete-group-0')) .
-                        Html::hidden('confirm-delete', true) .
-                        Html::hidden('group-params[0][group-id]',      $groupID) .
-                        Html::hidden('group-params[0][group-title]',   $groupTitle) .
-                        Html::hidden('group-params[0][group-enabled]', $groupEnabled ? 1 : 0) .
-                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
-                    ));
+                        )
+                    );
+                    $content .= Xml::submitButton('Delete group', array('name' => 'delete-group-0'));
+                    $content .= Html::hidden('confirm-delete', true);
+                    $content .= Html::hidden('group-params[0][group-id]',      $groupID);
+                    $content .= Html::hidden('group-params[0][group-title]',   $groupTitle);
+                    $content .= Html::hidden('group-params[0][group-enabled]', $groupEnabled ? 1 : 0);
+                    foreach ( $groupUsers as $userID => $isMember )
+                        $content .= Html::hidden('group-params[0][group-user][' . $userID . ']', $isMember ? 1 : 0);
+                    $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
+                    $content .= Html::closeElement('form') . "\n";
+
+                    $page->addHtml($content);
 
                 } else {
 
@@ -1530,6 +1559,8 @@ class SpecialGrades extends SpecialPage {
                 'sgg_title'   => $groupTitle,
                 'sgg_enabled' => $groupEnabled,
             ));
+
+            # User membership is not processed for new groups
 
             # Report success and create a new log entry
             if ( $dbw->affectedRows() === 0 ) {
@@ -1917,6 +1948,7 @@ class SpecialGrades extends SpecialPage {
     function showGroupForm ( $id = false ) {
 
         $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
 
         # Set default parameters for creating a new group
         $fieldsetTitle = 'Create a new group';
@@ -1928,7 +1960,6 @@ class SpecialGrades extends SpecialPage {
         if ( $id ) {
 
             # Check whether group exists
-            $dbr = wfGetDB(DB_SLAVE);
             $group = $dbr->selectRow('scholasticgrading_group', '*', array('sgg_id' => $id));
             if ( !$group ) {
 
@@ -1952,6 +1983,29 @@ class SpecialGrades extends SpecialPage {
 
         }
 
+        # Query for all users
+        $users = $dbr->select('user', '*');
+
+        # Create a hidden for each group user
+        $groupuserfields = '';
+        foreach ( $users as $user ) {
+
+            $groupuser = $dbr->selectRow('scholasticgrading_groupuser', '*',
+                array('sggu_group_id' => $groupIdDefault, 'sggu_user_id' => $user->user_id));
+            if ( $groupuser ) {
+
+                # The user is a member of the group
+                $groupuserfields .= Html::hidden('group-params[0][group-user][' . $user->user_id . ']', 1);
+
+            } else {
+
+                # The user is not a member of the group
+                $groupuserfields .= Html::hidden('group-params[0][group-user][' . $user->user_id . ']', 0);
+
+            }
+
+        }
+
         # Build the group form
         $content = Xml::fieldset($fieldsetTitle,
             Html::rawElement('form',
@@ -1969,6 +2023,7 @@ class SpecialGrades extends SpecialPage {
                         Html::rawElement('td', null, Xml::check('group-params[0][group-enabled]', $groupEnabledDefault, array('id' => 'group-enabled')))
                     )
                 ) .
+                $groupuserfields .
                 $buttons .
                 Html::hidden('group-params[0][group-id]', $groupIdDefault) .
                 Html::hidden('wpEditToken', $this->getUser()->getEditToken())
@@ -2463,18 +2518,20 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Display a table of all groups
+     * Display a table of all groups and user group membership controls
      *
-     * Generates a table of groups with controls
-     * for modifying and deleting groups
+     * Generates a table of groups with controls for modifying
+     * and deleting groups, and a table with controls for modifying
+     * user group memberships
      */
 
     function showAllGroups () {
 
         $page = $this->getOutput();
 
-        # Query for all groups
+        # Query for all users and all groups
         $dbr = wfGetDB(DB_SLAVE);
+        $users = $dbr->select('user', '*');
         $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
             array('ORDER BY' => array('sgg_title')));
 
@@ -2523,10 +2580,63 @@ class SpecialGrades extends SpecialPage {
             Html::rawElement('td', array('class' => 'sg-managegroupstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-group-' . $paramSetCounter, 'disabled')))
         );
 
+        $content .= Html::hidden('group-params[' . $paramSetCounter . '][group-user][]', '');
         $content .= Html::hidden('group-params[' . $paramSetCounter . '][group-id]', false);
         $content .= "\n";
 
         $paramSetCounter += 1;
+
+        $content .= Html::closeElement('table') . "\n";
+        $content .= Html::element('br') . "\n";
+
+        # Build the group users table
+        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-managegroupstable')) . "\n";
+
+        # Create a column header for each field
+        $content .= Html::openElement('tr', array('id' => 'sg-managegroupstable-header'));
+        $content .= Html::element('th', null, 'User');
+        foreach ( $groups as $group )
+            $content .= Html::element('th', array('class' => 'unsortable'), $group->sgg_title);
+        $content .= Html::closeElement('tr');
+        $content .= "\n";
+
+        # Create a row for each user
+        foreach ( $users as $user ) {
+
+            $content .= Html::openElement('tr', array('class' => 'sg-managegroupstable-row'));
+            $content .= Html::element('td', array('class' => 'sg-managegroupstable-user'), $this->getUserDisplayName($user->user_id));
+
+            # Create a cell for each group
+            $paramSetCounter = 0;
+            foreach ( $groups as $group ) {
+
+                $groupuser = $dbr->selectRow('scholasticgrading_groupuser', '*',
+                    array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $user->user_id));
+                if ( $groupuser ) {
+
+                    # The user is a member of the group
+                    $content .= Html::rawElement('td', array('class' => 'sg-managegroupstable-groupuser'),
+                        Html::hidden('group-params[' . $paramSetCounter . '][group-user][' . $user->user_id . ']', 0) .
+                        Xml::check('group-params[' . $paramSetCounter . '][group-user][' . $user->user_id . ']', true)
+                    );
+
+                } else {
+
+                    # The user is not a member of the group
+                    $content .= Html::rawElement('td', array('class' => 'sg-managegroupstable-groupuser'),
+                        Html::hidden('group-params[' . $paramSetCounter . '][group-user][' . $user->user_id . ']', 0) .
+                        Xml::check('group-params[' . $paramSetCounter . '][group-user][' . $user->user_id . ']', false)
+                    );
+
+                }
+
+                $paramSetCounter += 1;
+
+            }
+
+            $content .= Html::closeElement('tr');
+
+        }
 
         $content .= Html::closeElement('table') . "\n";
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-group'));

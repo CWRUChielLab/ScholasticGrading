@@ -264,9 +264,15 @@ table.sg-managegroupstable tr.sg-managegroupstable-disabled td.sg-managegroupsta
 }
 
 table.sg-managegroupstable td.sg-managegroupstable-enabled,
-table.sg-managegroupstable td.sg-managegroupstable-delete {
+table.sg-managegroupstable td.sg-managegroupstable-delete,
+table.sg-managegroupstable td.sg-managegroupstable-groupuser {
     text-align: center;
     width: 75px;
+}
+
+table.sg-managegroupstable td.sg-managegroupstable-user {
+    text-align: left;
+    width: 200px;
 }
 
 table.sg-managegroupstable td.sg-managegroupstable-title {
