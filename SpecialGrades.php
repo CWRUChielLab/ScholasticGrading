@@ -933,20 +933,25 @@ class SpecialGrades extends SpecialPage {
                     }
 
                     # Provide a delete button
-                    $page->addHtml(Html::rawElement('form',
+                    $content = '';
+                    $content .= Html::openElement('form',
                         array(
                             'method' => 'post',
                             'action' => $this->getTitle()->getLocalUrl(array('action' => 'submit'))
-                        ),
-                        Xml::submitButton('Delete assignment', array('name' => 'delete-assignment-0')) .
-                        Html::hidden('confirm-delete', true) .
-                        Html::hidden('assignment-params[0][assignment-id]',      $assignmentID) .
-                        Html::hidden('assignment-params[0][assignment-title]',   $assignmentTitle) .
-                        Html::hidden('assignment-params[0][assignment-value]',   $assignmentValue) .
-                        Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled ? 1 : 0) .
-                        Html::hidden('assignment-params[0][assignment-date]',    $assignmentDate) .
-                        Html::hidden('wpEditToken', $this->getUser()->getEditToken())
-                    ));
+                        ));
+                    $content .= Xml::submitButton('Delete assignment', array('name' => 'delete-assignment-0'));
+                    $content .= Html::hidden('confirm-delete', true);
+                    $content .= Html::hidden('assignment-params[0][assignment-id]',      $assignmentID);
+                    $content .= Html::hidden('assignment-params[0][assignment-title]',   $assignmentTitle);
+                    $content .= Html::hidden('assignment-params[0][assignment-value]',   $assignmentValue);
+                    $content .= Html::hidden('assignment-params[0][assignment-enabled]', $assignmentEnabled ? 1 : 0);
+                    $content .= Html::hidden('assignment-params[0][assignment-date]',    $assignmentDate);
+                    foreach ( $assignmentGroups as $groupID => $isMember )
+                        $content .= Html::hidden('assignment-params[0][assignment-group][' . $groupID . ']', $isMember ? 1 : 0);
+                    $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
+                    $content .= Html::closeElement('form') . "\n";
+
+                    $page->addHtml($content);
 
                 } else {
 
@@ -1559,6 +1564,7 @@ class SpecialGrades extends SpecialPage {
     function showAssignmentForm ( $id = false ) {
 
         $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
 
         # Set default parameters for creating a new assignment
         $fieldsetTitle = 'Create a new assignment';
@@ -1572,7 +1578,6 @@ class SpecialGrades extends SpecialPage {
         if ( $id ) {
 
             # Check whether assignment exists
-            $dbr = wfGetDB(DB_SLAVE);
             $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $id));
             if ( !$assignment ) {
 
@@ -1593,6 +1598,42 @@ class SpecialGrades extends SpecialPage {
                 $assignmentValueDefault = (float)$assignment->sga_value;
                 $assignmentEnabledDefault = $assignment->sga_enabled;
                 $assignmentDateDefault = $assignment->sga_date;
+
+            }
+
+        }
+
+        # Query for all groups
+        $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
+            array('ORDER BY' => array('sgg_title')));
+
+        # Create a checkbox for each group
+        $groupchecks = '';
+        foreach ( $groups as $group ) {
+
+            $groupassignment = $dbr->selectRow('scholasticgrading_groupassignment', '*',
+                array('sgga_group_id' => $group->sgg_id, 'sgga_assignment_id' => $assignmentIdDefault));
+            if ( $groupassignment ) {
+
+                # The assignment is a member of the group
+                $groupchecks .= Html::rawElement('tr', null,
+                    Html::rawElement('td', null, Xml::label($group->sgg_title . ':', 'assignment-group-' . $group->sgg_id)) .
+                    Html::rawElement('td', null,
+                        Html::hidden('assignment-params[0][assignment-group][' . $group->sgg_id . ']', 0) .
+                        Xml::check('assignment-params[0][assignment-group][' . $group->sgg_id . ']', true, array('id' => 'assignment-group-' . $group->sgg_id))
+                    )
+                );
+
+            } else {
+
+                # The assignment is not a member of the group
+                $groupchecks .= Html::rawElement('tr', null,
+                    Html::rawElement('td', null, Xml::label($group->sgg_title . ':', 'assignment-group-' . $group->sgg_id)) .
+                    Html::rawElement('td', null,
+                        Html::hidden('assignment-params[0][assignment-group][' . $group->sgg_id . ']', 0) .
+                        Xml::check('assignment-params[0][assignment-group][' . $group->sgg_id . ']', false, array('id' => 'assignment-group-' . $group->sgg_id))
+                    )
+                );
 
             }
 
@@ -1621,7 +1662,8 @@ class SpecialGrades extends SpecialPage {
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
                         Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date', 'class' => 'sg-date-input')))
-                    )
+                    ) .
+                    $groupchecks
                 ) .
                 $buttons .
                 Html::hidden('assignment-params[0][assignment-id]', $assignmentIdDefault) .
