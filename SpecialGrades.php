@@ -391,11 +391,10 @@ class SpecialGrades extends SpecialPage {
 
                 # Check whether user exists
                 $dbr = wfGetDB(DB_SLAVE);
-                $users = $dbr->select('user', '*', array('user_id' => $request->getVal('user', false)));
-                if ( $users->numRows() > 0 ) {
+                $user = $dbr->selectRow('user', '*', array('user_id' => $request->getVal('user', false)));
+                if ( $user ) {
 
                     # The user exists
-                    $user = $users->next();
                     return 'Edit scores for ' . $this->getUserDisplayName($user->user_id);
 
                 } else {
@@ -411,11 +410,10 @@ class SpecialGrades extends SpecialPage {
 
                 # Check whether assignment exists
                 $dbr = wfGetDB(DB_SLAVE);
-                $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $request->getVal('id', false)));
-                if ( $assignments->numRows() > 0 ) {
+                $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $request->getVal('id', false)));
+                if ( $assignment ) {
 
                     # The assignment exists
-                    $assignment = $assignments->next();
                     return 'Edit scores for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')';
 
                 } else {
@@ -496,16 +494,10 @@ class SpecialGrades extends SpecialPage {
             $dbr = wfGetDB(DB_SLAVE);
 
             # Check whether user exists
-            $users = $dbr->select('user', '*', array('user_id' => $user_id));
-            if ( $users->numRows() === 0 ) {
-
-                # The user does not exist
-                return false;
-
-            } else {
+            $user = $dbr->selectRow('user', '*', array('user_id' => $user_id));
+            if ( $user ) {
 
                 # The user exists
-                $user = $users->next();
 
                 # Determine if the user has a real name
                 if ( $user->user_real_name ) {
@@ -519,6 +511,11 @@ class SpecialGrades extends SpecialPage {
                     return $user->user_name;
 
                 }
+
+            } else {
+
+                # The user does not exist
+                return false;
 
             }
 
@@ -870,11 +867,10 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Check whether assignment exists
-        $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
-        if ( $assignments->numRows() > 0 ) {
+        $assignment = $dbw->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $assignmentID));
+        if ( $assignment ) {
 
             # The assignment exists
-            $assignment = $assignments->next();
 
             if ( !$delete ) {
 
@@ -889,11 +885,11 @@ class SpecialGrades extends SpecialPage {
 
                 # Edit the assignment's group memberships
                 foreach ( $assignmentGroups as $groupID => $isMember ) {
-                    $memberships = $dbw->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
-                    if ( $memberships->numRows() > 0 && !$isMember ) {
+                    $membership = $dbw->selectRow('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
+                    if ( $membership && !$isMember ) {
                         $dbw->delete('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
                         $affectedRows += $dbw->affectedRows();
-                    } elseif ( $memberships->numRows() == 0 && $isMember ) {
+                    } elseif ( !$membership && $isMember ) {
                         $dbw->insert('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
                         $affectedRows += $dbw->affectedRows();
                     }
@@ -929,7 +925,7 @@ class SpecialGrades extends SpecialPage {
                         $content .= Html::element('p', null, 'Evaluations for the following users will be deleted:') . "\n";
                         $content .= Html::openElement('ul', null);
                         foreach ( $evaluations as $evaluation ) {
-                            $user = $dbw->select('user', '*', array('user_id' => $evaluation->sge_user_id))->next();
+                            $user = $dbw->selectRow('user', '*', array('user_id' => $evaluation->sge_user_id));
                             $content .= Html::rawElement('li', null, $this->getUserDisplayName($user->user_id)) . "\n";
                         }
                         $content .= Html::closeElement('ul') . "\n";
@@ -989,9 +985,9 @@ class SpecialGrades extends SpecialPage {
             $affectedRows = $dbw->affectedRows();
 
             # Attempt to get the id for the newly created assignment
-            $maxAssignmentID = $dbw->select('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'))->next()->maxid;
-            $assignment = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $maxAssignmentID))->next();
-            if ( $assignment->sga_title != $assignmentTitle || $assignment->sga_value != $assignmentValue || $assignment->sga_enabled != $assignmentEnabled || $assignment->sga_date != $assignmentDate ) {
+            $maxAssignmentID = $dbw->selectRow('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'))->maxid;
+            $assignment = $dbw->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $maxAssignmentID));
+            if ( !$assignment || $assignment->sga_title != $assignmentTitle || $assignment->sga_value != $assignmentValue || $assignment->sga_enabled != $assignmentEnabled || $assignment->sga_date != $assignmentDate ) {
 
                 # The query result does not match the new assignment
                 $page->addWikiText('Unable to retrieve id of new assignment. Groups were not assigned.');
@@ -1087,9 +1083,9 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Check whether user and assignment exist
-        $users = $dbw->select('user', '*', array('user_id' => $evaluationUser));
-        $assignments = $dbw->select('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment));
-        if ( $users->numRows() === 0 || $assignments->numRows() === 0 ) {
+        $user = $dbw->selectRow('user', '*', array('user_id' => $evaluationUser));
+        $assignment = $dbw->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $evaluationAssignment));
+        if ( !$user || !$assignment ) {
 
             # Either the user or assignment does not exist
             $page->addWikiText('Either user (id=' . $evaluationUser . ') or assignment (id=' . $evaluationAssignment . ') does not exist.');
@@ -1098,15 +1094,12 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The user and assignment both exist
-            $user = $users->next();
-            $assignment = $assignments->next();
 
             # Check whether evaluation exists
-            $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
-            if ( $evaluations->numRows() > 0 ) {
+            $evaluation = $dbw->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
+            if ( $evaluation ) {
 
                 # The evaluation exists
-                $evaluation = $evaluations->next();
 
                 if ( !$delete ) {
 
@@ -1281,8 +1274,8 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Check whether user exist
-        $users = $dbw->select('user', '*', array('user_id' => $adjustmentUser));
-        if ( $users->numRows() === 0 ) {
+        $user = $dbw->selectRow('user', '*', array('user_id' => $adjustmentUser));
+        if ( !$user ) {
 
             # User does not exist
             $page->addWikiText('User (id=' . $adjustmentUser . ') does not exist.');
@@ -1291,14 +1284,12 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The user exists
-            $user = $users->next();
 
             # Check whether adjustment exists
-            $adjustments = $dbw->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $adjustmentID));
-            if ( $adjustments->numRows() > 0 ) {
+            $adjustment = $dbw->selectRow('scholasticgrading_adjustment', '*', array('sgadj_id' => $adjustmentID));
+            if ( $adjustment ) {
 
                 # The adjustment exists
-                $adjustment = $adjustments->next();
 
                 if ( !$delete ) {
 
@@ -1452,11 +1443,10 @@ class SpecialGrades extends SpecialPage {
         }
 
         # Check whether group exists
-        $groups = $dbw->select('scholasticgrading_group', '*', array('sgg_id' => $groupID));
-        if ( $groups->numRows() > 0 ) {
+        $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupID));
+        if ( $group ) {
 
             # The group exists
-            $group = $groups->next();
 
             if ( !$delete ) {
 
@@ -1583,8 +1573,8 @@ class SpecialGrades extends SpecialPage {
 
             # Check whether assignment exists
             $dbr = wfGetDB(DB_SLAVE);
-            $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $id));
-            if ( $assignments->numRows() === 0 ) {
+            $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $id));
+            if ( !$assignment ) {
 
                 # The assignment does not exist
                 $page->addWikiText('Assignment (id=' . $id . ') does not exist.');
@@ -1593,7 +1583,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 # The assignment exists
-                $assignment = $assignments->next();
 
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing assignment';
@@ -1664,9 +1653,9 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
 
         # Check whether user and assignment exist
-        $users = $dbr->select('user', '*', array('user_id' => $user_id));
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignment_id));
-        if ( $users->numRows() === 0 || $assignments->numRows() === 0 ) {
+        $user = $dbr->selectRow('user', '*', array('user_id' => $user_id));
+        $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $assignment_id));
+        if ( !$user || !$assignment ) {
 
             # Either the user or assignment does not exist
             $page->addWikiText('Either user (id=' . $user_id . ') or assignment (id=' . $assignment_id . ') does not exist.');
@@ -1675,12 +1664,10 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The user and assignment both exist
-            $user = $users->next();
-            $assignment = $assignments->next();
 
             # Check whether evaluation exists
-            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
-            if ( $evaluations->numRows() === 0 ) {
+            $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment_id));
+            if ( !$evaluation ) {
 
                 # The evaluation does not exist
                 # Set default parameters for creating a new evaluation
@@ -1696,7 +1683,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 # The evaluation exists
-                $evaluation = $evaluations->next();
 
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing evaluation';
@@ -1776,14 +1762,14 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
 
         # Check whether adjustment exists
-        $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $id));
-        if ( $adjustments->numRows() === 0 ) {
+        $adjustment = $dbr->selectRow('scholasticgrading_adjustment', '*', array('sgadj_id' => $id));
+        if ( !$adjustment ) {
 
             # The adjustment does not exist
 
             # Check whether user exists
-            $users = $dbr->select('user', '*', array('user_id' => $user_id));
-            if ( $users->numRows() === 0 ) {
+            $user = $dbr->selectRow('user', '*', array('user_id' => $user_id));
+            if ( !$user ) {
 
                 # Neither the user nor the adjustment exist
                 $page->addWikiText('Adjustment (id=' . $id . ') and user (id=' . $user_id . ') do not exist.');
@@ -1792,7 +1778,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 # The user exists
-                $user = $users->next();
 
                 # Set default parameters for creating a new adjustment
                 $fieldsetTitle = 'Create a new adjustment';
@@ -1811,7 +1796,6 @@ class SpecialGrades extends SpecialPage {
         } else {
 
             # The adjustment exists
-            $adjustment = $adjustments->next();
 
             # Use its values as default parameters
             $fieldsetTitle = 'Edit an existing adjustment';
@@ -1903,8 +1887,8 @@ class SpecialGrades extends SpecialPage {
 
             # Check whether group exists
             $dbr = wfGetDB(DB_SLAVE);
-            $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_id' => $id));
-            if ( $groups->numRows() === 0 ) {
+            $group = $dbr->selectRow('scholasticgrading_group', '*', array('sgg_id' => $id));
+            if ( !$group ) {
 
                 # The group does not exist
                 $page->addWikiText('Group (id=' . $id . ') does not exist.');
@@ -1913,7 +1897,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 # The group exists
-                $group = $groups->next();
 
                 # Use its values as default parameters
                 $fieldsetTitle = 'Edit an existing group';
@@ -1970,19 +1953,16 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
 
         # Check whether user exists
-        $users = $dbr->select('user', '*', array('user_id' => $user_id));
-        if ( $users->numRows() === 0 ) {
+        $user = $dbr->selectRow('user', '*', array('user_id' => $user_id));
+        if ( !$user ) {
 
             # The user does not exist
             $page->addWikiText('User (id=' . $user_id . ') does not exist.');
             return;
 
-        } else {
-
-            # The user exists
-            $user = $users->next();
-
         }
+
+        # The user exists
 
         $scores = array();
 
@@ -2048,13 +2028,14 @@ class SpecialGrades extends SpecialPage {
             if ( $score['assignmentID'] ) {
 
                 # The next row is an evaluation for an assignment
-                $assignment = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $score['assignmentID']))->next();
+                $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $score['assignmentID']));
+
                 # Increment the course total points
                 $pointsAllAssignments += $assignment->sga_value;
 
                 # Check whether evaluation exists
-                $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
-                if ( $evaluations->numRows() === 0 ) {
+                $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
+                if ( !$evaluation ) {
 
                     # The evaluation does not exist
                     # Set default parameters for creating a new evaluation
@@ -2068,7 +2049,6 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     # The evaluation exists
-                    $evaluation = $evaluations->next();
 
                     # Use its values as default parameters
                     $evaluationDateDefault = $evaluation->sge_date;
@@ -2112,7 +2092,7 @@ class SpecialGrades extends SpecialPage {
             } elseif ( $score['adjustmentID'] ) {
 
                 # The next row is an adjustment
-                $adjustment = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_id' => $score['adjustmentID']))->next();
+                $adjustment = $dbr->selectRow('scholasticgrading_adjustment', '*', array('sgadj_id' => $score['adjustmentID']));
 
                 if ( $adjustment->sgadj_enabled ) {
 
@@ -2216,19 +2196,16 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
 
         # Check whether assignment exists
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $id));
-        if ( $assignments->numRows() === 0 ) {
+        $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $id));
+        if ( !$assignment ) {
 
             # The assignment does not exist
             $page->addWikiText('Assignment (id=' . $id . ') does not exist.');
             return;
 
-        } else {
-
-            # The assignment exists
-            $assignment = $assignments->next();
-
         }
+
+        # The assignment exists
 
         # Query for all users
         $users = $dbr->select('user', '*');
@@ -2257,8 +2234,8 @@ class SpecialGrades extends SpecialPage {
         foreach ( $users as $user ) {
 
             # Check whether evaluation exists
-            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $id));
-            if ( $evaluations->numRows() === 0 ) {
+            $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $id));
+            if ( !$evaluation ) {
 
                 # The evaluation does not exist
                 # Set default parameters for creating a new evaluation
@@ -2272,7 +2249,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 # The evaluation exists
-                $evaluation = $evaluations->next();
 
                 # Use its values as default parameters
                 $evaluationDateDefault = $evaluation->sge_date;
@@ -2333,7 +2309,7 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
 
-        # Query for all assignments and groups
+        # Query for all assignments and all groups
         $dbr = wfGetDB(DB_SLAVE);
         $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
             array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
@@ -2379,9 +2355,9 @@ class SpecialGrades extends SpecialPage {
             # Create a cell for each group
             foreach ( $groups as $group ) {
 
-                $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*',
+                $groupassignment = $dbr->selectRow('scholasticgrading_groupassignment', '*',
                     array('sgga_group_id' => $group->sgg_id, 'sgga_assignment_id' => $assignment->sga_id));
-                if ( $groupassignments->numRows() > 0 ) {
+                if ( $groupassignment ) {
 
                     # The assignment is a member of the group
                     $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-group'),
@@ -2574,12 +2550,11 @@ class SpecialGrades extends SpecialPage {
             # Create a cell for each user
             foreach ( $users as $user ) {
 
-                $evaluations = $dbr->select('scholasticgrading_evaluation', '*',
+                $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*',
                     array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
-                if ( $evaluations->numRows() > 0 ) {
+                if ( $evaluation ) {
 
                     # An evaluation exists for this (user,assignment) combination
-                    $evaluation = $evaluations->next();
                     if ( $evaluation->sge_enabled ) {
 
                         # The evaluation is enabled
@@ -2692,19 +2667,16 @@ class SpecialGrades extends SpecialPage {
         $dbr = wfGetDB(DB_SLAVE);
 
         # Check whether user exists
-        $users = $dbr->select('user', '*', array('user_id' => $user_id));
-        if ( $users->numRows() === 0 ) {
+        $user = $dbr->selectRow('user', '*', array('user_id' => $user_id));
+        if ( !$user ) {
 
             # The user does not exist
             $page->addWikiText('User (id=' . $user_id . ') does not exist.');
             return;
 
-        } else {
-
-            # The user exists
-            $user = $users->next();
-
         }
+
+        # The user exists
 
         $scores = array();
 
@@ -2725,11 +2697,10 @@ class SpecialGrades extends SpecialPage {
             $pointsAllAssignments += $assignment->sga_value;
 
             # Check whether evaluation exists and is enabled
-            $evaluations = $dbr->select('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id, 'sge_enabled' => true));
-            if ( $evaluations->numRows() > 0 ) {
+            $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id, 'sge_enabled' => true));
+            if ( $evaluation ) {
 
                 # The evaluation exists and is enabled
-                $evaluation = $evaluations->next();
 
                 # Increment the points earned and the ideal score
                 $pointsEarned += $evaluation->sge_score;
