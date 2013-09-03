@@ -2531,7 +2531,8 @@ class SpecialGrades extends SpecialPage {
 
         # Query for all users and all groups
         $dbr = wfGetDB(DB_SLAVE);
-        $users = $dbr->select('user', '*');
+        $users = $dbr->select('user', '*', '', __METHOD__,
+            array('ORDER BY' => array('user_name')));
         $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
             array('ORDER BY' => array('sgg_title')));
 
@@ -2664,9 +2665,10 @@ class SpecialGrades extends SpecialPage {
 
         # Query for all users and all enabled assignments
         $dbr = wfGetDB(DB_SLAVE);
-        $users = $dbr->select('user', '*');
-        $assignments = $dbr->select('scholasticgrading_assignment', '*',
-            array('sga_enabled' => true), __METHOD__, array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
+        $users = $dbr->select('user', '*', '', __METHOD__,
+            array('ORDER BY' => array('user_name')));
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true), __METHOD__,
+            array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
         # Build the grade grid
         $content = '';
