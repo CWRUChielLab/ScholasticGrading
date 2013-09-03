@@ -2710,146 +2710,171 @@ class SpecialGrades extends SpecialPage {
     function showGradeGrid () {
 
         $page = $this->getOutput();
-        $pointsEarned = array();
-        $pointsIdeal = array();
-
-        # Query for all users and all enabled assignments
         $dbr = wfGetDB(DB_SLAVE);
-        $users = $dbr->select('user', '*', '', __METHOD__,
-            array('ORDER BY' => array('user_name')));
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true), __METHOD__,
-            array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
-        # Build the grade grid
-        $content = '';
-        $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-gradegrid')) . "\n";
-        $content .= Html::element('caption', null, 'Grades') . "\n";
+        # Query for all enabled groups
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_enabled' => true), __METHOD__,
+            array('ORDER BY' => array('sgg_title')));
 
-        # Create a column header for each student
-        $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-header'));
-        $content .= Html::element('th', null, 'Date') . Html::element('th', null, 'Assignment');
-        foreach ( $users as $user ) {
-            $content .= Html::rawElement('th', array('class' => 'sg-gradegrid-user'),
-                Html::rawElement('div', null,
-                    Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
-                        array('action' => 'edituserscores', 'user' => $user->user_id))
-                )
-            );
+        # Create a grade grid for each enabled group
+        foreach ( $groups as $group ) {
 
-            # Initialize the points earned and the ideal score for this student
-            $pointsEarned[$user->user_name] = 0;
-            $pointsIdeal[$user->user_name] = 0;
-        }
-        $content .= Html::closeElement('tr') . "\n";
+            $pointsEarned = array();
+            $pointsIdeal = array();
 
-        # Create a row for each enabled assignment
-        foreach ( $assignments as $assignment ) {
+            # Query for all users in the group
+            $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_group_id' => $group->sgg_id));
+            $userIDs = array();
+            foreach ( $groupusers as $groupuser )
+                array_push($userIDs, $groupuser->sggu_user_id);
+            if ( !count($userIDs) )
+                $userIDs = null;
+            $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
+                array('ORDER BY' => array('user_name')));
 
-            $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
-            $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => $assignment->sga_date ? $assignment->sga_date : '9999'), $assignment->sga_date ? date_format(date_create($assignment->sga_date), 'D m/d') : '');
-            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'),
-                Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
-                    array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
+            # Query for all enabled assignments in the group
+            $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $group->sgg_id));
+            $assignmentIDs = array();
+            foreach ( $groupassignments as $groupassignment )
+                array_push($assignmentIDs, $groupassignment->sgga_assignment_id);
+            if ( !count($assignmentIDs) )
+                $assignmentIDs = null;
+            $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentIDs, 'sga_enabled' => true), __METHOD__,
+                array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
-            # Create a cell for each user
+            # Build the grade grid
+            $content = '';
+            $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-gradegrid')) . "\n";
+            $content .= Html::element('caption', null, $group->sgg_title) . "\n";
+
+            # Create a column header for each student
+            $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-header'));
+            $content .= Html::element('th', null, 'Date') . Html::element('th', null, 'Assignment');
             foreach ( $users as $user ) {
+                $content .= Html::rawElement('th', array('class' => 'sg-gradegrid-user'),
+                    Html::rawElement('div', null,
+                        Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                            array('action' => 'edituserscores', 'user' => $user->user_id))
+                    )
+                );
 
-                $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*',
-                    array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
-                if ( $evaluation ) {
+                # Initialize the points earned and the ideal score for this student
+                $pointsEarned[$user->user_name] = 0;
+                $pointsIdeal[$user->user_name] = 0;
+            }
+            $content .= Html::closeElement('tr') . "\n";
 
-                    # An evaluation exists for this (user,assignment) combination
-                    if ( $evaluation->sge_enabled ) {
+            # Create a row for each enabled assignment
+            foreach ( $assignments as $assignment ) {
 
-                        # The evaluation is enabled
-                        if ( $assignment->sga_value == 0 ) {
+                $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
+                $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => $assignment->sga_date ? $assignment->sga_date : '9999'), $assignment->sga_date ? date_format(date_create($assignment->sga_date), 'D m/d') : '');
+                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'),
+                    Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
+                        array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
 
-                            # The assignment is extra credit
-                            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
-                                Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
-                                    array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                # Create a cell for each user
+                foreach ( $users as $user ) {
+
+                    $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*',
+                        array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
+                    if ( $evaluation ) {
+
+                        # An evaluation exists for this (user,assignment) combination
+                        if ( $evaluation->sge_enabled ) {
+
+                            # The evaluation is enabled
+                            if ( $assignment->sga_value == 0 ) {
+
+                                # The assignment is extra credit
+                                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
+                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
+                                        array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                            } else {
+
+                                # The assignment is not extra credit
+                                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
+                                    Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                        array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+
+                            }
+
+                            # Increment the points earned and the ideal score for this student
+                            $pointsEarned[$user->user_name] += $evaluation->sge_score;
+                            $pointsIdeal[$user->user_name] += $assignment->sga_value;
 
                         } else {
 
-                            # The assignment is not extra credit
+                            # The evaluation is disabled
                             $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
-                                Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                Linker::linkKnown($this->getTitle(), '**', array(),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                         }
 
-                        # Increment the points earned and the ideal score for this student
-                        $pointsEarned[$user->user_name] += $evaluation->sge_score;
-                        $pointsIdeal[$user->user_name] += $assignment->sga_value;
-
                     } else {
 
-                        # The evaluation is disabled
+                        # An evaluation does not exist for this (user,assignment) combination
                         $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
-                            Linker::linkKnown($this->getTitle(), '**', array(),
+                            Linker::linkKnown($this->getTitle(), '--', array(),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     }
 
-                } else {
+                } /* end for each user */
 
-                    # An evaluation does not exist for this (user,assignment) combination
-                    $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
-                        Linker::linkKnown($this->getTitle(), '--', array(),
-                            array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
+                $content .= Html::closeElement('tr') . "\n";
+
+            } /* end for each enabled assignment */
+
+            # Create a row listing point adjustment sums
+            $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
+            $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => '9999'), '');
+            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'), 'Point adjustments');
+
+            # Create a cell for each user
+            foreach ( $users as $user ) {
+
+                $adjustmentScoreSum = 0;
+                $adjustmentValueSum = 0;
+
+                $adjustments = $dbr->select('scholasticgrading_adjustment', '*',
+                    array('sgadj_user_id' => $user->user_id, 'sgadj_enabled' => true));
+                foreach ( $adjustments as $adjustment ) {
+
+                    $adjustmentScoreSum += $adjustment->sgadj_score;
+                    $adjustmentValueSum += $adjustment->sgadj_value;
+
+                    # Increment the points earned and the ideal score for this student
+                    $pointsEarned[$user->user_name] += $adjustment->sgadj_score;
+                    $pointsIdeal[$user->user_name] += $adjustment->sgadj_value;
 
                 }
 
-            } /* end for each user */
-
-            $content .= Html::closeElement('tr') . "\n";
-
-        } /* end for each enabled assignment */
-
-        # Create a row listing point adjustment sums
-        $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
-        $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => '9999'), '');
-        $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'), 'Point adjustments');
-
-        # Create a cell for each user
-        foreach ( $users as $user ) {
-
-            $adjustmentScoreSum = 0;
-            $adjustmentValueSum = 0;
-
-            $adjustments = $dbr->select('scholasticgrading_adjustment', '*',
-                array('sgadj_user_id' => $user->user_id, 'sgadj_enabled' => true));
-            foreach ( $adjustments as $adjustment ) {
-
-                $adjustmentScoreSum += $adjustment->sgadj_score;
-                $adjustmentValueSum += $adjustment->sgadj_value;
-
-                # Increment the points earned and the ideal score for this student
-                $pointsEarned[$user->user_name] += $adjustment->sgadj_score;
-                $pointsIdeal[$user->user_name] += $adjustment->sgadj_value;
+                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'),
+                    $adjustmentScoreSum . ' / ' . $adjustmentValueSum);
 
             }
 
-            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'),
-                $adjustmentScoreSum . ' / ' . $adjustmentValueSum);
+            $content .= Html::closeElement('tr') . "\n";
 
-        }
+            # Report point totals for each student
+            $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
+            $content .= Html::element('th', null, '') . Html::element('th', null, '');
+            foreach ( $users as $user ) {
+                $content .= Html::element('th', null,
+                    $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
+                );
+            }
+            $content .= Html::closeElement('tr') . "\n";
 
-        $content .= Html::closeElement('tr') . "\n";
+            $content .= Html::closeElement('table') . "\n";
+            $content .= Html::closeElement('br') . "\n";
 
-        # Report point totals for each student
-        $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
-        $content .= Html::element('th', null, '') . Html::element('th', null, '');
-        foreach ( $users as $user ) {
-            $content .= Html::element('th', null,
-                $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
-            );
-        }
-        $content .= Html::closeElement('tr') . "\n";
+            $page->addHTML($content);
 
-        $content .= Html::closeElement('table') . "\n";
-
-        $page->addHTML($content);
+        } /* end for each group */
 
     } /* end showGradeGrid */
 
