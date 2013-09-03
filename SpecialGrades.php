@@ -2061,19 +2061,41 @@ class SpecialGrades extends SpecialPage {
 
         # The user exists
 
-        $scores = array();
-
         # Initialize the points earned, the ideal score,
         # and the course total points for this student
         $pointsEarned = 0;
         $pointsIdeal = 0;
         $pointsAllAssignments = 0;
 
-        # Query for all enabled assignments and all adjustments
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true));
+        # Query for the enabled groups the user belongs to
+        $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_user_id' => $user_id));
+        $groupIDs = array();
+        foreach ( $groupusers as $groupuser )
+            array_push($groupIDs, $groupuser->sggu_group_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_id' => $groupIDs, 'sgg_enabled' => true));
+        $groupIDs = array();
+        foreach ( $groups as $group )
+            array_push($groupIDs, $group->sgg_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+
+        # Query for the enabled assignments attached to these groups
+        $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupIDs));
+        $assignmentIDs = array();
+        foreach ( $groupassignments as $groupassignment )
+            array_push($assignmentIDs, $groupassignment->sgga_assignment_id);
+        $assignmentIDs = array_unique($assignmentIDs);
+        if ( !count($assignmentIDs) )
+            $assignmentIDs = null;
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentIDs, 'sga_enabled' => true));
+
+        # Query for all adjustments belonging to the user
         $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_user_id' => $user_id));
 
         # Store dates, titles, and ids for each enabled assignment
+        $scores = array();
         foreach ( $assignments as $assignment ) {
 
             array_push($scores, array(
@@ -2304,8 +2326,36 @@ class SpecialGrades extends SpecialPage {
 
         # The assignment exists
 
-        # Query for all users
-        $users = $dbr->select('user', '*');
+        # Query for the enabled groups the assignment belongs to
+        $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*', array('sgga_assignment_id' => $id));
+        $groupIDs = array();
+        foreach ( $groupassignments as $groupassignment )
+            array_push($groupIDs, $groupassignment->sgga_group_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_id' => $groupIDs, 'sgg_enabled' => true));
+        $groupIDs = array();
+        foreach ( $groups as $group )
+            array_push($groupIDs, $group->sgg_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+
+        # Query for the users in these groups
+        $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_group_id' => $groupIDs));
+        $userIDs = array();
+        foreach ( $groupusers as $groupuser )
+            array_push($userIDs, $groupuser->sggu_user_id);
+        $userIDs = array_unique($userIDs);
+        if ( !count($userIDs) )
+            $userIDs = null;
+        $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
+            array('ORDER BY' => 'user_name'));
+
+        # Abort if there are no users
+        if ( $users->numRows() === 0 ) {
+            $page->addWikiText('There are no users to evaluate because all enabled groups this assignment belongs to contain no users.');
+            return;
+        }
 
         # Build the assignment scores page
         $content = '';
@@ -2832,19 +2882,46 @@ class SpecialGrades extends SpecialPage {
 
         # The user exists
 
-        $scores = array();
-
         # Initialize the points earned, the ideal score,
         # and the course total points for this student
         $pointsEarned = 0;
         $pointsIdeal = 0;
         $pointsAllAssignments = 0;
 
-        # Query for all enabled assignments and all enabled adjustments
-        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_enabled' => true));
+        # Query for the enabled groups the user belongs to
+        $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_user_id' => $user_id));
+        $groupIDs = array();
+        foreach ( $groupusers as $groupuser )
+            array_push($groupIDs, $groupuser->sggu_group_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_id' => $groupIDs, 'sgg_enabled' => true));
+        $groupIDs = array();
+        foreach ( $groups as $group )
+            array_push($groupIDs, $group->sgg_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+
+        # Query for the enabled assignments attached to these groups
+        $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupIDs));
+        $assignmentIDs = array();
+        foreach ( $groupassignments as $groupassignment )
+            array_push($assignmentIDs, $groupassignment->sgga_assignment_id);
+        $assignmentIDs = array_unique($assignmentIDs);
+        if ( !count($assignmentIDs) )
+            $assignmentIDs = null;
+        $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentIDs, 'sga_enabled' => true));
+        # Query for all enabled adjustments belonging to the user
         $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_user_id' => $user_id, 'sgadj_enabled' => true));
 
+        # Abort if there are no assignments or adjustments
+        if ( $assignments->numRows() === 0 && $adjustments->numRows() === 0 ) {
+            $page->addWikiText('There are currently no assignments assigned to you.');
+            return;
+        }
+
         # Store scores for each enabled assignment
+        $scores = array();
         foreach ( $assignments as $assignment ) {
 
             # Increment the course total points
