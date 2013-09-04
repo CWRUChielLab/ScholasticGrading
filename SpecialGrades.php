@@ -952,7 +952,7 @@ class SpecialGrades extends SpecialPage {
                         ']', array());
                 }
 
-                # Edit the assignment's group memberships and create log entries
+                # Edit the group memberships for the assignment and create log entries
                 foreach ( $assignmentGroups as $groupID => $isMember ) {
                     $membership = $dbw->selectRow('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
                     $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupID));
@@ -1050,11 +1050,13 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     # Delete is confirmed
+                    $totalAffectedRows = 0;
 
                     # Delete the evaluations for this assignment and create log entries
                     $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_assignment_id' => $assignmentID));
                     foreach ( $evaluations as $evaluation ) {
                         $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluation->sge_user_id, 'sge_assignment_id' => $assignmentID));
+                        $totalAffectedRows += $dbw->affectedRows();
                         if ( $dbw->affectedRows() > 0 ) {
                             $log->addEntry('deleteEvaluation', $this->getTitle(),
                                 'for user ' .
@@ -1073,8 +1075,29 @@ class SpecialGrades extends SpecialPage {
                         }
                     }
 
+                    # Delete the group memberships for the assignment and create log entries
+                    $groupassignments = $dbw->select('scholasticgrading_groupassignment', '*', array('sgga_assignment_id' => $assignmentID));
+
+                    foreach ( $groupassignments as $groupassignment ) {
+                        $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupassignment->sgga_group_id));
+                        $dbw->delete('scholasticgrading_groupassignment', array('sgga_group_id' => $group->sgg_id, 'sgga_assignment_id' => $assignmentID));
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteGroupAssignment', $this->getTitle(),
+                                'assignment "' .
+                                    $assignment->sga_title . '" (' .
+                                    $assignment->sga_date . ') [id=' .
+                                    $assignmentID .
+                                ']; group "' .
+                                    $group->sgg_title . '" [id=' .
+                                    $group->sgg_id .
+                                ']', array());
+                        }
+                    }
+
                     # Delete the existing assignment
                     $dbw->delete('scholasticgrading_assignment', array('sga_id' => $assignmentID));
+                    $totalAffectedRows += $dbw->affectedRows();
 
                     # Create a new log entry
                     if ( $dbw->affectedRows() > 0 ) {
@@ -1089,7 +1112,7 @@ class SpecialGrades extends SpecialPage {
                     }
 
                     # Report success
-                    if ( $dbw->affectedRows() === 0 ) {
+                    if ( $totalaffectedRows === 0 ) {
 
                         if ( $verbose )
                             $page->addWikiText('Database unchanged.');
@@ -1143,7 +1166,7 @@ class SpecialGrades extends SpecialPage {
                     ']', array());
             }
 
-            # Create the assignment's group memberships and create log entries
+            # Create the group memberships for the assignment and create log entries
             foreach ( $assignmentGroups as $groupID => $isMember ) {
 
                 if ( $isMember ) {
