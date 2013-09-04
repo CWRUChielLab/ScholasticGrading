@@ -133,8 +133,8 @@ class SpecialGrades extends SpecialPage {
                     $request->getVal('user', false)
                 );
                 $page->addHTML(Html::rawElement('p', null,
-                    Linker::linkKnown($this->getTitle(), 'See student\'s view.', array(),
-                        array('action' => 'viewuserscores', 'user' => $request->getVal('user', false)))) . "\n");
+                    Linker::linkKnown($this->getTitle(), 'See student\'s view', array(),
+                        array('action' => 'viewuserscores', 'user' => $request->getVal('user', false))) . '.') . "\n");
             }
 
             $page->returnToMain(false, $this->getTitle());
@@ -173,21 +173,12 @@ class SpecialGrades extends SpecialPage {
 
                 if ( $this->canModify(false) ) {
                     $page->addHTML(Html::rawElement('p', null,
+                        Linker::linkKnown($this->getTitle(), 'Manage groups', array(),
+                            array('action' => 'groups')) . ' | ' .
                         Linker::linkKnown($this->getTitle(), 'Manage assignments', array(),
                             array('action' => 'assignments'))) . "\n");
 
-                    $page->addHTML(Html::rawElement('p', null,
-                        Linker::linkKnown($this->getTitle(), 'Manage groups', array(),
-                            array('action' => 'groups'))) . "\n");
-
                     $this->showGradeGrids();
-                    //$this->showAssignments();
-                    //$this->showEvaluations();
-                    //$this->showAdjustments();
-                    //$this->showGroups();
-                    //$this->showGroupUsers();
-                    //$this->showGroupAssignments();
-                    //$this->showUsers();
                 } else {
                     $this->showUserScores(
                         $this->getUser()->getId()
@@ -3091,7 +3082,6 @@ class SpecialGrades extends SpecialPage {
         $paramSetCounter += 1;
 
         $content .= Html::closeElement('table') . "\n";
-        $content .= Html::element('br') . "\n";
 
         # Build the group users table
         $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-managegroupstable')) . "\n";
