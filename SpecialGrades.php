@@ -574,6 +574,11 @@ class SpecialGrades extends SpecialPage {
         
         }
 
+        # If this is a submission of more than one item, turn off warnings
+        $verboseFlag = true;
+        if ( count($assignmentParams) + count($evaluationParams) + count($adjustmentParams) + count($groupParams) > 1  )
+            $verboseFlag = false;
+
         if ( $assignmentParams ) {
 
             foreach ( $assignmentParams as $key => $assignment ) {
@@ -748,7 +753,8 @@ class SpecialGrades extends SpecialPage {
                     $assignment['assignment-enabled'],
                     $assignment['assignment-date'],
                     $assignment['assignment-group'],
-                    false
+                    false,
+                    $verboseFlag
                 );
 
             }
@@ -767,7 +773,8 @@ class SpecialGrades extends SpecialPage {
                     $evaluation['evaluation-enabled'],
                     $evaluation['evaluation-date'],
                     $evaluation['evaluation-comment'],
-                    false
+                    false,
+                    $verboseFlag
                 );
 
             }
@@ -788,7 +795,8 @@ class SpecialGrades extends SpecialPage {
                     $adjustment['adjustment-enabled'],
                     $adjustment['adjustment-date'],
                     $adjustment['adjustment-comment'],
-                    false
+                    false,
+                    $verboseFlag
                 );
 
             }
@@ -805,7 +813,8 @@ class SpecialGrades extends SpecialPage {
                     $group['group-title'],
                     $group['group-enabled'],
                     $group['group-user'],
-                    false
+                    false,
+                    $verboseFlag
                 );
 
             }
@@ -833,9 +842,10 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $assignmentDate the date of an assignment
      * @param array|bool  $assignmentGroups the group memberships of an assignment
      * @param bool        $delete whether to delete the assignment or not
+     * @param bool        $verbose whether to print warnings
      */
 
-    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false, $assignmentGroups = false, $delete = false ) {
+    function writeAssignment ( $assignmentID = false, $assignmentTitle = false, $assignmentValue = false, $assignmentEnabled = false, $assignmentDate = false, $assignmentGroups = false, $delete = false, $verbose = true ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -850,23 +860,28 @@ class SpecialGrades extends SpecialPage {
         }
         $assignmentDate        = filter_var($assignmentDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
         if ( $assignmentTitle === false ) {
-            $page->addWikiText('Invalid title for assignment (may not be empty).');
+            if ( $verbose )
+                $page->addWikiText('Invalid title for assignment (may not be empty).');
             return;
         }
         if ( $assignmentValue === false ) {
-            $page->addWikiText('Invalid value for assignment (must be a float).');
+            if ( $verbose )
+                $page->addWikiText('Invalid value for assignment (must be a float).');
             return;
         }
         if ( !is_bool($assignmentEnabled) ) {
-            $page->addWikiText('Invalid enabled status for assignment (must be a boolean).');
+            if ( $verbose )
+                $page->addWikiText('Invalid enabled status for assignment (must be a boolean).');
             return;
         }
         if ( $assignmentDate === false ) {
-            $page->addWikiText('Invalid date for assignment (must have form YYYY-MM-DD).');
+            if ( $verbose )
+                $page->addWikiText('Invalid date for assignment (must have form YYYY-MM-DD).');
             return;
         }
         if ( !is_array($assignmentGroups) ) {
-            $page->addWikiText('Invalid group membership array for assignment (must be an array).');
+            if ( $verbose )
+                $page->addWikiText('Invalid group membership array for assignment (must be an array).');
             return;
         }
 
@@ -902,7 +917,8 @@ class SpecialGrades extends SpecialPage {
                 # Report success and create a new log entry
                 if ( $affectedRows === 0 ) {
 
-                    $page->addWikiText('Database unchanged.');
+                    if ( $verbose )
+                        $page->addWikiText('Database unchanged.');
 
                 } else {
 
@@ -965,7 +981,8 @@ class SpecialGrades extends SpecialPage {
                     # Report success and create a new log entry
                     if ( $dbw->affectedRows() === 0 ) {
 
-                        $page->addWikiText('Database unchanged.');
+                        if ( $verbose )
+                            $page->addWikiText('Database unchanged.');
 
                     } else {
 
@@ -1019,7 +1036,8 @@ class SpecialGrades extends SpecialPage {
             # Report success and create a new log entry
             if ( $affectedRows === 0 ) {
 
-                $page->addWikiText('Database unchanged.');
+                if ( $verbose )
+                    $page->addWikiText('Database unchanged.');
 
             } else {
 
@@ -1053,9 +1071,10 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $evaluationDate the date of an evaluation
      * @param string|bool $evaluationComment the comment of an evaluation
      * @param bool        $delete whether to delete the evaluation or not
+     * @param bool        $verbose whether to print warnings
      */
 
-    function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false, $delete = false ) {
+    function writeEvaluation ( $evaluationUser = false, $evaluationAssignment = false, $evaluationScore = false, $evaluationEnabled = false, $evaluationDate = false, $evaluationComment = false, $delete = false, $verbose = true ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1071,23 +1090,28 @@ class SpecialGrades extends SpecialPage {
         $evaluationDate        = filter_var($evaluationDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
         $evaluationComment     = trim($evaluationComment);
         if ( $evaluationUser === false ) {
-            $page->addWikiText('Invalid user id for evaluation (must be an integer).');
+            if ( $verbose )
+                $page->addWikiText('Invalid user id for evaluation (must be an integer).');
             return;
         }
         if ( $evaluationAssignment === false ) {
-            $page->addWikiText('Invalid assignment id for evaluation (must be an integer).');
+            if ( $verbose )
+                $page->addWikiText('Invalid assignment id for evaluation (must be an integer).');
             return;
         }
         if ( $evaluationScore === false ) {
-            $page->addWikiText('Invalid score for evaluation (must be a float).');
+            if ( $verbose )
+                $page->addWikiText('Invalid score for evaluation (must be a float).');
             return;
         }
         if ( !is_bool($evaluationEnabled) ) {
-            $page->addWikiText('Invalid enabled status for evaluation (must be a boolean).');
+            if ( $verbose )
+                $page->addWikiText('Invalid enabled status for evaluation (must be a boolean).');
             return;
         }
         if ( $evaluationDate === false ) {
-            $page->addWikiText('Invalid date for evaluation (must have form YYYY-MM-DD).');
+            if ( $verbose )
+                $page->addWikiText('Invalid date for evaluation (must have form YYYY-MM-DD).');
             return;
         }
 
@@ -1123,7 +1147,8 @@ class SpecialGrades extends SpecialPage {
                     # Report success and create a new log entry
                     if ( $dbw->affectedRows() === 0 ) {
 
-                        $page->addWikiText('Database unchanged.');
+                        if ( $verbose )
+                            $page->addWikiText('Database unchanged.');
 
                     } else {
 
@@ -1168,7 +1193,8 @@ class SpecialGrades extends SpecialPage {
                         # Report success and create a new log entry
                         if ( $dbw->affectedRows() === 0 ) {
 
-                            $page->addWikiText('Database unchanged.');
+                            if ( $verbose )
+                                $page->addWikiText('Database unchanged.');
 
                         } else {
 
@@ -1200,7 +1226,8 @@ class SpecialGrades extends SpecialPage {
                 # Report success and create a new log entry
                 if ( $dbw->affectedRows() === 0 ) {
 
-                    $page->addWikiText('Database unchanged.');
+                    if ( $verbose )
+                        $page->addWikiText('Database unchanged.');
 
                 } else {
 
@@ -1238,9 +1265,10 @@ class SpecialGrades extends SpecialPage {
      * @param string|bool $adjustmentDate the date of an adjustment
      * @param string|bool $adjustmentComment the comment of an adjustment
      * @param bool        $delete whether to delete the adjustment or not
+     * @param bool        $verbose whether to print warnings
      */
 
-    function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false, $delete = false ) {
+    function writeAdjustment ( $adjustmentID = false, $adjustmentUser = false, $adjustmentTitle = false, $adjustmentValue = false, $adjustmentScore = false, $adjustmentEnabled = false, $adjustmentDate = false, $adjustmentComment = false, $delete = false, $verbose = true ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1258,27 +1286,33 @@ class SpecialGrades extends SpecialPage {
         $adjustmentDate        = filter_var($adjustmentDate, FILTER_CALLBACK, array('options' => array($this, 'validateDate')));
         $adjustmentComment     = trim($adjustmentComment);
         if ( $adjustmentUser === false ) {
-            $page->addWikiText('Invalid user id for adjustment (must be an integer).');
+            if ( $verbose )
+                $page->addWikiText('Invalid user id for adjustment (must be an integer).');
             return;
         }
         if ( $adjustmentTitle === false ) {
-            $page->addWikiText('Invalid title for adjustment (may not be empty).');
+            if ( $verbose )
+                $page->addWikiText('Invalid title for adjustment (may not be empty).');
             return;
         }
         if ( $adjustmentValue === false ) {
-            $page->addWikiText('Invalid value for adjustment (must be a float).');
+            if ( $verbose )
+                $page->addWikiText('Invalid value for adjustment (must be a float).');
             return;
         }
         if ( $adjustmentScore === false ) {
-            $page->addWikiText('Invalid score for adjustment (must be a float).');
+            if ( $verbose )
+                $page->addWikiText('Invalid score for adjustment (must be a float).');
             return;
         }
         if ( !is_bool($adjustmentEnabled) ) {
-            $page->addWikiText('Invalid enabled status for adjustment (must be a boolean).');
+            if ( $verbose )
+                $page->addWikiText('Invalid enabled status for adjustment (must be a boolean).');
             return;
         }
         if ( $adjustmentDate === false ) {
-            $page->addWikiText('Invalid date for adjustment (must have form YYYY-MM-DD).');
+            if ( $verbose )
+                $page->addWikiText('Invalid date for adjustment (must have form YYYY-MM-DD).');
             return;
         }
 
@@ -1316,7 +1350,8 @@ class SpecialGrades extends SpecialPage {
                     # Report success and create a new log entry
                     if ( $dbw->affectedRows() === 0 ) {
 
-                        $page->addWikiText('Database unchanged.');
+                        if ( $verbose )
+                            $page->addWikiText('Database unchanged.');
 
                     } else {
 
@@ -1363,7 +1398,8 @@ class SpecialGrades extends SpecialPage {
                         # Report success and create a new log entry
                         if ( $dbw->affectedRows() === 0 ) {
 
-                            $page->addWikiText('Database unchanged.');
+                            if ( $verbose )
+                                $page->addWikiText('Database unchanged.');
 
                         } else {
 
@@ -1396,7 +1432,8 @@ class SpecialGrades extends SpecialPage {
                 # Report success and create a new log entry
                 if ( $dbw->affectedRows() === 0 ) {
 
-                    $page->addWikiText('Database unchanged.');
+                    if ( $verbose )
+                        $page->addWikiText('Database unchanged.');
 
                 } else {
 
@@ -1430,9 +1467,10 @@ class SpecialGrades extends SpecialPage {
      * @param int|bool    $groupEnabled the enabled status of a group
      * @param array|bool  $groupUsers the user memberships of a group
      * @param bool        $delete whether to delete the group or not
+     * @param bool        $verbose whether to print warnings
      */
 
-    function writeGroup ( $groupID = false, $groupTitle = false, $groupEnabled = false, $groupUsers = false, $delete = false ) {
+    function writeGroup ( $groupID = false, $groupTitle = false, $groupEnabled = false, $groupUsers = false, $delete = false, $verbose = true ) {
 
         $page = $this->getOutput();
         $request = $this->getRequest();
@@ -1445,15 +1483,18 @@ class SpecialGrades extends SpecialPage {
             $groupEnabled = filter_var($groupEnabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
         if ( $groupTitle === false ) {
-            $page->addWikiText('Invalid title for group (may not be empty).');
+            if ( $verbose )
+                $page->addWikiText('Invalid title for group (may not be empty).');
             return;
         }
         if ( !is_bool($groupEnabled) ) {
-            $page->addWikiText('Invalid enabled status for group (must be a boolean).');
+            if ( $verbose )
+                $page->addWikiText('Invalid enabled status for group (must be a boolean).');
             return;
         }
         if ( !is_array($groupUsers) ) {
-            $page->addWikiText('Invalid user membership array for group (must be an array).');
+            if ( $verbose )
+                $page->addWikiText('Invalid user membership array for group (must be an array).');
             return;
         }
 
@@ -1487,7 +1528,8 @@ class SpecialGrades extends SpecialPage {
                 # Report success and create a new log entry
                 if ( $affectedRows === 0 ) {
 
-                    $page->addWikiText('Database unchanged.');
+                    if ( $verbose )
+                        $page->addWikiText('Database unchanged.');
 
                 } else {
 
@@ -1535,7 +1577,8 @@ class SpecialGrades extends SpecialPage {
                     # Report success and create a new log entry
                     if ( $dbw->affectedRows() === 0 ) {
 
-                        $page->addWikiText('Database unchanged.');
+                        if ( $verbose )
+                            $page->addWikiText('Database unchanged.');
 
                     } else {
 
@@ -1565,7 +1608,8 @@ class SpecialGrades extends SpecialPage {
             # Report success and create a new log entry
             if ( $dbw->affectedRows() === 0 ) {
 
-                $page->addWikiText('Database unchanged.');
+                if ( $verbose )
+                    $page->addWikiText('Database unchanged.');
 
             } else {
 
