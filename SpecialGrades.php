@@ -3222,8 +3222,10 @@ class SpecialGrades extends SpecialPage {
 
                 $content .= Html::openElement('tr', array('class' => 'sg-gradegrid-row'));
                 $content .= Html::element('td', array('class' => 'sg-gradegrid-date', 'data-sort-value' => $assignment->sga_date ? $assignment->sga_date : '9999'), $assignment->sga_date ? date_format(date_create($assignment->sga_date), 'D m/d') : '');
-                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment'),
-                    Linker::linkKnown($this->getTitle(), $assignment->sga_title, array(),
+                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-assignment', 'title' =>
+                    'Value: ' . (float)$assignment->sga_value),
+                    Linker::linkKnown($this->getTitle(), $assignment->sga_title, array('title' => 
+                        'Value: ' . (float)$assignment->sga_value),
                         array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)));
 
                 # Create a cell for each user
@@ -3241,8 +3243,14 @@ class SpecialGrades extends SpecialPage {
 
                                 # The assignment is extra credit
                                 $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
-                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array('title' => (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
+                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
+                                    'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                                 'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                                 'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
+                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array('title' =>
+                                        'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                                     'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                                     'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             } else {
@@ -3262,8 +3270,14 @@ class SpecialGrades extends SpecialPage {
                                 } else {
                                     $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-F';
                                 }
-                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array('title' => (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
+                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
+                                    'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                                 'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                                 'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
+                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array('title' =>
+                                        'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                                     'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                                     'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             }
@@ -3276,8 +3290,14 @@ class SpecialGrades extends SpecialPage {
 
                             # The evaluation is disabled
                             $evaluationCellClass = 'sg-gradegrid-cell';
-                            $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                Linker::linkKnown($this->getTitle(), '**', array('title' => 'Evaluation disabled'),
+                            $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
+                                'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                             'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                             'Evaluation disabled'),
+                                Linker::linkKnown($this->getTitle(), '**', array('title' =>
+                                    'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                                 'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                                 'Evaluation disabled'),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                         }
@@ -3286,8 +3306,14 @@ class SpecialGrades extends SpecialPage {
 
                         # An evaluation does not exist for this (user,assignment) combination
                         $evaluationCellClass = 'sg-gradegrid-cell';
-                        $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                            Linker::linkKnown($this->getTitle(), '--', array('title' => 'Unevaluated'),
+                        $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
+                            'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                         'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                         'Unevaluated'),
+                            Linker::linkKnown($this->getTitle(), '--', array('title' =>
+                                'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                             'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
+' .                             'Unevaluated'),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     }
