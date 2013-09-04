@@ -58,7 +58,7 @@ $wgResourceModules['ext.ScholasticGrading.SpecialGrades'] = array(
     'localBasePath' => dirname(__FILE__),
     'styles' => 'modules/ext.ScholasticGrading.SpecialGrades.css',
     'scripts' => 'modules/ext.ScholasticGrading.SpecialGrades.js',
-    'dependencies' => 'jquery.ui.datepicker',
+    'dependencies' => array('jquery.ui.datepicker', 'jquery.ui.tabs'),
 );
 
 

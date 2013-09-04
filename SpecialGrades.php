@@ -3169,6 +3169,15 @@ class SpecialGrades extends SpecialPage {
         $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_enabled' => true), __METHOD__,
             array('ORDER BY' => array('sgg_title')));
 
+        # Create the grade grid tabs
+        $content = '';
+        $content .= Html::openElement('div', array('id' => 'sg-gradegrid-tabs')) . "\n";
+        $content .= Html::openElement('ul') . "\n";
+        foreach ( $groups as $group ) {
+            $content .= Html::rawElement('li', null, '<a href="#sg-gradegrid-tabs-' . $group->sgg_id . '">' . $group->sgg_title . '</a>') . "\n";
+        }
+        $content .= Html::closeElement('ul') . "\n";
+
         # Create a grade grid for each enabled group
         foreach ( $groups as $group ) {
 
@@ -3196,9 +3205,8 @@ class SpecialGrades extends SpecialPage {
                 array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
 
             # Build the grade grid
-            $content = '';
+            $content .= Html::openElement('div', array('id' => 'sg-gradegrid-tabs-' . $group->sgg_id)) . "\n";
             $content .= Html::openElement('table', array('class' => 'wikitable sortable sg-gradegrid')) . "\n";
-            $content .= Html::element('caption', null, $group->sgg_title) . "\n";
 
             # Create a column header for each student
             $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-header'));
@@ -3369,11 +3377,13 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::closeElement('tr') . "\n";
 
             $content .= Html::closeElement('table') . "\n";
-            $content .= Html::closeElement('br') . "\n";
-
-            $page->addHTML($content);
+            $content .= Html::closeElement('div') . "\n";
 
         } /* end for each group */
+
+        $content .= Html::closeElement('div');
+
+        $page->addHTML($content);
 
     } /* end showGradeGrids */
 

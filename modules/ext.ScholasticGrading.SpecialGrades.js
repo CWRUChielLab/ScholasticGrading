@@ -9,3 +9,7 @@ $(function() {
         selectOtherMonths: true,
     } );
 });
+
+$(function() {
+    $( "#sg-gradegrid-tabs" ).tabs();
+});

@@ -12,6 +12,16 @@ div.racetrack {
  * Styles for instructor interface with grade grids *
  ****************************************************/
 
+div#sg-gradegrid-tabs {
+    font-size: 1em;
+    background: none;
+    border: 0px;
+}
+
+div.ui-tabs div.ui-tabs-panel {
+    padding: 0em 0em;
+}
+
 table.sg-gradegrid {
 }
 
