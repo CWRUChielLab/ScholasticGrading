@@ -1216,6 +1216,7 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+        $log = new LogPage('grades', false);
 
         # Validate/sanitize evaluation parameters
         $evaluationUser        = filter_var($evaluationUser, FILTER_VALIDATE_INT);
@@ -1281,7 +1282,30 @@ class SpecialGrades extends SpecialPage {
                         'sge_comment' => $evaluationComment,
                     ), array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
-                    # Report success and create a new log entry
+                    # Create a new log entry
+                    if ( $dbw->affectedRows() > 0 ) {
+                        $log->addEntry('editEvaluation', $this->getTitle(),
+                            'for user ' .
+                                $this->getUserDisplayName($evaluationUser) .
+                                ' [id=' . $evaluationUser .
+                            '] for assignment "' .
+                                $assignment->sga_title .
+                                '" (' . $assignment->sga_date .
+                                ') [id=' . $evaluationAssignment .
+                            ']; from [' .
+                                $evaluation->sge_date . ', ' .
+                                'score=' . (float)$evaluation->sge_score . ', ' .
+                                ($evaluation->sge_enabled ? 'enabled' : 'disabled') . ', ' .
+                                '"' . $evaluation->sge_comment . '"' .
+                            '] to [' .
+                                $evaluationDate . ', ' .
+                                'score=' . (float)$evaluationScore . ', ' .
+                                ($evaluationEnabled ? 'enabled' : 'disabled') . ', ' .
+                                '"' . $evaluationComment . '"' .
+                            ']', array());
+                    }
+
+                    # Report success
                     if ( $dbw->affectedRows() === 0 ) {
 
                         if ( $verbose )
@@ -1291,10 +1315,6 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
-
-                        $log = new LogPage('grades', false);
-                        $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
-
                         return true;
 
                     }
@@ -1332,7 +1352,25 @@ class SpecialGrades extends SpecialPage {
                         # Delete is confirmed so delete the existing evaluation
                         $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluationUser, 'sge_assignment_id' => $evaluationAssignment));
 
-                        # Report success and create a new log entry
+                        # Create a new log entry
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteEvaluation', $this->getTitle(),
+                                'for user ' .
+                                    $this->getUserDisplayName($evaluationUser) .
+                                    ' [id=' . $evaluationUser .
+                                '] for assignment "' .
+                                    $assignment->sga_title .
+                                    '" (' . $assignment->sga_date .
+                                    ') [id=' . $evaluationAssignment .
+                                ']; was [' .
+                                    $evaluation->sge_date . ', ' .
+                                    'score=' . (float)$evaluation->sge_score . ', ' .
+                                    ($evaluation->sge_enabled ? 'enabled' : 'disabled') . ', ' .
+                                    '"' . $evaluation->sge_comment . '"' .
+                                ']', array());
+                        }
+
+                        # Report success
                         if ( $dbw->affectedRows() === 0 ) {
 
                             if ( $verbose )
@@ -1342,10 +1380,6 @@ class SpecialGrades extends SpecialPage {
                         } else {
 
                             $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
-
-                            $log = new LogPage('grades', false);
-                            $log->addEntry('deleteEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
-
                             return true;
 
                         }
@@ -1368,7 +1402,25 @@ class SpecialGrades extends SpecialPage {
                     'sge_comment'       => $evaluationComment,
                 ));
 
-                # Report success and create a new log entry
+                # Create a new log entry
+                if ( $dbw->affectedRows() > 0 ) {
+                    $log->addEntry('addEvaluation', $this->getTitle(),
+                        'for user ' .
+                            $this->getUserDisplayName($evaluationUser) .
+                            ' [id=' . $evaluationUser .
+                        '] for assignment "' .
+                            $assignment->sga_title .
+                            '" (' . $assignment->sga_date .
+                            ') [id=' . $evaluationAssignment .
+                        ']; is [' .
+                            $evaluationDate . ', ' .
+                            'score=' . (float)$evaluationScore . ', ' .
+                            ($evaluationEnabled ? 'enabled' : 'disabled') . ', ' .
+                            '"' . $evaluationComment . '"' .
+                        ']', array());
+                }
+
+                # Report success
                 if ( $dbw->affectedRows() === 0 ) {
 
                     if ( $verbose )
@@ -1378,10 +1430,6 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
-
                     return true;
 
                 }
