@@ -1149,7 +1149,7 @@ class SpecialGrades extends SpecialPage {
             if ( !$assignment || $assignment->sga_title != $assignmentTitle || $assignment->sga_value != $assignmentValue || $assignment->sga_enabled != $assignmentEnabled || $assignment->sga_date != $assignmentDate ) {
 
                 # The query result does not match the new assignment
-                $page->addWikiText('Unable to retrieve id of new assignment. Groups were not assigned.');
+                $page->addWikiText('Unable to retrieve id of new assignment. Groups were not assigned. Log entry was not written.');
                 return false;
 
             }
@@ -1191,7 +1191,7 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-            # Report success and create a new log entry
+            # Report success
             if ( $affectedRows === 0 ) {
 
                 if ( $verbose )
@@ -1495,6 +1495,7 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+        $log = new LogPage('grades', false);
 
         # Validate/sanitize adjustment parameters
         $adjustmentID          = filter_var($adjustmentID, FILTER_VALIDATE_INT);
@@ -1569,7 +1570,31 @@ class SpecialGrades extends SpecialPage {
                         'sgadj_comment' => $adjustmentComment,
                     ), array('sgadj_id' => $adjustmentID));
 
-                    # Report success and create a new log entry
+                    # Create a new log entry
+                    if ( $dbw->affectedRows() > 0 ) {
+                        $log->addEntry('editAdjustment', $this->getTitle(),
+                            'id=' . $adjustmentID .
+                            '; for user ' .
+                                $this->getUserDisplayName($adjustmentUser) .
+                                ' [id=' . $user->user_id .
+                            ']; from ["' .
+                                $adjustment->sgadj_title . '", ' .
+                                $adjustment->sgadj_date . ', ' .
+                                'value=' . (float)$adjustment->sgadj_value . ', ' .
+                                'score=' . (float)$adjustment->sgadj_score . ', ' .
+                                ($adjustment->sgadj_enabled ? 'enabled' : 'disabled') . ', ' .
+                                '"' . $adjustment->sgadj_comment . '"' .
+                            '] to ["' .
+                                $adjustmentTitle . '", ' .
+                                $adjustmentDate . ', ' .
+                                'value=' . (float)$adjustmentValue . ', ' .
+                                'score=' . (float)$adjustmentScore . ', ' .
+                                ($adjustmentEnabled ? 'enabled' : 'disabled') . ', ' .
+                                '"' . $adjustmentComment . '"' .
+                            ']', array());
+                    }
+
+                    # Report success
                     if ( $dbw->affectedRows() === 0 ) {
 
                         if ( $verbose )
@@ -1579,10 +1604,6 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') updated!\'\'\'');
-
-                        $log = new LogPage('grades', false);
-                        $log->addEntry('editAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
-
                         return true;
 
                     }
@@ -1622,7 +1643,24 @@ class SpecialGrades extends SpecialPage {
                         # Delete is confirmed so delete the existing adjustment
                         $dbw->delete('scholasticgrading_adjustment', array('sgadj_id' => $adjustmentID));
 
-                        # Report success and create a new log entry
+                        # Create a new log entry
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteAdjustment', $this->getTitle(),
+                                'id=' . $adjustmentID .
+                                '; for user ' .
+                                    $this->getUserDisplayName($adjustmentUser) .
+                                    ' [id=' . $user->user_id .
+                                ']; was ["' .
+                                    $adjustment->sgadj_title . '", ' .
+                                    $adjustment->sgadj_date . ', ' .
+                                    'value=' . (float)$adjustment->sgadj_value . ', ' .
+                                    'score=' . (float)$adjustment->sgadj_score . ', ' .
+                                    ($adjustment->sgadj_enabled ? 'enabled' : 'disabled') . ', ' .
+                                    '"' . $adjustment->sgadj_comment . '"' .
+                                ']', array());
+                        }
+
+                        # Report success
                         if ( $dbw->affectedRows() === 0 ) {
 
                             if ( $verbose )
@@ -1631,11 +1669,7 @@ class SpecialGrades extends SpecialPage {
 
                         } else {
 
-                            $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') deleted!\'\'\'');
-
-                            $log = new LogPage('grades', false);
-                            $log->addEntry('deleteAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
-
+                            $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ') deleted!\'\'\'');
                             return true;
 
                         }
@@ -1649,6 +1683,7 @@ class SpecialGrades extends SpecialPage {
                 # The adjustment does not exist
 
                 # Create a new adjustment
+                $totalAffectedRows = 0;
                 $dbw->insert('scholasticgrading_adjustment', array(
                     'sgadj_user_id' => $adjustmentUser,
                     'sgadj_title'   => $adjustmentTitle,
@@ -1658,8 +1693,37 @@ class SpecialGrades extends SpecialPage {
                     'sgadj_date'    => $adjustmentDate,
                     'sgadj_comment' => $adjustmentComment,
                 ));
+                $totalAffectedRows += $dbw->affectedRows();
 
-                # Report success and create a new log entry
+                # Attempt to get the id for the newly created adjustment
+                $maxAdjustmentID = $dbw->selectRow('scholasticgrading_adjustment', array('maxid' => 'MAX(sgadj_id)'))->maxid;
+                $adjustment = $dbw->selectRow('scholasticgrading_adjustment', '*', array('sgadj_id' => $maxAdjustmentID));
+                if ( !$adjustment || $adjustment->sgadj_user_id != $adjustmentUser || $adjustment->sgadj_title != $adjustmentTitle || $adjustment->sgadj_value != $adjustmentValue || $adjustment->sgadj_score != $adjustmentScore || $adjustment->sgadj_enabled != $adjustmentEnabled || $adjustment->sgadj_date != $adjustmentDate || $adjustment->sgadj_comment != $adjustmentComment ) {
+
+                    # The query result does not match the new adjustment
+                    $page->addWikiText('Unable to retrieve id of new adjustment. Log entry was not written.');
+                    return false;
+
+                }
+
+                # Create a new log entry
+                if ( $dbw->affectedRows() > 0 ) {
+                    $log->addEntry('addAdjustment', $this->getTitle(),
+                        'id=' . $adjustment->sgadj_id .
+                        '; for user ' .
+                            $this->getUserDisplayName($adjustmentUser) .
+                            ' [id=' . $user->user_id .
+                        ']; is ["' .
+                            $adjustmentTitle . '", ' .
+                            $adjustmentDate . ', ' .
+                            'value=' . (float)$adjustmentValue . ', ' .
+                            'score=' . (float)$adjustmentScore . ', ' .
+                            ($adjustmentEnabled ? 'enabled' : 'disabled') . ', ' .
+                            '"' . $adjustmentComment . '"' .
+                        ']', array());
+                }
+
+                # Report success
                 if ( $dbw->affectedRows() === 0 ) {
 
                     if ( $verbose )
@@ -1669,10 +1733,6 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') added!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('addAdjustment', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($adjustmentTitle, $adjustmentDate));
-
                     return true;
 
                 }
