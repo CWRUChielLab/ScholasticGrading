@@ -25,6 +25,10 @@ div.ui-tabs div.ui-tabs-panel {
 table.sg-gradegrid {
 }
 
+table.sg-gradegrid a {
+    color: black;
+}
+
 table.sg-gradegrid tr#sg-gradegrid-header {
 }
 
@@ -59,46 +63,32 @@ table.sg-gradegrid td.sg-gradegrid-assignment {
     max-width: 300px;
 }
 
-table.sg-gradegrid td.sg-gradegrid-cell,
-table.sg-gradegrid td.sg-gradegrid-cell a {
+table.sg-gradegrid td.sg-gradegrid-cell {
     text-align: center;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-extracredit,
-table.sg-gradegrid td.sg-gradegrid-extracredit a {
+table.sg-gradegrid td.sg-gradegrid-extracredit {
     background-color: #66ccff;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-A,
-table.sg-gradegrid td.sg-gradegrid-A a {
+table.sg-gradegrid td.sg-gradegrid-A {
     background-color: #66cc66;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-B,
-table.sg-gradegrid td.sg-gradegrid-B a {
+table.sg-gradegrid td.sg-gradegrid-B {
     background-color: #ccff66;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-C,
-table.sg-gradegrid td.sg-gradegrid-C a {
+table.sg-gradegrid td.sg-gradegrid-C {
     background-color: #ffff66;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-D,
-table.sg-gradegrid td.sg-gradegrid-D a {
+table.sg-gradegrid td.sg-gradegrid-D {
     background-color: #ffcc66;
-    color: black;
 }
 
-table.sg-gradegrid td.sg-gradegrid-F,
-table.sg-gradegrid td.sg-gradegrid-F a {
+table.sg-gradegrid td.sg-gradegrid-F {
     background-color: #ff6666;
-    color: black;
 }
 
 
