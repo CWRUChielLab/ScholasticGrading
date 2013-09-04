@@ -3435,6 +3435,7 @@ class SpecialGrades extends SpecialPage {
         if ( !count($assignmentIDs) )
             $assignmentIDs = null;
         $assignments = $dbr->select('scholasticgrading_assignment', '*', array('sga_id' => $assignmentIDs, 'sga_enabled' => true));
+
         # Query for all enabled adjustments belonging to the user
         $adjustments = $dbr->select('scholasticgrading_adjustment', '*', array('sgadj_user_id' => $user_id, 'sgadj_enabled' => true));
 
