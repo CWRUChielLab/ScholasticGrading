@@ -3242,7 +3242,7 @@ class SpecialGrades extends SpecialPage {
                                 # The assignment is extra credit
                                 $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
                                 $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
+                                    Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array('title' => (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             } else {
@@ -3263,7 +3263,7 @@ class SpecialGrades extends SpecialPage {
                                     $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-F';
                                 }
                                 $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array(),
+                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array('title' => (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             }
@@ -3277,7 +3277,7 @@ class SpecialGrades extends SpecialPage {
                             # The evaluation is disabled
                             $evaluationCellClass = 'sg-gradegrid-cell';
                             $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                                Linker::linkKnown($this->getTitle(), '**', array(),
+                                Linker::linkKnown($this->getTitle(), '**', array('title' => 'Evaluation disabled'),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                         }
@@ -3287,7 +3287,7 @@ class SpecialGrades extends SpecialPage {
                         # An evaluation does not exist for this (user,assignment) combination
                         $evaluationCellClass = 'sg-gradegrid-cell';
                         $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
-                            Linker::linkKnown($this->getTitle(), '--', array(),
+                            Linker::linkKnown($this->getTitle(), '--', array('title' => 'Unevaluated'),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                     }

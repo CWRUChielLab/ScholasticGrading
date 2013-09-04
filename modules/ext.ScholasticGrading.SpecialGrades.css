@@ -49,8 +49,10 @@ table.sg-gradegrid td.sg-gradegrid-assignment {
     max-width: 300px;
 }
 
-table.sg-gradegrid td.sg-gradegrid-cell {
+table.sg-gradegrid td.sg-gradegrid-cell,
+table.sg-gradegrid td.sg-gradegrid-cell a {
     text-align: center;
+    color: black;
 }
 
 table.sg-gradegrid td.sg-gradegrid-extracredit,
