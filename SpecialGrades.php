@@ -881,6 +881,7 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+        $log = new LogPage('grades', false);
 
         # Validate/sanitize assignment parameters
         $assignmentID          = filter_var($assignmentID, FILTER_VALIDATE_INT);
@@ -925,28 +926,69 @@ class SpecialGrades extends SpecialPage {
             if ( !$delete ) {
 
                 # Edit the existing assignment
+                $totalAffectedRows = 0;
                 $dbw->update('scholasticgrading_assignment', array(
                     'sga_title'   => $assignmentTitle,
                     'sga_value'   => $assignmentValue,
                     'sga_enabled' => $assignmentEnabled,
                     'sga_date'    => $assignmentDate,
                 ), array('sga_id' => $assignmentID));
-                $affectedRows = $dbw->affectedRows();
+                $totalAffectedRows += $dbw->affectedRows();
 
-                # Edit the assignment's group memberships
+                # Create a new log entry
+                if ( $dbw->affectedRows() > 0 ) {
+                    $log->addEntry('editAssignment', $this->getTitle(),
+                        'id=' . $assignmentID .
+                        '; from ["' .
+                            $assignment->sga_title . '", ' .
+                            $assignment->sga_date . ', ' .
+                            'value=' . (float)$assignment->sga_value . ', ' .
+                            ($assignment->sga_enabled ? 'enabled' : 'disabled') .
+                        '] to ["' .
+                            $assignmentTitle . '", ' .
+                            $assignmentDate . ', ' .
+                            'value=' . (float)$assignmentValue . ', ' .
+                            ($assignmentEnabled ? 'enabled' : 'disabled') .
+                        ']', array());
+                }
+
+                # Edit the assignment's group memberships and create log entries
                 foreach ( $assignmentGroups as $groupID => $isMember ) {
                     $membership = $dbw->selectRow('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
+                    $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupID));
                     if ( $membership && !$isMember ) {
                         $dbw->delete('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
-                        $affectedRows += $dbw->affectedRows();
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteGroupAssignment', $this->getTitle(),
+                                'assignment "' .
+                                    $assignmentTitle . '" (' .
+                                    $assignmentDate . ') [id=' .
+                                    $assignmentID .
+                                ']; group "' .
+                                    $group->sgg_title . '" [id=' .
+                                    $groupID .
+                                ']', array());
+                        }
                     } elseif ( !$membership && $isMember ) {
                         $dbw->insert('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignmentID));
-                        $affectedRows += $dbw->affectedRows();
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('addGroupAssignment', $this->getTitle(),
+                                'assignment "' .
+                                    $assignmentTitle . '" (' .
+                                    $assignmentDate . ') [id=' .
+                                    $assignmentID .
+                                ']; group "' .
+                                    $group->sgg_title . '" [id=' .
+                                    $groupID .
+                                ']', array());
+                        }
                     }
                 }
 
-                # Report success and create a new log entry
-                if ( $affectedRows === 0 ) {
+                # Report success
+                if ( $totalAffectedRows === 0 ) {
 
                     if ( $verbose )
                         $page->addWikiText('Database unchanged.');
@@ -954,11 +996,7 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('editAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
-
+                    $page->addWikiText('\'\'\'Assignment "' . $assignmentTitle . '" (' . $assignmentDate . ') updated!\'\'\'');
                     return true;
 
                 }
@@ -970,7 +1008,7 @@ class SpecialGrades extends SpecialPage {
                 if ( !$request->getVal('confirm-delete') ) {
 
                     # Ask for confirmation of delete
-                    $page->addWikiText('Are you sure you want to delete "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
+                    $page->addWikiText('Are you sure you want to delete assignment "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
 
                     # List all evaluations that will be deleted with the assignment
                     $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_assignment_id' => $assignmentID));
@@ -1011,10 +1049,46 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    # Delete is confirmed so delete the existing assignment
+                    # Delete is confirmed
+
+                    # Delete the evaluations for this assignment and create log entries
+                    $evaluations = $dbw->select('scholasticgrading_evaluation', '*', array('sge_assignment_id' => $assignmentID));
+                    foreach ( $evaluations as $evaluation ) {
+                        $dbw->delete('scholasticgrading_evaluation', array('sge_user_id' => $evaluation->sge_user_id, 'sge_assignment_id' => $assignmentID));
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteEvaluation', $this->getTitle(),
+                                'for user ' .
+                                    $this->getUserDisplayName($evaluation->sge_user_id) .
+                                    ' [id=' . $evaluation->sge_user_id .
+                                '] for assignment "' .
+                                    $assignment->sga_title .
+                                    '" (' . $assignment->sga_date .
+                                    ') [id=' . $assignmentID .
+                                ']; was [' .
+                                    $evaluation->sge_date . ', ' .
+                                    'score=' . (float)$evaluation->sge_score . ', ' .
+                                    ($evaluation->sge_enabled ? 'enabled' : 'disabled') . ', ' .
+                                    '"' . $evaluation->sge_comment . '"' .
+                                ']', array());
+                        }
+                    }
+
+                    # Delete the existing assignment
                     $dbw->delete('scholasticgrading_assignment', array('sga_id' => $assignmentID));
 
-                    # Report success and create a new log entry
+                    # Create a new log entry
+                    if ( $dbw->affectedRows() > 0 ) {
+                        $log->addEntry('deleteAssignment', $this->getTitle(),
+                            'id=' . $assignmentID .
+                            '; was ["' .
+                                $assignment->sga_title . '", ' .
+                                $assignment->sga_date . ', ' .
+                                'value=' . (float)$assignment->sga_value . ', ' .
+                                ($assignment->sga_enabled ? 'enabled' : 'disabled') .
+                            ']', array());
+                    }
+
+                    # Report success
                     if ( $dbw->affectedRows() === 0 ) {
 
                         if ( $verbose )
@@ -1023,11 +1097,7 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $page->addWikiText('\'\'\'"' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
-
-                        $log = new LogPage('grades', false);
-                        $log->addEntry('deleteAssignment', $this->getTitle(), null, array($assignment->sga_title, $assignment->sga_date));
-
+                        $page->addWikiText('\'\'\'Assignment "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
                         return true;
 
                     }
@@ -1041,13 +1111,14 @@ class SpecialGrades extends SpecialPage {
             # The assignment does not exist
 
             # Create a new assignment
+            $totalAffectedRows = 0;
             $dbw->insert('scholasticgrading_assignment', array(
                 'sga_title'   => $assignmentTitle,
                 'sga_value'   => $assignmentValue,
                 'sga_enabled' => $assignmentEnabled,
                 'sga_date'    => $assignmentDate,
             ));
-            $affectedRows = $dbw->affectedRows();
+            $totalAffectedRows += $dbw->affectedRows();
 
             # Attempt to get the id for the newly created assignment
             $maxAssignmentID = $dbw->selectRow('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'))->maxid;
@@ -1060,13 +1131,38 @@ class SpecialGrades extends SpecialPage {
 
             }
 
-            # Create the assignment's group memberships
+            # Create a new log entry
+            if ( $totalAffectedRows > 0 ) {
+                $log->addEntry('addAssignment', $this->getTitle(),
+                    'id=' . $assignment->sga_id .
+                    '; is ["' .
+                        $assignmentTitle . '", ' .
+                        $assignmentDate . ', ' .
+                        'value=' . (float)$assignmentValue . ', ' .
+                        ($assignmentEnabled ? 'enabled' : 'disabled') .
+                    ']', array());
+            }
+
+            # Create the assignment's group memberships and create log entries
             foreach ( $assignmentGroups as $groupID => $isMember ) {
 
                 if ( $isMember ) {
 
+                    $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $groupID));
                     $dbw->insert('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $assignment->sga_id));
-                    $affectedRows += $dbw->affectedRows();
+                    $totalAffectedRows += $dbw->affectedRows();
+
+                    if ( $dbw->affectedRows() > 0 ) {
+                        $log->addEntry('addGroupAssignment', $this->getTitle(),
+                            'assignment "' .
+                                $assignmentTitle . '" (' .
+                                $assignmentDate . ') [id=' .
+                                $assignment->sga_id .
+                            ']; group "' .
+                                $group->sgg_title . '" [id=' .
+                                $groupID .
+                            ']', array());
+                    }
 
                 }
 
@@ -1081,11 +1177,7 @@ class SpecialGrades extends SpecialPage {
 
             } else {
 
-                $page->addWikiText('\'\'\'"' . $assignmentTitle . '" (' . $assignmentDate . ') added!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('addAssignment', $this->getTitle(), null, array($assignmentTitle, $assignmentDate));
-
+                $page->addWikiText('\'\'\'Assignment "' . $assignmentTitle . '" (' . $assignmentDate . ') added!\'\'\'');
                 return true;
 
             }
@@ -1198,7 +1290,7 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
+                        $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
 
                         $log = new LogPage('grades', false);
                         $log->addEntry('editEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
@@ -1249,7 +1341,7 @@ class SpecialGrades extends SpecialPage {
 
                         } else {
 
-                            $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+                            $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
 
                             $log = new LogPage('grades', false);
                             $log->addEntry('deleteEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
@@ -1285,7 +1377,7 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    $page->addWikiText('\'\'\'Score for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
+                    $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
 
                     $log = new LogPage('grades', false);
                     $log->addEntry('addEvaluation', $this->getTitle(), 'for [[User:' . $user->user_name . '|' . $user->user_name .']]', array($assignment->sga_title, $assignment->sga_date));
@@ -1607,7 +1699,7 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    $page->addWikiText('\'\'\'"' . $groupTitle . '" updated!\'\'\'');
+                    $page->addWikiText('\'\'\'Group "' . $groupTitle . '" updated!\'\'\'');
 
                     $log = new LogPage('grades', false);
                     $log->addEntry('editGroup', $this->getTitle(), null, array($groupTitle));
@@ -1623,7 +1715,7 @@ class SpecialGrades extends SpecialPage {
                 if ( !$request->getVal('confirm-delete') ) {
 
                     # Ask for confirmation of delete
-                    $page->addWikiText('Are you sure you want to delete "' . $group->sgg_title . '"?');
+                    $page->addWikiText('Are you sure you want to delete group "' . $group->sgg_title . '"?');
 
                     # Provide a delete button
                     $content = '';
@@ -1661,7 +1753,7 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $page->addWikiText('\'\'\'"' . $group->sgg_title . '" deleted!\'\'\'');
+                        $page->addWikiText('\'\'\'Group "' . $group->sgg_title . '" deleted!\'\'\'');
 
                         $log = new LogPage('grades', false);
                         $log->addEntry('deleteGroup', $this->getTitle(), null, array($group->sgg_title));
@@ -1695,7 +1787,7 @@ class SpecialGrades extends SpecialPage {
 
             } else {
 
-                $page->addWikiText('\'\'\'"' . $groupTitle . '" added!\'\'\'');
+                $page->addWikiText('\'\'\'Group "' . $groupTitle . '" added!\'\'\'');
 
                 $log = new LogPage('grades', false);
                 $log->addEntry('addGroup', $this->getTitle(), null, array($groupTitle));
