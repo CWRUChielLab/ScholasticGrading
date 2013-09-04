@@ -3348,7 +3348,8 @@ class SpecialGrades extends SpecialPage {
 
                 }
 
-                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'),
+                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell', 'title' =>
+                    'User: ' . $this->getUserDisplayName($user->user_id)),
                     $adjustmentScoreSum . ' / ' . $adjustmentValueSum);
 
             }
@@ -3359,7 +3360,9 @@ class SpecialGrades extends SpecialPage {
             $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
             $content .= Html::element('th', null, '') . Html::element('th', null, '');
             foreach ( $users as $user ) {
-                $content .= Html::element('th', null,
+                $content .= Html::element('th', array('title' =>
+                    'User: ' . $this->getUserDisplayName($user->user_id) . '
+' .                 round(100*$pointsEarned[$user->user_name]/$pointsIdeal[$user->user_name], 2) . '%'),
                     $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
                 );
             }
