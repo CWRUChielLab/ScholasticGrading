@@ -180,7 +180,7 @@ class SpecialGrades extends SpecialPage {
                         Linker::linkKnown($this->getTitle(), 'Manage groups', array(),
                             array('action' => 'groups'))) . "\n");
 
-                    $this->showGradeGrid();
+                    $this->showGradeGrids();
                     //$this->showAssignments();
                     //$this->showEvaluations();
                     //$this->showAdjustments();
@@ -3154,13 +3154,13 @@ class SpecialGrades extends SpecialPage {
 
 
     /**
-     * Display a table of assignments, students, and evaluations
+     * Display tables of scores for each assignment-user combination for each group
      *
-     * Generates a table of evaluations, where columns represent
-     * students and rows represent assignments.
+     * Generates a table for each enabled group of evaluations,
+     * where columns represent users and rows represent assignments.
      */
 
-    function showGradeGrid () {
+    function showGradeGrids () {
 
         $page = $this->getOutput();
         $dbr = wfGetDB(DB_SLAVE);
@@ -3329,7 +3329,7 @@ class SpecialGrades extends SpecialPage {
 
         } /* end for each group */
 
-    } /* end showGradeGrid */
+    } /* end showGradeGrids */
 
 
     /**
