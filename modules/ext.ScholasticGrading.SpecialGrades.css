@@ -8,9 +8,9 @@ div.racetrack {
 }
 
 
-/***************************************************
- * Styles for instructor interface with grade grid *
- ***************************************************/
+/****************************************************
+ * Styles for instructor interface with grade grids *
+ ****************************************************/
 
 table.sg-gradegrid {
 }
@@ -51,6 +51,42 @@ table.sg-gradegrid td.sg-gradegrid-assignment {
 
 table.sg-gradegrid td.sg-gradegrid-cell {
     text-align: center;
+}
+
+table.sg-gradegrid td.sg-gradegrid-extracredit,
+table.sg-gradegrid td.sg-gradegrid-extracredit a {
+    background-color: #66ccff;
+    color: black;
+}
+
+table.sg-gradegrid td.sg-gradegrid-A,
+table.sg-gradegrid td.sg-gradegrid-A a {
+    background-color: #66cc66;
+    color: black;
+}
+
+table.sg-gradegrid td.sg-gradegrid-B,
+table.sg-gradegrid td.sg-gradegrid-B a {
+    background-color: #ccff66;
+    color: black;
+}
+
+table.sg-gradegrid td.sg-gradegrid-C,
+table.sg-gradegrid td.sg-gradegrid-C a {
+    background-color: #ffff66;
+    color: black;
+}
+
+table.sg-gradegrid td.sg-gradegrid-D,
+table.sg-gradegrid td.sg-gradegrid-D a {
+    background-color: #ffcc66;
+    color: black;
+}
+
+table.sg-gradegrid td.sg-gradegrid-F,
+table.sg-gradegrid td.sg-gradegrid-F a {
+    background-color: #ff6666;
+    color: black;
 }
 
 

@@ -3240,15 +3240,30 @@ class SpecialGrades extends SpecialPage {
                             if ( $assignment->sga_value == 0 ) {
 
                                 # The assignment is extra credit
-                                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
+                                $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
+                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
                                     Linker::linkKnown($this->getTitle(), '+' . (float)$evaluation->sge_score, array(),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             } else {
 
                                 # The assignment is not extra credit
-                                $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
-                                    Linker::linkKnown($this->getTitle(), $evaluation->sge_score / $assignment->sga_value * 100 . '%', array(),
+                                $evaluationPercentage = $evaluation->sge_score / $assignment->sga_value * 100;
+                                if ( $evaluationPercentage > 100.0 ) {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
+                                } elseif ( $evaluationPercentage >= 90.0 ) {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-A';
+                                } elseif ( $evaluationPercentage >= 80.0 ) {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-B';
+                                } elseif ( $evaluationPercentage >= 70.0 ) {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-C';
+                                } elseif ( $evaluationPercentage >= 60.0 ) {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-D';
+                                } else {
+                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-F';
+                                }
+                                $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
+                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array(),
                                         array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
                             }
@@ -3260,7 +3275,8 @@ class SpecialGrades extends SpecialPage {
                         } else {
 
                             # The evaluation is disabled
-                            $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
+                            $evaluationCellClass = 'sg-gradegrid-cell';
+                            $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
                                 Linker::linkKnown($this->getTitle(), '**', array(),
                                     array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
@@ -3269,7 +3285,8 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         # An evaluation does not exist for this (user,assignment) combination
-                        $content .= Html::rawElement('td', array('class' => 'sg-gradegrid-cell'), 
+                        $evaluationCellClass = 'sg-gradegrid-cell';
+                        $content .= Html::rawElement('td', array('class' => $evaluationCellClass), 
                             Linker::linkKnown($this->getTitle(), '--', array(),
                                 array('action' => 'editevaluation', 'user' => $user->user_id, 'assignment' => $assignment->sga_id)));
 
