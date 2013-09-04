@@ -37,17 +37,19 @@ $messages['en'] = array(
     'logentry-grades-addAssignment' => "$1 {{GENDER:$2|added}} an assignment",
     'logentry-grades-addEvaluation' => "$1 {{GENDER:$2|added}} an evaluation",
     'logentry-grades-addAdjustment' => "$1 {{GENDER:$2|added}} a point adjustment",
-    'logentry-grades-addGroup' => "$1 {{GENDER:$2|added}} group \"$4\"",
+    'logentry-grades-addGroup' => "$1 {{GENDER:$2|added}} a group",
     'logentry-grades-addGroupAssignment' => "$1 {{GENDER:$2|added}} an assignment to a group",
+    'logentry-grades-addGroupUser' => "$1 {{GENDER:$2|added}} a user to a group",
     'logentry-grades-editAssignment' => "$1 {{GENDER:$2|modified}} an assignment",
     'logentry-grades-editEvaluation' => "$1 {{GENDER:$2|modified}} an evaluation",
     'logentry-grades-editAdjustment' => "$1 {{GENDER:$2|modified}} a point adjustment",
-    'logentry-grades-editGroup' => "$1 {{GENDER:$2|updated}} group \"$4\"",
+    'logentry-grades-editGroup' => "$1 {{GENDER:$2|modified}} a group",
     'logentry-grades-deleteAssignment' => "$1 {{GENDER:$2|deleted}} an assignment",
     'logentry-grades-deleteEvaluation' => "$1 {{GENDER:$2|deleted}} an evaluation",
     'logentry-grades-deleteAdjustment' => "$1 {{GENDER:$2|deleted}} a point adjustment",
-    'logentry-grades-deleteGroup' => "$1 {{GENDER:$2|deleted}} group \"$4\"",
+    'logentry-grades-deleteGroup' => "$1 {{GENDER:$2|deleted}} a group",
     'logentry-grades-deleteGroupAssignment' => "$1 {{GENDER:$2|removed}} an assignment from a group",
+    'logentry-grades-deleteGroupUser' => "$1 {{GENDER:$2|removed}} a user from a group",
     #   $1: user name with links
     #   $2: user name
     #   $3: page title
@@ -85,6 +87,7 @@ $messages['qqq'] = array(
     'logentry-grades-addAdjustment' => "Appears on [[Special:Log/grades]] when a new point adjustment is created",
     'logentry-grades-addGroup' => "Appears on [[Special:Log/grades]] when a new group is created",
     'logentry-grades-addGroupAssignment' => "Appears on [[Special:Log/grades]] when an assignment is added to a group",
+    'logentry-grades-addGroupUser' => "Appears on [[Special:Log/grades]] when a user is added to a group",
     'logentry-grades-editAssignment' => "Appears on [[Special:Log/grades]] when an assignment is updated",
     'logentry-grades-editEvaluation' => "Appears on [[Special:Log/grades]] when an evaluation is updated",
     'logentry-grades-editAdjustment' => "Appears on [[Special:Log/grades]] when a point adjustment is updated",
@@ -94,4 +97,5 @@ $messages['qqq'] = array(
     'logentry-grades-deleteAdjustment' => "Appears on [[Special:Log/grades]] when a point adjustment is deleted",
     'logentry-grades-deleteGroup' => "Appears on [[Special:Log/grades]] when a group is deleted",
     'logentry-grades-deleteGroupAssignment' => "Appears on [[Special:Log/grades]] when an assignment is removed from a group",
+    'logentry-grades-deleteGroupUser' => "Appears on [[Special:Log/grades]] when a user is removed from a group",
 );

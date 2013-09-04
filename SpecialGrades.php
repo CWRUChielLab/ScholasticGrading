@@ -1192,7 +1192,7 @@ class SpecialGrades extends SpecialPage {
             }
 
             # Report success
-            if ( $affectedRows === 0 ) {
+            if ( $totalAffectedRows === 0 ) {
 
                 if ( $verbose )
                     $page->addWikiText('Database unchanged.');
@@ -1707,7 +1707,7 @@ class SpecialGrades extends SpecialPage {
                 }
 
                 # Create a new log entry
-                if ( $dbw->affectedRows() > 0 ) {
+                if ( $totalAffectedRows > 0 ) {
                     $log->addEntry('addAdjustment', $this->getTitle(),
                         'id=' . $adjustment->sgadj_id .
                         '; for user ' .
@@ -1724,7 +1724,7 @@ class SpecialGrades extends SpecialPage {
                 }
 
                 # Report success
-                if ( $dbw->affectedRows() === 0 ) {
+                if ( $totalAffectedRows === 0 ) {
 
                     if ( $verbose )
                         $page->addWikiText('Database unchanged.');
@@ -1771,6 +1771,7 @@ class SpecialGrades extends SpecialPage {
         $page = $this->getOutput();
         $request = $this->getRequest();
         $dbw = wfGetDB(DB_MASTER);
+        $log = new LogPage('grades', false);
 
         # Validate/sanitize group parameters
         $groupID          = filter_var($groupID, FILTER_VALIDATE_INT);
@@ -1803,26 +1804,61 @@ class SpecialGrades extends SpecialPage {
             if ( !$delete ) {
 
                 # Edit the existing group
+                $totalAffectedRows = 0;
                 $dbw->update('scholasticgrading_group', array(
                     'sgg_title'   => $groupTitle,
                     'sgg_enabled' => $groupEnabled,
                 ), array('sgg_id' => $groupID));
-                $affectedRows = $dbw->affectedRows();
+                $totalAffectedRows += $dbw->affectedRows();
 
-                # Edit the group's user memberships
+                # Create a new log entry
+                if ( $dbw->affectedRows() > 0 ) {
+                    $log->addEntry('editGroup', $this->getTitle(),
+                        'id=' . $groupID .
+                        '; from ["' .
+                            $group->sgg_title . '", ' .
+                            ($group->sgg_enabled ? 'enabled' : 'disabled') .
+                        '] to ["' .
+                            $groupTitle . '", ' .
+                            ($groupEnabled ? 'enabled' : 'disabled') .
+                        ']', array());
+                }
+
+                # Edit the user memberships for the group and create log entries
                 foreach ( $groupUsers as $userID => $isMember ) {
-                    $membership = $dbw->selectRow('scholasticgrading_groupuser', '*', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
+                    $membership = $dbw->selectRow('scholasticgrading_groupuser', '*', array('sggu_group_id' => $groupID, 'sggu_user_id' => $userID));
+                    $user = $dbw->selectRow('user', '*', array('user_id' => $userID));
                     if ( $membership && !$isMember ) {
-                        $dbw->delete('scholasticgrading_groupuser', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
-                        $affectedRows += $dbw->affectedRows();
+                        $dbw->delete('scholasticgrading_groupuser', array('sggu_group_id' => $groupID, 'sggu_user_id' => $userID));
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteGroupUser', $this->getTitle(),
+                                'user "' .
+                                    $this->getUserDisplayName($userID) . ' [id=' .
+                                    $userID .
+                                ']; group "' .
+                                    $groupTitle . '" [id=' .
+                                    $groupID .
+                                ']', array());
+                        }
                     } elseif ( !$membership && $isMember ) {
-                        $dbw->insert('scholasticgrading_groupuser', array('sggu_group_id' => $group->sgg_id, 'sggu_user_id' => $userID));
-                        $affectedRows += $dbw->affectedRows();
+                        $dbw->insert('scholasticgrading_groupuser', array('sggu_group_id' => $groupID, 'sggu_user_id' => $userID));
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('addGroupUser', $this->getTitle(),
+                                'user "' .
+                                    $this->getUserDisplayName($userID) . ' [id=' .
+                                    $userID .
+                                ']; group "' .
+                                    $groupTitle . '" [id=' .
+                                    $groupID .
+                                ']', array());
+                        }
                     }
                 }
 
-                # Report success and create a new log entry
-                if ( $affectedRows === 0 ) {
+                # Report success
+                if ( $totalAffectedRows === 0 ) {
 
                     if ( $verbose )
                         $page->addWikiText('Database unchanged.');
@@ -1831,10 +1867,6 @@ class SpecialGrades extends SpecialPage {
                 } else {
 
                     $page->addWikiText('\'\'\'Group "' . $groupTitle . '" updated!\'\'\'');
-
-                    $log = new LogPage('grades', false);
-                    $log->addEntry('editGroup', $this->getTitle(), null, array($groupTitle));
-
                     return true;
 
                 }
@@ -1872,11 +1904,64 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    # Delete is confirmed so delete the existing group
+                    # Delete is confirmed
+                    $totalAffectedRows = 0;
+
+                    # Delete the assignment memberships for the group and create log entries
+                    $groupassignments = $dbw->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $groupID));
+
+                    foreach ( $groupassignments as $groupassignment ) {
+                        $assignment = $dbw->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $groupassignment->sgga_assignment_id));
+                        $dbw->delete('scholasticgrading_groupassignment', array('sgga_group_id' => $groupID, 'sgga_assignment_id' => $groupassignment->sgga_assignment_id));
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteGroupAssignment', $this->getTitle(),
+                                'assignment "' .
+                                    $assignment->sga_title . '" (' .
+                                    $assignment->sga_date . ') [id=' .
+                                    $assignment->sga_id .
+                                ']; group "' .
+                                    $group->sgg_title . '" [id=' .
+                                    $group->sgg_id .
+                                ']', array());
+                        }
+                    }
+
+                    # Delete the user memberships for the group and create log entries
+                    $groupusers = $dbw->select('scholasticgrading_groupuser', '*', array('sggu_group_id' => $groupID));
+
+                    foreach ( $groupusers as $groupuser ) {
+                        $user = $dbw->selectRow('user', '*', array('user_id' => $groupuser->sggu_user_id));
+                        $dbw->delete('scholasticgrading_groupuser', array('sggu_group_id' => $groupID, 'sggu_user_id' => $groupuser->sggu_user_id));
+                        $totalAffectedRows += $dbw->affectedRows();
+                        if ( $dbw->affectedRows() > 0 ) {
+                            $log->addEntry('deleteGroupUser', $this->getTitle(),
+                                'user "' .
+                                    $this->getUserDisplayName($user->user_id) . ' [id=' .
+                                    $user->user_id .
+                                ']; group "' .
+                                    $group->sgg_title . '" [id=' .
+                                    $group->sgg_id .
+                                ']', array());
+                        }
+                    }
+
+                    # Delete the existing group
                     $dbw->delete('scholasticgrading_group', array('sgg_id' => $groupID));
+                    $totalAffectedRows += $dbw->affectedRows();
+
+                    # Create a new log entry
+                    if ( $dbw->affectedRows() > 0 ) {
+                        $log->addEntry('deleteGroup', $this->getTitle(),
+                            'id=' . $groupID .
+                            '; was ["' .
+                                $group->sgg_title . '", ' .
+                                ($group->sgg_enabled ? 'enabled' : 'disabled') .
+                            ']', array());
+                    }
 
                     # Report success and create a new log entry
-                    if ( $dbw->affectedRows() === 0 ) {
+                    if ( $totalAffectedRows === 0 ) {
 
                         if ( $verbose )
                             $page->addWikiText('Database unchanged.');
@@ -1885,10 +1970,6 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         $page->addWikiText('\'\'\'Group "' . $group->sgg_title . '" deleted!\'\'\'');
-
-                        $log = new LogPage('grades', false);
-                        $log->addEntry('deleteGroup', $this->getTitle(), null, array($group->sgg_title));
-
                         return true;
 
                     }
@@ -1902,15 +1983,38 @@ class SpecialGrades extends SpecialPage {
             # The group does not exist
 
             # Create a new group
+            $totalAffectedRows = 0;
             $dbw->insert('scholasticgrading_group', array(
                 'sgg_title'   => $groupTitle,
                 'sgg_enabled' => $groupEnabled,
             ));
+            $totalAffectedRows += $dbw->affectedRows();
+
+            # Attempt to get the id for the newly created group
+            $maxGroupID = $dbw->selectRow('scholasticgrading_group', array('maxid' => 'MAX(sgg_id)'))->maxid;
+            $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $maxGroupID));
+            if ( !$group || $group->sgg_title != $groupTitle || $group->sgg_enabled != $groupEnabled ) {
+
+                # The query result does not match the new group
+                $page->addWikiText('Unable to retrieve id of new group. Log entry was not written.');
+                return false;
+
+            }
 
             # User membership is not processed for new groups
 
-            # Report success and create a new log entry
-            if ( $dbw->affectedRows() === 0 ) {
+            # Create a new log entry
+            if ( $totalAffectedRows > 0 ) {
+                $log->addEntry('addGroup', $this->getTitle(),
+                    'id=' . $group->sgg_id .
+                    '; is ["' .
+                        $groupTitle . '", ' .
+                        ($groupEnabled ? 'enabled' : 'disabled') .
+                    ']', array());
+            }
+
+            # Report success
+            if ( $totalAffectedRows === 0 ) {
 
                 if ( $verbose )
                     $page->addWikiText('Database unchanged.');
@@ -1919,10 +2023,6 @@ class SpecialGrades extends SpecialPage {
             } else {
 
                 $page->addWikiText('\'\'\'Group "' . $groupTitle . '" added!\'\'\'');
-
-                $log = new LogPage('grades', false);
-                $log->addEntry('addGroup', $this->getTitle(), null, array($groupTitle));
-
                 return true;
 
             }
