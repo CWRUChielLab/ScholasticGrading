@@ -129,6 +129,15 @@ table.sg-userscorestable td.sg-userscorestable-comment {
 }
 
 
+/*********************************************************************
+ * Styles for instructor interface for viewing all user score tables *
+ *********************************************************************/
+
+h3.sg-allusertables-header {
+    text-align: center;
+}
+
+
 /**********************************************************************************
  * Styles for instructor interface for editing all evaluations for one assignment *
  **********************************************************************************/

@@ -80,6 +80,15 @@ class SpecialGrades extends SpecialPage {
             $page->returnToMain(false, $this->getTitle());
             break;
 
+        case 'viewalluserscores':
+
+            if ( $this->canModify(true) ) {
+                $this->showAllUserScores();
+            }
+
+            $page->returnToMain(false, $this->getTitle());
+            break;
+
         case 'editassignment':
 
             if ( $this->canModify(true) ) {
@@ -176,7 +185,9 @@ class SpecialGrades extends SpecialPage {
                         Linker::linkKnown($this->getTitle(), 'Manage groups', array(),
                             array('action' => 'groups')) . ' | ' .
                         Linker::linkKnown($this->getTitle(), 'Manage assignments', array(),
-                            array('action' => 'assignments'))) . "\n");
+                            array('action' => 'assignments')) . ' | ' .
+                        Linker::linkKnown($this->getTitle(), 'View all user scores', array(),
+                            array('action' => 'viewalluserscores'))) . "\n");
 
                     $this->showGradeGrids();
                 } else {
@@ -3572,6 +3583,59 @@ class SpecialGrades extends SpecialPage {
         $page->addHTML($content);
 
     } /* end showUserScores */
+
+
+    /**
+     * Display all scores for all users
+     *
+     * Generates a page for viewing all enabled evaluations for
+     * all enabled assignments, all enabled assignments that do
+     * not have an enabled evaluation, and all adjustments for
+     * each user that belongs to at least one enabled group.
+     */
+
+    function showAllUserScores () {
+
+        $page = $this->getOutput();
+        $dbr = wfGetDB(DB_SLAVE);
+
+        # Query for all enabled groups
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_enabled' => true));
+        $groupIDs = array();
+        foreach( $groups as $group )
+            array_push($groupIDs, $group->sgg_id);
+        if ( !count($groupIDs) )
+            $groupIDs = null;
+
+        # Query for the users in these groups
+        $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_group_id' => $groupIDs));
+        $userIDs = array();
+        foreach ( $groupusers as $groupuser )
+            array_push($userIDs, $groupuser->sggu_user_id);
+        $userIDs = array_unique($userIDs);
+        if ( !count($userIDs) )
+            $userIDs = null;
+        $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
+            array('ORDER BY' => 'user_name'));
+
+        # Abort if there are no users
+        if ( $users->numRows() === 0 ) {
+            $page->addWikiText('There are no users belonging to enabled groups.');
+            return;
+        }
+
+        # Create user score tables for each user
+        foreach ( $users as $user ) {
+            $page->addHTML(Html::rawElement('h3', array('class' => 'sg-allusertables-header'),
+                Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                    array('action' => 'edituserscores', 'user' => $user->user_id))) . "\n");
+            $this->showUserScores( $user->user_id );
+            $page->addHTML(Html::element('br'));
+            $page->addHTML(Html::element('hr'));
+            $page->addHTML(Html::element('br'));
+        }
+
+    } /* end showAllUserScores */
 
 
     /**
