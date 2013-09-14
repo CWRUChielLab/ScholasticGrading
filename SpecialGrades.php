@@ -72,6 +72,8 @@ class SpecialGrades extends SpecialPage {
         case 'viewuserscores':
 
             if ( $this->canModify(true) ) {
+                $page->addHTML(Html::rawElement('p', null,
+                    Html::element('a', array('class' => 'sg-toggleunevaluated', 'href' => 'javascript:void(0);'), 'Hide unevaluated assignments')) . "\n");
                 $this->showUserScores(
                     $request->getVal('user', false)
                 );
@@ -83,6 +85,9 @@ class SpecialGrades extends SpecialPage {
         case 'viewalluserscores':
 
             if ( $this->canModify(true) ) {
+                $page->addHTML(Html::rawElement('p', null,
+                    Html::element('a', array('class' => 'sg-toggleuserscores', 'href' => 'javascript:void(0);'), 'Hide tables') . ' | ' .
+                    Html::element('a', array('class' => 'sg-toggleunevaluated', 'href' => 'javascript:void(0);'), 'Hide unevaluated assignments')) . "\n");
                 $this->showAllUserScores();
             }
 
@@ -188,9 +193,10 @@ class SpecialGrades extends SpecialPage {
                             array('action' => 'assignments')) . ' | ' .
                         Linker::linkKnown($this->getTitle(), 'View all user scores', array(),
                             array('action' => 'viewalluserscores'))) . "\n");
-
                     $this->showGradeGrids();
                 } else {
+                    $page->addHTML(Html::rawElement('p', null,
+                        Html::element('a', array('class' => 'sg-toggleunevaluated', 'href' => 'javascript:void(0);'), 'Hide unevaluated assignments')) . "\n");
                     $this->showUserScores(
                         $this->getUser()->getId()
                     );
