@@ -1345,7 +1345,11 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') updated!\'\'\'');
+                        $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Evaluation for ' .
+                            Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                            Linker::linkKnown($this->getTitle(), '"' . $assignment->sga_title . '" (' . $assignment->sga_date . ')', array(),
+                                array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)) . ' updated!')) . "\n");
                         return true;
 
                     }
@@ -1357,7 +1361,11 @@ class SpecialGrades extends SpecialPage {
                     if ( !$request->getVal('confirm-delete') ) {
 
                         # Ask for confirmation of delete
-                        $page->addWikiText('Are you sure you want to delete the evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ')?');
+                        $page->addHtml(Html::rawElement('p', null, 'Are you sure you want to delete the evaluation for ' .
+                            Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                            Linker::linkKnown($this->getTitle(), '"' . $assignment->sga_title . '" (' . $assignment->sga_date . ')', array(),
+                                array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)) . '?') . "\n");
 
                         # Provide a delete button
                         $page->addHtml(Html::rawElement('form',
@@ -1410,7 +1418,11 @@ class SpecialGrades extends SpecialPage {
 
                         } else {
 
-                            $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') deleted!\'\'\'');
+                            $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Evaluation for ' .
+                                Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                    array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                                Linker::linkKnown($this->getTitle(), '"' . $assignment->sga_title . '" (' . $assignment->sga_date . ')', array(),
+                                    array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)) . ' deleted!')) . "\n");
                             return true;
 
                         }
@@ -1460,7 +1472,11 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    $page->addWikiText('\'\'\'Evaluation for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $assignment->sga_title . '" (' . $assignment->sga_date . ') added!\'\'\'');
+                    $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Evaluation for ' .
+                        Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                            array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                        Linker::linkKnown($this->getTitle(), '"' . $assignment->sga_title . '" (' . $assignment->sga_date . ')', array(),
+                            array('action' => 'editassignmentscores', 'id' => $assignment->sga_id)) . ' added!')) . "\n");
                     return true;
 
                 }
@@ -1611,7 +1627,11 @@ class SpecialGrades extends SpecialPage {
 
                     } else {
 
-                        $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') updated!\'\'\'');
+                        $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Point adjustment for ' .
+                            Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                            Linker::linkKnown($this->getTitle(), '"' . $adjustmentTitle . '" (' . $adjustmentDate . ')', array(),
+                                array('action' => 'editadjustment', 'id' => $adjustmentID)) . ' updated!')) . "\n");
                         return true;
 
                     }
@@ -1623,7 +1643,11 @@ class SpecialGrades extends SpecialPage {
                     if ( !$request->getVal('confirm-delete') ) {
 
                         # Ask for confirmation of delete
-                        $page->addWikiText('Are you sure you want to delete the point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ')?');
+                        $page->addHtml(Html::rawElement('p', null, 'Are you sure you want to delete the point adjustment for ' .
+                            Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                            Linker::linkKnown($this->getTitle(), '"' . $adjustmentTitle . '" (' . $adjustmentDate . ')', array(),
+                                array('action' => 'editadjustment', 'id' => $adjustmentID)) . '?') . "\n");
 
                         # Provide a delete button
                         $page->addHtml(Html::rawElement('form',
@@ -1677,7 +1701,9 @@ class SpecialGrades extends SpecialPage {
 
                         } else {
 
-                            $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustment->sgadj_title . '" (' . $adjustment->sgadj_date . ') deleted!\'\'\'');
+                            $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Point adjustment for ' .
+                                Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                                    array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') deleted!')) . "\n");
                             return true;
 
                         }
@@ -1740,7 +1766,11 @@ class SpecialGrades extends SpecialPage {
 
                 } else {
 
-                    $page->addWikiText('\'\'\'Point adjustment for [[User:' . $user->user_name . '|' . $user->user_name . ']] for "' . $adjustmentTitle . '" (' . $adjustmentDate . ') added!\'\'\'');
+                    $page->addHtml(Html::rawElement('p', null, Html::rawElement('b', null, 'Point adjustment for ' .
+                        Linker::linkKnown($this->getTitle(), $this->getUserDisplayName($user->user_id), array(),
+                            array('action' => 'edituserscores', 'user' => $user->user_id)) . ' for ' .
+                        Linker::linkKnown($this->getTitle(), '"' . $adjustmentTitle . '" (' . $adjustmentDate . ')', array(),
+                            array('action' => 'editadjustment', 'id' => $adjustment->sgadj_id)) . ' added!')) . "\n");
                     return true;
 
                 }
