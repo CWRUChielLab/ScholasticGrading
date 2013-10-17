@@ -2175,7 +2175,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Point value:', 'assignment-value')) .
-                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-value]', 20, $assignmentValueDefault, array('id' => 'assignment-value')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-value]', 20, $assignmentValueDefault, array('id' => 'assignment-value', 'autocomplete' => 'off')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'assignment-enabled')) .
@@ -2183,7 +2183,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'assignment-date')) .
-                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date', 'class' => 'sg-date-input')))
+                        Html::rawElement('td', null, Xml::input('assignment-params[0][assignment-date]', 20, $assignmentDateDefault, array('id' => 'assignment-date', 'autocomplete' => 'off', 'class' => 'sg-date-input')))
                     ) .
                     $groupchecks
                 ) .
@@ -2281,7 +2281,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'evaluation-score')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-score]', 20, $evaluationScoreDefault, array('id' => 'evaluation-score', 'autocomplete' => 'off')) . ' out of ' . (float)$assignment->sga_value . ' point(s)')
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'evaluation-enabled')) .
@@ -2289,7 +2289,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'evaluation-date')) .
-                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date', 'class' => 'sg-date-input')))
+                        Html::rawElement('td', null, Xml::input('evaluation-params[0][evaluation-date]', 20, $evaluationDateDefault, array('id' => 'evaluation-date', 'autocomplete' => 'off', 'class' => 'sg-date-input')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'evaluation-comment')) .
@@ -2394,11 +2394,11 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Score:', 'adjustment-score')) .
-                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-score]', 20, $adjustmentScoreDefault, array('id' => 'adjustment-score')))
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-score]', 20, $adjustmentScoreDefault, array('id' => 'adjustment-score', 'autocomplete' => 'off')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Value:', 'adjustment-value')) .
-                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-value]', 20, $adjustmentValueDefault, array('id' => 'adjustment-value')))
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-value]', 20, $adjustmentValueDefault, array('id' => 'adjustment-value', 'autocomplete' => 'off')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Enabled:', 'adjustment-enabled')) .
@@ -2406,7 +2406,7 @@ class SpecialGrades extends SpecialPage {
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Date:', 'adjustment-date')) .
-                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-date]', 20, $adjustmentDateDefault, array('id' => 'adjustment-date', 'class' => 'sg-date-input')))
+                        Html::rawElement('td', null, Xml::input('adjustment-params[0][adjustment-date]', 20, $adjustmentDateDefault, array('id' => 'adjustment-date', 'autocomplete' => 'off', 'class' => 'sg-date-input')))
                     ) .
                     Html::rawElement('tr', null,
                         Html::rawElement('td', null, Xml::label('Comment:', 'adjustment-comment')) .
@@ -2684,9 +2684,9 @@ class SpecialGrades extends SpecialPage {
                 }
 
                 $content .= Html::rawElement('tr', array('class' => $evaluationRowClass),
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('class' => 'sg-date-input'))) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
                     Html::element('td', array('class' => 'sg-userscoresformtable-title'), $assignment->sga_title . ' (' . $assignment->sga_date . ')') .
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault, array('autocomplete' => 'off'))) .
                     Html::element('td', array('class' => 'sg-userscoresformtable-value'), (float)$assignment->sga_value) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-comment]', 50, $evaluationCommentDefault)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('evaluation-params[' . $evaluationParamSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault)) .
@@ -2722,10 +2722,10 @@ class SpecialGrades extends SpecialPage {
                 }
 
                 $content .= Html::rawElement('tr', array('class' => $adjustmentRowClass),
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-date]', 10, $adjustment->sgadj_date, array('class' => 'sg-date-input'))) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-date]', 10, $adjustment->sgadj_date, array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-title'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-title]', 50, $adjustment->sgadj_title)) .
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, (float)$adjustment->sgadj_score)) .
-                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, (float)$adjustment->sgadj_value)) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, (float)$adjustment->sgadj_score, array('autocomplete' => 'off'))) .
+                    Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, (float)$adjustment->sgadj_value, array('autocomplete' => 'off'))) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-comment]', 50, $adjustment->sgadj_comment)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', $adjustment->sgadj_enabled)) .
                     Html::rawElement('td', array('class' => 'sg-userscoresformtable-delete'), Xml::submitButton('Delete', array('name' => 'delete-adjustment-' . $adjustmentParamSetCounter)))
@@ -2749,10 +2749,10 @@ class SpecialGrades extends SpecialPage {
 
         # Create a row for a new adjustment
         $content .= Html::rawElement('tr', array('class' => 'sg-userscoresformtable-row'),
-            Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-date]', 10, date('Y-m-d'), array('class' => 'sg-date-input'))) .
+            Html::rawElement('td', array('class' => 'sg-userscoresformtable-date'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-date]', 10, date('Y-m-d'), array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-title'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-title]', 50, '')) .
-            Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, '')) .
-            Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, '0')) .
+            Html::rawElement('td', array('class' => 'sg-userscoresformtable-score'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-score]', 5, '', array('autocomplete' => 'off'))) .
+            Html::rawElement('td', array('class' => 'sg-userscoresformtable-value'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-value]', 5, '0', array('autocomplete' => 'off'))) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-comment'), Xml::input('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-comment]', 50, '')) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-enabled'), Xml::check('adjustment-params[' . $adjustmentParamSetCounter . '][adjustment-enabled]', true)) .
             Html::rawElement('td', array('class' => 'sg-userscoresformtable-delete'), Xml::submitButton('Delete', array('name' => 'delete-adjustment-' . $adjustmentParamSetCounter, 'disabled')))
@@ -2909,8 +2909,8 @@ class SpecialGrades extends SpecialPage {
 
             $content .= Html::rawElement('tr', array('class' => $evaluationRowClass),
                 Html::element('td', array('class' => 'sg-assignmentscoresformtable-user'), $this->getUserDisplayName($user->user_id)) .
-                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-date'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('class' => 'sg-date-input'))) .
-                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-score'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault)) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-date'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-date]', 10, $evaluationDateDefault, array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
+                Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-score'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-score]', 5, $evaluationScoreDefault, array('autocomplete' => 'off'))) .
                 Html::element('td', array('class' => 'sg-assignmentscoresformtable-value'), (float)$assignment->sga_value) .
                 Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-comment'), Xml::input('evaluation-params[' . $paramSetCounter . '][evaluation-comment]', 50, $evaluationCommentDefault)) .
                 Html::rawElement('td', array('class' => 'sg-assignmentscoresformtable-enabled'), Xml::check('evaluation-params[' . $paramSetCounter . '][evaluation-enabled]', $evaluationEnabledDefault)) .
@@ -2985,9 +2985,9 @@ class SpecialGrades extends SpecialPage {
             }
 
             $content .= Html::openElement('tr', array('class' => $assignmentRowClass)) .
-                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, $assignment->sga_date, array('class' => 'sg-date-input'))) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, $assignment->sga_date, array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
                 Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, $assignment->sga_title)) .
-                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, (float)$assignment->sga_value)) .
+                Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, (float)$assignment->sga_value, array('autocomplete' => 'off'))) .
                 Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', $assignment->sga_enabled));
 
             # Create a cell for each group
@@ -3027,9 +3027,9 @@ class SpecialGrades extends SpecialPage {
 
         # Create a row for a new assignment
         $content .= Html::openElement('tr', array('class' => 'sg-manageassignmentstable-row')) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('class' => 'sg-date-input'))) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, '')) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '')) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '', array('autocomplete' => 'off'))) .
             Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', true));
 
         foreach ( $groups as $group ) {
