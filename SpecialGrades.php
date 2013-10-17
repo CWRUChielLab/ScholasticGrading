@@ -192,7 +192,8 @@ class SpecialGrades extends SpecialPage {
                         Linker::linkKnown($this->getTitle(), 'Manage assignments', array(),
                             array('action' => 'assignments')) . ' | ' .
                         Linker::linkKnown($this->getTitle(), 'View all user scores', array(),
-                            array('action' => 'viewalluserscores'))) . "\n");
+                            array('action' => 'viewalluserscores')) . ' | ' .
+                            Linker::linkKnown(Title::newFromText('Special:Log/grades'), 'View grade log')) . "\n");
                     $this->showGradeGrids();
                 } else {
                     $page->addHTML(Html::rawElement('p', null,
