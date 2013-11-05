@@ -3320,7 +3320,7 @@ class SpecialGrades extends SpecialPage {
                                     'User: ' . $this->getUserDisplayName($user->user_id) . '
 ' .                                 'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
 ' .                                 'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
-                                    Linker::linkKnown($this->getTitle(), $evaluationPercentage . '%', array('title' =>
+                                    Linker::linkKnown($this->getTitle(), round($evaluationPercentage, 2) . '%', array('title' =>
                                         'User: ' . $this->getUserDisplayName($user->user_id) . '
 ' .                                     'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
 ' .                                     'Score: ' . (float)$evaluation->sge_score . ' out of ' . (float)$assignment->sga_value),
