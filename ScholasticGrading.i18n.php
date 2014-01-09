@@ -72,8 +72,8 @@ $messages['qqq'] = array(
 
     # User groups
     'group-instructor' => "{{doc-group|instructor}}",
-    'group-instructor-member' => "{{doc-group|instructor|member",
-    'grouppage-instructor' => "{{doc-group|instructor|page",
+    'group-instructor-member' => "{{doc-group|instructor|member}}",
+    'grouppage-instructor' => "{{doc-group|instructor|page}}",
 
     # Rights
     'right-editgrades' => "{{doc-right|editgrades}}",
