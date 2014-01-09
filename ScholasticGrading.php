@@ -40,9 +40,8 @@ $wgSpecialPages['Grades'] = 'SpecialGrades';
 $wgSpecialPageGroups['Grades'] = 'scholastic';
 
 
-# User right to create, modify, and delete grades; given to Instructors by default
+# User right to create, modify, and delete grades
 $wgAvailableRights[] = 'editgrades';
-$wgGroupPermissions['instructor']['editgrades'] = true;
 
 
 # Create the log Special:Log/grades

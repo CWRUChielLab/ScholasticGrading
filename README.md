@@ -24,6 +24,7 @@ Download and install the source code into `extensions/ScholasticGrading`:
 Add the following code to your `LocalSettings.php` file:
 
     require_once("$IP/extensions/ScholasticGrading/ScholasticGrading.php");
+    $wgGroupPermissions['instructor']['editgrades'] = true;
 
 Run the wiki maintenance script. This will modify your wiki database by adding
 tables needed for this extension.
