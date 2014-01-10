@@ -100,8 +100,9 @@ jQuery( document ).ready( function() {
     jQuery( 'a.sg-toggleunevaluated' ).one( 'click', function() {
         ScholasticGrading.toggleUnevaluatedAssignments( 1 );
     } );
+    var paramSetCounter = jQuery( 'table.sg-manageassignmentstable' ).find( 'tr.sg-manageassignmentstable-row' ).length - 1;
     jQuery( 'a.sg-appendassignment' ).one( 'click', function() {
-        ScholasticGrading.appendNewAssignment( jQuery( 'table.sg-manageassignmentstable' ).find( 'tr.sg-manageassignmentstable-row' ).length - 1 );
+        ScholasticGrading.appendNewAssignment( paramSetCounter );
     } );
 
 } );
