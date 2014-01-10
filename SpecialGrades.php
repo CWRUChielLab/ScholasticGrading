@@ -3037,27 +3037,26 @@ class SpecialGrades extends SpecialPage {
 
         }
 
-        # Create a row for a new assignment
-        $content .= Html::openElement('tr', array('class' => 'sg-manageassignmentstable-row')) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-date]', 10, date('Y-m-d'), array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-title]', 50, '')) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[' . $paramSetCounter . '][assignment-value]', 5, '', array('autocomplete' => 'off'))) .
-            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[' . $paramSetCounter . '][assignment-enabled]', true));
+        # Create a hidden row that will serve as a template for
+        # new rows added dynamically for new assignments
+        $content .= Html::openElement('tr', array('id' => 'sg-manageassignmentstable-new', 'class' => 'sg-manageassignmentstable-row', 'hidden')) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-date'), Xml::input('assignment-params[paramSetCounterPlaceholder][assignment-date]', 10, date('Y-m-d'), array('autocomplete' => 'off', 'class' => 'sg-date-input'))) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-title'), Xml::input('assignment-params[paramSetCounterPlaceholder][assignment-title]', 50, '')) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-value'), Xml::input('assignment-params[paramSetCounterPlaceholder][assignment-value]', 5, '', array('autocomplete' => 'off'))) .
+            Html::rawElement('td', array('class' => 'sg-manageassignmentstable-enabled'), Xml::check('assignment-params[paramSetCounterPlaceholder][assignment-enabled]', true));
 
         foreach ( $groups as $group ) {
             $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-group'),
-                Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', 0) .
-                Xml::check('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', false)
+                Html::hidden('assignment-params[paramSetCounterPlaceholder][assignment-group][' . $group->sgg_id . ']', 0) .
+                Xml::check('assignment-params[paramSetCounterPlaceholder][assignment-group][' . $group->sgg_id . ']', false)
             );
         }
 
-        $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-' . $paramSetCounter, 'disabled')));
+        $content .= Html::rawElement('td', array('class' => 'sg-manageassignmentstable-delete'), Xml::submitButton('Delete', array('name' => 'delete-assignment-paramSetCounterPlaceholder', 'disabled')));
         $content .= Html::closeElement('tr');
 
-        $content .= Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-id]', false);
+        $content .= Html::hidden('assignment-params[paramSetCounterPlaceholder][assignment-id]', false);
         $content .= "\n";
-
-        $paramSetCounter += 1;
 
         # Report value totals for each group
         $content .= Html::openElement('tr', array('id' => 'sg-manageassignmentstable-footer'));
@@ -3068,6 +3067,8 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::closeElement('tr') . "\n";
 
         $content .= Html::closeElement('table') . "\n";
+        $content .= Html::rawElement('p', null,
+            Html::element('a', array('class' => 'sg-appendassignment', 'href' => 'javascript:void(0);'), 'Add another assignment')) . "\n";
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-assignment'));
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";

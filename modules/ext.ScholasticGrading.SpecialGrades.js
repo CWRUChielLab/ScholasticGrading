@@ -50,6 +50,33 @@ var ScholasticGrading = {
 
     },
 
+    // Append a row for a new assignment to the assignments table
+    appendNewAssignment: function( paramSetCounter ) {
+
+        // Clone the hidden table row for new assignments
+        var newRow = jQuery( '#sg-manageassignmentstable-new' ).clone().removeAttr( 'id' ).show();
+
+        // Replace the input field names
+        newRow.find( 'input' ).attr( 'name', function ( i, name ) {
+            return name.replace( /paramSetCounterPlaceholder/, paramSetCounter );
+        });
+
+        // Provide interacive calendar for new date input field
+        newRow.find( 'input.sg-date-input' ).removeAttr( 'id' ).removeClass( 'hasDatepicker' ).datepicker( {
+            dateFormat: 'yy-mm-dd',
+            showOtherMonths: true,
+            selectOtherMonths: true,
+        } );
+
+        // Place the new table row at the end of the table
+        newRow.insertBefore( '#sg-manageassignmentstable-new' );
+
+        jQuery( 'a.sg-appendassignment' ).one( 'click', function() {
+            ScholasticGrading.appendNewAssignment( +paramSetCounter + 1 );
+        } );
+
+    },
+
 };
 
 
@@ -60,18 +87,21 @@ jQuery( document ).ready( function() {
     jQuery( '#sg-gradegrid-tabs' ).tabs();
 
     // Provide interacive calendars for date input fields
-    jQuery( '.sg-date-input' ).datepicker( {
+    jQuery( 'input.sg-date-input' ).datepicker( {
         dateFormat: 'yy-mm-dd',
         showOtherMonths: true,
         selectOtherMonths: true,
     } );
 
-    // Attach on-click event handlers for togglers
+    // Attach on-click event handlers
     jQuery( 'a.sg-toggleuserscores' ).one( 'click', function() {
         ScholasticGrading.toggleUserScoresTables( 1 );
     } );
     jQuery( 'a.sg-toggleunevaluated' ).one( 'click', function() {
         ScholasticGrading.toggleUnevaluatedAssignments( 1 );
+    } );
+    jQuery( 'a.sg-appendassignment' ).one( 'click', function() {
+        ScholasticGrading.appendNewAssignment( jQuery( 'table.sg-manageassignmentstable' ).find( 'tr.sg-manageassignmentstable-row' ).length - 1 );
     } );
 
 } );
