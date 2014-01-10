@@ -3058,7 +3058,7 @@ class SpecialGrades extends SpecialPage {
         $paramSetCounter += 1;
 
         # Report value totals for each group
-        $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
+        $content .= Html::openElement('tr', array('id' => 'sg-manageassignmentstable-footer'));
         $content .= Html::element('th', null, '') . Html::element('th', null, '') . Html::element('th', null, '') . Html::element('th', null, '');
         foreach ( $groups as $group )
             $content .= Html::element('th', null, $totalValue[$group->sgg_id]);
