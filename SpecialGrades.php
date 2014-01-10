@@ -2963,6 +2963,8 @@ class SpecialGrades extends SpecialPage {
         ));
         $content .= Html::openElement('table', array('class' => 'wikitable sg-manageassignmentstable')) . "\n";
 
+        $totalValue = array();
+
         # Create a column header for each field
         $content .= Html::openElement('tr', array('id' => 'sg-manageassignmentstable-header')) .
             Html::element('th', null, 'Date') .
