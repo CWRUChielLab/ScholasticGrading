@@ -2553,11 +2553,11 @@ class SpecialGrades extends SpecialPage {
 
         # The user exists
 
-        # Initialize the points earned, the ideal score,
-        # and the course total points for this student
-        $pointsEarned = 0;
-        $pointsIdeal = 0;
-        $pointsAllAssignments = 0;
+        # Initialize the cumulative score, cumulative value,
+        # and the course total value for this student
+        $cumulativeScore = 0;
+        $cumulativeValue = 0;
+        $totalValue = 0;
 
         # Query for the enabled groups the user belongs to
         $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_user_id' => $user_id));
@@ -2641,8 +2641,8 @@ class SpecialGrades extends SpecialPage {
                 # The next row is an evaluation for an assignment
                 $assignment = $dbr->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $score['assignmentID']));
 
-                # Increment the course total points
-                $pointsAllAssignments += $assignment->sga_value;
+                # Increment the course total value
+                $totalValue += $assignment->sga_value;
 
                 # Check whether evaluation exists
                 $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id));
@@ -2672,9 +2672,9 @@ class SpecialGrades extends SpecialPage {
 
                         $evaluationRowClass = 'sg-userscoresformtable-row';
 
-                        # Increment the points earned and the ideal score
-                        $pointsEarned += $evaluation->sge_score;
-                        $pointsIdeal  += $assignment->sga_value;
+                        # Increment the cumulative score and value
+                        $cumulativeScore += $evaluation->sge_score;
+                        $cumulativeValue  += $assignment->sga_value;
 
                     } else {
 
@@ -2709,12 +2709,12 @@ class SpecialGrades extends SpecialPage {
 
                     $adjustmentRowClass = 'sg-userscoresformtable-row';
 
-                    # Increment the course total points
-                    $pointsAllAssignments += $adjustment->sgadj_value;
+                    # Increment the course total value
+                    $totalValue += $adjustment->sgadj_value;
 
-                    # Increment the points earned and the ideal score
-                    $pointsEarned += $adjustment->sgadj_score;
-                    $pointsIdeal  += $adjustment->sgadj_value;
+                    # Increment the cumulative score and value
+                    $cumulativeScore += $adjustment->sgadj_score;
+                    $cumulativeValue  += $adjustment->sgadj_value;
 
                 } else {
 
@@ -2769,9 +2769,9 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::rawElement('tr', array('id' => 'sg-userscoresformtable-footer'),
             Html::element('th', null, '') .
             Html::element('th', null, '') .
-            Html::element('th', null, $pointsEarned) .
-            Html::element('th', null, $pointsIdeal) .
-            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%') .
+            Html::element('th', null, $cumulativeScore) .
+            Html::element('th', null, $cumulativeValue) .
+            Html::element('th', null, 'Current grade: ' . round(100*$cumulativeScore/$cumulativeValue , 2) . '%') .
             Html::element('th', null, '') .
             Html::element('th', null, '')
         ) . "\n";
@@ -2784,7 +2784,7 @@ class SpecialGrades extends SpecialPage {
 
         # Insert the racetrack image at the top of the page
         $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
-                Html::element('img', array('src' => '/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+                Html::element('img', array('src' => '/django/credit/racetrack/' . round($cumulativeScore/$totalValue, 3) . '/' . round($cumulativeValue/$totalValue, 3) . '/racetrack.png'), '')
             )) . "\n";
 
         $page->addHTML($content);
@@ -3219,8 +3219,8 @@ class SpecialGrades extends SpecialPage {
         # Create a grade grid for each enabled group
         foreach ( $groups as $group ) {
 
-            $pointsEarned = array();
-            $pointsIdeal = array();
+            $cumulativeScore = array();
+            $cumulativeValue = array();
 
             # Query for all users in the group
             $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_group_id' => $group->sgg_id));
@@ -3257,9 +3257,9 @@ class SpecialGrades extends SpecialPage {
                     )
                 );
 
-                # Initialize the points earned and the ideal score for this student
-                $pointsEarned[$user->user_name] = 0;
-                $pointsIdeal[$user->user_name] = 0;
+                # Initialize the cumulative score and value for this student
+                $cumulativeScore[$user->user_name] = 0;
+                $cumulativeValue[$user->user_name] = 0;
             }
             $content .= Html::closeElement('tr') . "\n";
 
@@ -3328,9 +3328,9 @@ class SpecialGrades extends SpecialPage {
 
                             }
 
-                            # Increment the points earned and the ideal score for this student
-                            $pointsEarned[$user->user_name] += $evaluation->sge_score;
-                            $pointsIdeal[$user->user_name] += $assignment->sga_value;
+                            # Increment the cumulative score and value for this student
+                            $cumulativeScore[$user->user_name] += $evaluation->sge_score;
+                            $cumulativeValue[$user->user_name] += $assignment->sga_value;
 
                         } else {
 
@@ -3388,9 +3388,9 @@ class SpecialGrades extends SpecialPage {
                     $adjustmentScoreSum += $adjustment->sgadj_score;
                     $adjustmentValueSum += $adjustment->sgadj_value;
 
-                    # Increment the points earned and the ideal score for this student
-                    $pointsEarned[$user->user_name] += $adjustment->sgadj_score;
-                    $pointsIdeal[$user->user_name] += $adjustment->sgadj_value;
+                    # Increment the cumulative score and value for this student
+                    $cumulativeScore[$user->user_name] += $adjustment->sgadj_score;
+                    $cumulativeValue[$user->user_name] += $adjustment->sgadj_value;
 
                 }
 
@@ -3408,8 +3408,8 @@ class SpecialGrades extends SpecialPage {
             foreach ( $users as $user ) {
                 $content .= Html::element('th', array('title' =>
                     'User: ' . $this->getUserDisplayName($user->user_id) . '
-' .                 round(100*$pointsEarned[$user->user_name]/$pointsIdeal[$user->user_name], 2) . '%'),
-                    $pointsEarned[$user->user_name] . ' / ' . $pointsIdeal[$user->user_name]
+' .                 round(100*$cumulativeScore[$user->user_name]/$cumulativeValue[$user->user_name], 2) . '%'),
+                    $cumulativeScore[$user->user_name] . ' / ' . $cumulativeValue[$user->user_name]
                 );
             }
             $content .= Html::closeElement('tr') . "\n";
@@ -3454,11 +3454,11 @@ class SpecialGrades extends SpecialPage {
 
         # The user exists
 
-        # Initialize the points earned, the ideal score,
-        # and the course total points for this student
-        $pointsEarned = 0;
-        $pointsIdeal = 0;
-        $pointsAllAssignments = 0;
+        # Initialize the cumulative score, cumulative value,
+        # and the course total value for this student
+        $cumulativeScore = 0;
+        $cumulativeValue = 0;
+        $totalValue = 0;
 
         # Query for the enabled groups the user belongs to
         $groupusers = $dbr->select('scholasticgrading_groupuser', '*', array('sggu_user_id' => $user_id));
@@ -3497,8 +3497,8 @@ class SpecialGrades extends SpecialPage {
         $scores = array();
         foreach ( $assignments as $assignment ) {
 
-            # Increment the course total points
-            $pointsAllAssignments += $assignment->sga_value;
+            # Increment the course total value
+            $totalValue += $assignment->sga_value;
 
             # Check whether evaluation exists and is enabled
             $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*', array('sge_user_id' => $user_id, 'sge_assignment_id' => $assignment->sga_id, 'sge_enabled' => true));
@@ -3506,9 +3506,9 @@ class SpecialGrades extends SpecialPage {
 
                 # The evaluation exists and is enabled
 
-                # Increment the points earned and the ideal score
-                $pointsEarned += $evaluation->sge_score;
-                $pointsIdeal  += $assignment->sga_value;
+                # Increment the cumulative score and value
+                $cumulativeScore += $evaluation->sge_score;
+                $cumulativeValue  += $assignment->sga_value;
 
                 # Store the score for this assignment
                 array_push($scores, array(
@@ -3539,12 +3539,12 @@ class SpecialGrades extends SpecialPage {
         # Store scores for each enabled adjustment
         foreach ( $adjustments as $adjustment ) {
 
-            # Increment the course total points
-            $pointsAllAssignments += $adjustment->sgadj_value;
+            # Increment the course total value
+            $totalValue += $adjustment->sgadj_value;
 
-            # Increment the points earned and the ideal score
-            $pointsEarned += $adjustment->sgadj_score;
-            $pointsIdeal  += $adjustment->sgadj_value;
+            # Increment the cumulative score and value
+            $cumulativeScore += $adjustment->sgadj_score;
+            $cumulativeValue  += $adjustment->sgadj_value;
 
             # Store the score for this adjustment
             array_push($scores, array(
@@ -3606,15 +3606,15 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::rawElement('tr', array('id' => 'sg-userscorestable-footer'),
             Html::element('th', null, '') .
             Html::element('th', null, '') .
-            Html::element('th', null, $pointsEarned) .
-            Html::element('th', null, $pointsIdeal) .
-            Html::element('th', null, 'Current grade: ' . round(100*$pointsEarned/$pointsIdeal , 2) . '%')
+            Html::element('th', null, $cumulativeScore) .
+            Html::element('th', null, $cumulativeValue) .
+            Html::element('th', null, 'Current grade: ' . round(100*$cumulativeScore/$cumulativeValue , 2) . '%')
         ) . "\n";
         $content .= Html::closeElement('table') . "\n";
 
         # Insert the racetrack image at the top of the page
         $page->addHTML(Html::rawElement('div', array('class' => 'racetrack'),
-                Html::element('img', array('src' => '/django/credit/racetrack/' . round($pointsEarned/$pointsAllAssignments, 3) . '/' . round($pointsIdeal/$pointsAllAssignments, 3) . '/racetrack.png'), '')
+                Html::element('img', array('src' => '/django/credit/racetrack/' . round($cumulativeScore/$totalValue, 3) . '/' . round($cumulativeValue/$totalValue, 3) . '/racetrack.png'), '')
             )) . "\n";
 
         $page->addHTML($content);
