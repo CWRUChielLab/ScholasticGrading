@@ -3066,8 +3066,6 @@ class SpecialGrades extends SpecialPage {
         $content .= Html::closeElement('tr') . "\n";
 
         $content .= Html::closeElement('table') . "\n";
-        $content .= Html::rawElement('p', null,
-            Html::element('a', array('class' => 'sg-appendassignment', 'href' => 'javascript:void(0);'), 'Add another assignment')) . "\n";
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-assignment'));
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";
