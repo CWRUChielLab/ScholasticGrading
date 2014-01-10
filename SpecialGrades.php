@@ -2969,8 +2969,13 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, 'Title') .
             Html::element('th', null, 'Value') .
             Html::element('th', null, 'Enabled');
-        foreach ( $groups as $group )
+        foreach ( $groups as $group ) {
             $content .= Html::element('th', null, $group->sgg_title);
+
+
+            # Initialize the total value for this group
+            $totalValue[$group->sgg_id] = 0;
+        }
         $content .= Html::element('th', null, 'Delete');
         $content .= Html::closeElement('tr');
         $content .= "\n";
@@ -3003,6 +3008,10 @@ class SpecialGrades extends SpecialPage {
                         Html::hidden('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', 0) .
                         Xml::check('assignment-params[' . $paramSetCounter . '][assignment-group][' . $group->sgg_id . ']', true)
                     );
+
+                    # Increment the total value for this group
+                    if ( $assignment->sga_enabled )
+                        $totalValue[$group->sgg_id] += $assignment->sga_value;
 
                 } else {
 
@@ -3048,7 +3057,17 @@ class SpecialGrades extends SpecialPage {
 
         $paramSetCounter += 1;
 
+        # Report value totals for each group
+        $content .= Html::openElement('tr', array('id' => 'sg-gradegrid-footer'));
+        $content .= Html::element('th', null, '') . Html::element('th', null, '') . Html::element('th', null, '') . Html::element('th', null, '');
+        foreach ( $groups as $group )
+            $content .= Html::element('th', null, $totalValue[$group->sgg_id]);
+        $content .= Html::element('th', null, '');
+        $content .= Html::closeElement('tr') . "\n";
+
         $content .= Html::closeElement('table') . "\n";
+        $content .= Html::rawElement('p', null,
+            Html::element('a', array('class' => 'sg-appendassignment', 'href' => 'javascript:void(0);'), 'Add another assignment')) . "\n";
         $content .= Xml::submitButton('Apply changes', array('name' => 'modify-assignment'));
         $content .= Html::hidden('wpEditToken', $this->getUser()->getEditToken());
         $content .= Html::closeElement('form') . "\n";
