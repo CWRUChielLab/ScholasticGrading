@@ -2948,11 +2948,11 @@ class SpecialGrades extends SpecialPage {
 
         $page = $this->getOutput();
 
-        # Query for all assignments and all groups
+        # Query for all assignments and all enabled groups
         $dbr = wfGetDB(DB_SLAVE);
         $assignments = $dbr->select('scholasticgrading_assignment', '*', '', __METHOD__,
             array('ORDER BY' => array('ISNULL(sga_date)', 'sga_date', 'sga_title')));
-        $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
+        $groups = $dbr->select('scholasticgrading_group', '*', array('sgg_enabled' => true), __METHOD__,
             array('ORDER BY' => array('sgg_title')));
 
         # Build the assignment table
