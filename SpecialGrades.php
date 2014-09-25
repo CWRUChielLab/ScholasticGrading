@@ -3297,6 +3297,7 @@ class SpecialGrades extends SpecialPage {
                 # Create a cell for each user
                 foreach ( $users as $user ) {
 
+                    $evaluationCellClass = 'sg-gradegrid-cell';
                     $evaluation = $dbr->selectRow('scholasticgrading_evaluation', '*',
                         array('sge_user_id' => $user->user_id, 'sge_assignment_id' => $assignment->sga_id));
                     if ( $evaluation ) {
@@ -3308,7 +3309,7 @@ class SpecialGrades extends SpecialPage {
                             if ( $assignment->sga_value == 0 ) {
 
                                 # The assignment is extra credit
-                                $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
+                                $evaluationCellClass .= ' sg-gradegrid-extracredit';
                                 $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
                                     'User: ' . $this->getUserDisplayName($user->user_id) . '
 ' .                                 'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
@@ -3324,17 +3325,34 @@ class SpecialGrades extends SpecialPage {
                                 # The assignment is not extra credit
                                 $evaluationPercentage = $evaluation->sge_score / $assignment->sga_value * 100;
                                 if ( $evaluationPercentage > 100.0 ) {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-extracredit';
+                                    $evaluationCellClass .= ' sg-gradegrid-extracredit';
+                                } elseif ( $evaluationPercentage == 100.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-fullcredit';
                                 } elseif ( $evaluationPercentage >= 90.0 ) {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-A';
+                                    $evaluationCellClass .= ' sg-gradegrid-90s';
                                 } elseif ( $evaluationPercentage >= 80.0 ) {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-B';
+                                    $evaluationCellClass .= ' sg-gradegrid-80s';
                                 } elseif ( $evaluationPercentage >= 70.0 ) {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-C';
+                                    $evaluationCellClass .= ' sg-gradegrid-70s';
                                 } elseif ( $evaluationPercentage >= 60.0 ) {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-D';
+                                    $evaluationCellClass .= ' sg-gradegrid-60s';
+                                } elseif ( $evaluationPercentage >= 50.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-50s';
+                                } elseif ( $evaluationPercentage >= 40.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-40s';
+                                } elseif ( $evaluationPercentage >= 30.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-30s';
+                                } elseif ( $evaluationPercentage >= 20.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-20s';
+                                } elseif ( $evaluationPercentage >= 10.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-10s';
+                                } elseif ( $evaluationPercentage >  0.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-0s';
+                                } elseif ( $evaluationPercentage == 0.0 ) {
+                                    $evaluationCellClass .= ' sg-gradegrid-zerocredit';
                                 } else {
-                                    $evaluationCellClass = 'sg-gradegrid-cell sg-gradegrid-F';
+                                    # Should not get here
+                                    $evaluationCellClass .= '';
                                 }
                                 $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
                                     'User: ' . $this->getUserDisplayName($user->user_id) . '
@@ -3355,7 +3373,7 @@ class SpecialGrades extends SpecialPage {
                         } else {
 
                             # The evaluation is disabled
-                            $evaluationCellClass = 'sg-gradegrid-cell';
+                            $evaluationCellClass .= '';
                             $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
                                 'User: ' . $this->getUserDisplayName($user->user_id) . '
 ' .                             'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '
@@ -3371,7 +3389,7 @@ class SpecialGrades extends SpecialPage {
                     } else {
 
                         # An evaluation does not exist for this (user,assignment) combination
-                        $evaluationCellClass = 'sg-gradegrid-cell';
+                        $evaluationCellClass .= '';
                         $content .= Html::rawElement('td', array('class' => $evaluationCellClass, 'title' =>
                             'User: ' . $this->getUserDisplayName($user->user_id) . '
 ' .                         'Assignment: ' . $assignment->sga_title . ' (' . $assignment->sga_date . ')' . '

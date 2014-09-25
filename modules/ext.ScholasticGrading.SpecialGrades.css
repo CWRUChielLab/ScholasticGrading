@@ -68,27 +68,55 @@ table.sg-gradegrid td.sg-gradegrid-cell {
 }
 
 table.sg-gradegrid td.sg-gradegrid-extracredit {
-    background-color: #66ccff;
+    background-color: #80d9ff;
 }
 
-table.sg-gradegrid td.sg-gradegrid-A {
-    background-color: #66cc66;
+table.sg-gradegrid td.sg-gradegrid-fullcredit {
+    background-color: #99ff80;
 }
 
-table.sg-gradegrid td.sg-gradegrid-B {
-    background-color: #ccff66;
+table.sg-gradegrid td.sg-gradegrid-90s {
+    background-color: #aeff80;
 }
 
-table.sg-gradegrid td.sg-gradegrid-C {
-    background-color: #ffff66;
+table.sg-gradegrid td.sg-gradegrid-80s {
+    background-color: #c3ff80;
 }
 
-table.sg-gradegrid td.sg-gradegrid-D {
-    background-color: #ffcc66;
+table.sg-gradegrid td.sg-gradegrid-70s {
+    background-color: #d8ff80;
 }
 
-table.sg-gradegrid td.sg-gradegrid-F {
-    background-color: #ff6666;
+table.sg-gradegrid td.sg-gradegrid-60s {
+    background-color: #ecff80;
+}
+
+table.sg-gradegrid td.sg-gradegrid-50s {
+    background-color: #fffd80;
+}
+
+table.sg-gradegrid td.sg-gradegrid-40s {
+    background-color: #ffe880;
+}
+
+table.sg-gradegrid td.sg-gradegrid-30s {
+    background-color: #ffd380;
+}
+
+table.sg-gradegrid td.sg-gradegrid-20s {
+    background-color: #ffbe80;
+}
+
+table.sg-gradegrid td.sg-gradegrid-10s {
+    background-color: #ffa980;
+}
+
+table.sg-gradegrid td.sg-gradegrid-0s {
+    background-color: #ff9480;
+}
+
+table.sg-gradegrid td.sg-gradegrid-zerocredit {
+    background-color: #ff8080;
 }
 
 
