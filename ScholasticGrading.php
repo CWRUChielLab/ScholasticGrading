@@ -13,7 +13,7 @@ if(!defined('MEDIAWIKI')) {
     echo <<<EOT
 To install the ScholasticGrading extension, put the following in LocalSettings.php:\n
 require_once("\$IP/extensions/ScholasticGrading/ScholasticGrading.php");
-\$wgGroupPermissions['instructor']['editgrades'] = true;\n
+\$wgGroupPermissions['grader']['editgrades'] = true;\n
 EOT;
     exit(1);
 }

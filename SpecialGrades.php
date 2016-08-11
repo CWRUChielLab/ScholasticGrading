@@ -448,7 +448,7 @@ class SpecialGrades extends SpecialPage {
 
                     if ( $this->canModify(false) ) {
 
-                        # Instructor interface
+                        # Grader interface
                         return $this->msg('grades')->plain();
 
                     } else {

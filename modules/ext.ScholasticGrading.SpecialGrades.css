@@ -8,9 +8,9 @@ div.racetrack {
 }
 
 
-/****************************************************
- * Styles for instructor interface with grade grids *
- ****************************************************/
+/************************************************
+ * Styles for grader interface with grade grids *
+ ************************************************/
 
 div#sg-gradegrid-tabs {
     font-size: 1em;
@@ -157,18 +157,18 @@ table.sg-userscorestable td.sg-userscorestable-comment {
 }
 
 
-/*********************************************************************
- * Styles for instructor interface for viewing all user score tables *
- *********************************************************************/
+/*****************************************************************
+ * Styles for grader interface for viewing all user score tables *
+ *****************************************************************/
 
 h3.sg-allusertables-header {
     text-align: center;
 }
 
 
-/**********************************************************************************
- * Styles for instructor interface for editing all evaluations for one assignment *
- **********************************************************************************/
+/******************************************************************************
+ * Styles for grader interface for editing all evaluations for one assignment *
+ ******************************************************************************/
 
 table.sg-assignmentscoresformtable {
     width: 100%;
@@ -217,9 +217,9 @@ table.sg-assignmentscoresformtable td.sg-assignmentscoresformtable-score input {
 }
 
 
-/****************************************************************************
- * Styles for instructor interface for editing all evaluations for one user *
- ****************************************************************************/
+/************************************************************************
+ * Styles for grader interface for editing all evaluations for one user *
+ ************************************************************************/
 
 table.sg-userscoresformtable {
     width: 100%;
@@ -276,9 +276,9 @@ table.sg-userscoresformtable td.sg-userscoresformtable-value input {
 }
 
 
-/************************************************************
- * Styles for instructor interface for managing assignments *
- ************************************************************/
+/********************************************************
+ * Styles for grader interface for managing assignments *
+ ********************************************************/
 
 table.sg-manageassignmentstable {
     width: 100%;
@@ -322,9 +322,9 @@ table.sg-manageassignmentstable td.sg-manageassignmentstable-value input {
 }
 
 
-/*******************************************************
- * Styles for instructor interface for managing groups *
- *******************************************************/
+/***************************************************
+ * Styles for grader interface for managing groups *
+ ***************************************************/
 
 table.sg-managegroupstable {
     width: 100%;

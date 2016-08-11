@@ -20,12 +20,12 @@ $messages['en'] = array(
     # General messages
     'grades' => "Grades",
     'specialpages-group-scholastic' => "Scholastic tools",
-    'scholasticgrading-desc' => "[[Special:Grades | Allows instructors to assign and students to review course grades]]",
+    'scholasticgrading-desc' => "[[Special:Grades | Allows graders to assign and students to review course grades]]",
 
     # User groups
-    'group-instructor' => "Instructors",
-    'group-instructor-member' => "{{GENDER:$1|instructor}}",
-    'grouppage-instructor' => "{{ns:project}}:Instructors",
+    'group-grader' => "Graders",
+    'group-grader-member' => "{{GENDER:$1|grader}}",
+    'grouppage-grader' => "{{ns:project}}:Graders",
 
     # Rights
     'right-editgrades' => "Create, modify, and delete grades",
@@ -71,9 +71,9 @@ $messages['qqq'] = array(
     'scholasticgrading-desc' => "{{desc|name=ScholasticGrading|url=https://github.com/jpg18/ScholasticGrading}}",
 
     # User groups
-    'group-instructor' => "{{doc-group|instructor}}",
-    'group-instructor-member' => "{{doc-group|instructor|member}}",
-    'grouppage-instructor' => "{{doc-group|instructor|page}}",
+    'group-grader' => "{{doc-group|grader}}",
+    'group-grader-member' => "{{doc-group|grader|member}}",
+    'grouppage-grader' => "{{doc-group|grader|page}}",
 
     # Rights
     'right-editgrades' => "{{doc-right|editgrades}}",
