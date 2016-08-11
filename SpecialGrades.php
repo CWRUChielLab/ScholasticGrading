@@ -1153,7 +1153,7 @@ class SpecialGrades extends SpecialPage {
             $totalAffectedRows += $dbw->affectedRows();
 
             # Attempt to get the id for the newly created assignment
-            $maxAssignmentID = $dbw->selectRow('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'))->maxid;
+            $maxAssignmentID = $dbw->selectRow('scholasticgrading_assignment', array('maxid' => 'MAX(sga_id)'), '')->maxid;
             $assignment = $dbw->selectRow('scholasticgrading_assignment', '*', array('sga_id' => $maxAssignmentID));
             if ( !$assignment || $assignment->sga_title != $assignmentTitle || $assignment->sga_value != $assignmentValue || $assignment->sga_enabled != $assignmentEnabled || $assignment->sga_date != $assignmentDate ) {
 
@@ -1731,7 +1731,7 @@ class SpecialGrades extends SpecialPage {
                 $totalAffectedRows += $dbw->affectedRows();
 
                 # Attempt to get the id for the newly created adjustment
-                $maxAdjustmentID = $dbw->selectRow('scholasticgrading_adjustment', array('maxid' => 'MAX(sgadj_id)'))->maxid;
+                $maxAdjustmentID = $dbw->selectRow('scholasticgrading_adjustment', array('maxid' => 'MAX(sgadj_id)'), '')->maxid;
                 $adjustment = $dbw->selectRow('scholasticgrading_adjustment', '*', array('sgadj_id' => $maxAdjustmentID));
                 if ( !$adjustment || $adjustment->sgadj_user_id != $adjustmentUser || $adjustment->sgadj_title != $adjustmentTitle || $adjustment->sgadj_value != $adjustmentValue || $adjustment->sgadj_score != $adjustmentScore || $adjustment->sgadj_enabled != $adjustmentEnabled || $adjustment->sgadj_date != $adjustmentDate || $adjustment->sgadj_comment != $adjustmentComment ) {
 
@@ -2030,7 +2030,7 @@ class SpecialGrades extends SpecialPage {
             $totalAffectedRows += $dbw->affectedRows();
 
             # Attempt to get the id for the newly created group
-            $maxGroupID = $dbw->selectRow('scholasticgrading_group', array('maxid' => 'MAX(sgg_id)'))->maxid;
+            $maxGroupID = $dbw->selectRow('scholasticgrading_group', array('maxid' => 'MAX(sgg_id)'), '')->maxid;
             $group = $dbw->selectRow('scholasticgrading_group', '*', array('sgg_id' => $maxGroupID));
             if ( !$group || $group->sgg_title != $groupTitle || $group->sgg_enabled != $groupEnabled ) {
 
