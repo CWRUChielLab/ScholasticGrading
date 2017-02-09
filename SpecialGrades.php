@@ -2841,7 +2841,7 @@ class SpecialGrades extends SpecialPage {
         if ( !count($userIDs) )
             $userIDs = null;
         $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
-            array('ORDER BY' => 'user_name'));
+            array('ORDER BY' => 'user_real_name'));
 
         # Abort if there are no users
         if ( $users->numRows() === 0 ) {
@@ -3094,7 +3094,7 @@ class SpecialGrades extends SpecialPage {
         # Query for all users and all groups
         $dbr = wfGetDB(DB_SLAVE);
         $users = $dbr->select('user', '*', '', __METHOD__,
-            array('ORDER BY' => array('user_name')));
+            array('ORDER BY' => array('user_real_name')));
         $groups = $dbr->select('scholasticgrading_group', '*', '', __METHOD__,
             array('ORDER BY' => array('sgg_title')));
 
@@ -3250,7 +3250,7 @@ class SpecialGrades extends SpecialPage {
             if ( !count($userIDs) )
                 $userIDs = null;
             $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
-                array('ORDER BY' => array('user_name')));
+                array('ORDER BY' => array('user_real_name')));
 
             # Query for all enabled assignments in the group
             $groupassignments = $dbr->select('scholasticgrading_groupassignment', '*', array('sgga_group_id' => $group->sgg_id));
@@ -3691,7 +3691,7 @@ class SpecialGrades extends SpecialPage {
         if ( !count($userIDs) )
             $userIDs = null;
         $users = $dbr->select('user', '*', array('user_id' => $userIDs), __METHOD__,
-            array('ORDER BY' => 'user_name'));
+            array('ORDER BY' => 'user_real_name'));
 
         # Abort if there are no users
         if ( $users->numRows() === 0 ) {
