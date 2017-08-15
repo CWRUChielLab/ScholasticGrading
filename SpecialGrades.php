@@ -2771,7 +2771,7 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, '') .
             Html::element('th', null, $cumulativeScore) .
             Html::element('th', null, $cumulativeValue) .
-            Html::element('th', null, 'Current grade: ' . round(100*$cumulativeScore/$cumulativeValue , 2) . '%') .
+            Html::element('th', null, 'Current grade: ' . ($cumulativeValue > 0 ? round(100*$cumulativeScore/$cumulativeValue , 2) . '%' : '--')) .
             Html::element('th', null, '') .
             Html::element('th', null, '')
         ) . "\n";
@@ -3446,7 +3446,7 @@ class SpecialGrades extends SpecialPage {
             foreach ( $users as $user ) {
                 $content .= Html::element('th', array('title' =>
                     'User: ' . $this->getUserDisplayName($user->user_id) . '
-' .                 round(100*$cumulativeScore[$user->user_name]/$cumulativeValue[$user->user_name], 2) . '%'),
+' .                 ($cumulativeValue[$user->user_name] > 0 ? round(100*$cumulativeScore[$user->user_name]/$cumulativeValue[$user->user_name], 2) . '%' : '--')),
                     $cumulativeScore[$user->user_name] . ' / ' . $cumulativeValue[$user->user_name]
                 );
             }
@@ -3646,7 +3646,7 @@ class SpecialGrades extends SpecialPage {
             Html::element('th', null, '') .
             Html::element('th', null, $cumulativeScore) .
             Html::element('th', null, $cumulativeValue) .
-            Html::element('th', null, 'Current grade: ' . round(100*$cumulativeScore/$cumulativeValue , 2) . '%')
+            Html::element('th', null, 'Current grade: ' . ($cumulativeValue > 0 ? round(100*$cumulativeScore/$cumulativeValue , 2) . '%' : '--'))
         ) . "\n";
         $content .= Html::closeElement('table') . "\n";
 
